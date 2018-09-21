@@ -1,0 +1,188 @@
+\documentclass[12pt, a4paper]{report}
+\edef\restoreparindent{\parindent=\the\parindent\relax}
+\usepackage[UKenglish]{babel}
+\usepackage[bibstyle=ieee, sorting=nty]{biblatex}
+\usepackage[labelfont=bf]{caption}
+\usepackage{csquotes}
+\usepackage{fancyhdr}
+\usepackage{float}
+\usepackage[bottom]{footmisc}
+\usepackage{graphicx}
+\usepackage[hidelinks]{hyperref}
+\usepackage{parskip}
+
+\linespread{1.2}
+\restoreparindent
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[C]{\leftmark}
+\fancyfoot[C]{\thepage}
+
+\addbibresource{references.bib}
+
+\begin{document}
+\begin{titlepage}
+	\centering
+	\includegraphics[width=10cm]{tuos_logo}\par\vspace{1cm}
+	\vspace{1cm}
+
+	{\huge\bfseries Finding Security Issues in (Open Source) Software Repositories\par}
+	\vspace{1cm}
+
+	{\Large Zer Jun Eng\par}
+	\vspace{1cm}
+
+	supervised by\par
+	Dr.~Achim \textsc{Brucker}
+	\vfill
+
+	{This report is submitted in partial fulfilment of the requirement for the degree of
+		MEng Software Enginnering by Zer Jun Eng}
+	\vfill
+
+	{\large COM3610}
+	\vfill
+
+	{\large \today}
+\end{titlepage}
+
+\pagenumbering{roman}
+
+% \chapter*{Declaration}
+% \addcontentsline{toc}{chapter}{Declaration}
+% All sentences or passages quoted in this report from other people's work have been specifically
+% acknowledged by clear cross-referencing to author, work and page(s). Any illustrations that are
+% not the work of the author of this report have been used with the explicit permission of the
+% originator and are specifically acknowledged. I understand that failure to do this amounts to
+% plagiarism and will be considered grounds for failure in this project and the degree examination
+% as a whole.
+% \vspace{2cm}
+
+% \noindent
+% \begin{tabular}{llp{4.5cm}}
+% 	Name & : & Zer Jun Eng \\ \cline{3-3}
+% 	\\ [-0.5em]
+% 	Date & : & \today      \\ \cline{3-3}
+% \end{tabular}
+
+% \newpage
+
+% \chapter*{Abstract}
+% \addcontentsline{toc}{chapter}{Abstract}
+
+% \chapter*{Acknowledgements}
+% \addcontentsline{toc}{chapter}{Acknowledgements}
+% I would like to thank my family for...
+
+% \newpage
+
+\tableofcontents
+
+% \listoffigures
+% \addcontentsline{toc}{chapter}{List of Figures}
+
+% \listoftables
+% \addcontentsline{toc}{chapter}{List of Tables}
+
+\newpage
+
+\pagenumbering{arabic}
+
+\chapter{Introduction}
+\section{Background}
+Free/Libre and Open Source Software (\textbf{FLOSS}) is a type of software which license allows
+the users to inspect, use, modify and redistribute the software's source code \cite{crowston_2012}.
+Since the introduction of Git, and later the Git repositories hosting site such as GitHub, many users have started to make their softwares open source by storing them as public repositories on GitHub. As a result, the participation of global communities into \textbf{FLOSS} projects has started to grow and different contributions were made to improve the softwares quality, which included fixing the software vulnerabilities \cite{dabbish_2012}.
+
+Building a secure software is expensive, difficult, and time-consuming. In \textbf{FLOSS} projects, it is necessary to know when and how a security vulnerability is fixed. Therefore, having a list of changelogs or informative git commit messages that record the fixed security vulnerabilities is helpful. However,  Arora and Telang \cite{arora_2005} stated that some open source developers believe that public disclosure of security vulnerabilities patch is dangerous, and thus vulnerability fixing commits are not commonly identified in some open source software repositories to prevent malicious exploits. In this case, a repository mining tool that investigate vulnerability patterns and identify vulnerable software components can be developed to reduce the time and cost required to mitigate the vulnerabilities.
+
+\section{Objectives}
+\label{sec:objectives}
+\begin{itemize}
+	\item Develop a repository mining tool that searches through the commit history to find the actual code commits which addressed the vulnerabilities.
+	\item Mine commit messages from a list of software repositories to collect the vulnerability patterns. The patterns should be represented using regular expressions.
+	\item Extend the project and the repository mining tool by using the identified patterns to determine whether an application is affected by potential vulnerabilities.
+\end{itemize}
+
+\section{Challenges}
+\begin{itemize}
+	\item \textbf{Data}: There are a lot of popular open source repositories available on GitHub. However, it is challenging to find a set of sample repositories that can produce accurate and consistent results.
+	\item \textbf{Time}: Large repository such as Linux which have more than 780,000 commits in total \cite{linux_repo} could be extremely time-consuming for the repository mining tool to complete the search.
+	\item \textbf{Evaluation}: After mining a list of commit messages that contain the identified patterns, it might not be be intuitive for the tool to determine which one is the real patch containing the fixed security vulnerabilities.
+\end{itemize}
+
+\section{Report Structure}
+\textbf{Chapter 2} reviews a range of academic articles, theories and previous implementations that is related to this project, as well as investigating the techniques and tools to be used.
+
+\noindent\textbf{Chapter 3} is a list of detailed requirements and a thorough analysis for design, implementation and testing stage.
+
+\noindent\textbf{Chapter 4} is a comparison between different design concepts, where the advantages and disadvantages of difference approach are stated. The chosen design is justified with suitable diagrams provided including wireframes and UML.
+
+\noindent\textbf{Chapter 5} describes the implementation process by highlighting novel aspects to the algorithms used. Testing are performed by following a suitable model to evaluate the implementation.
+
+\noindent\textbf{Chapter 6} presents all the results along with critical discussions about the main findings,	and outlines the possible improvements that could be made for future work.
+
+\noindent\textbf{Chapter 7} summarises the main points of previous chapters and emphasise the results found.
+
+\section{Relationship to Degree Programme}
+This project focusses on researching real-world software security problem by deploying a repository mining tool to open source software repositories with the purpose of studying the patterns of different security vulnerabilities patch. This relates to the 'Software Engineering' degree as it requires a good understanding in version control system and it aims to improve softwares quality by reducing the time and effort needed to locate and fix security vulnerabilities in the source code.
+
+\chapter{Analysis} % Discussion of problems to be solved and possible techniques and tools
+The purpose of this chapter is to discuss the problems to be solved and consider some of the core decisions to be made before starting the implementation.
+
+\section{Problems}
+As mentioned in \hyperref[sec:objectives]{\textbf{Section 1.2}}, the repository mining tool must be able to detect commits that contain distinct patterns such as \textit{fix}, \textit{patch}, \textit{vulnerability} etc. After extracting a possible list of commits, it should perform an evaluation process to identify the actual commits that fixed security vulnerability.	This could be hard because not all open source software repositories are using the same programming language. Hence, it could might be difficult to determine the actual lines of code that addressed the vulnerabilities.
+
+\section{Tools}
+\begin{itemize}
+	\item PyGithub is a Python library build to access the GitHub API \cite{pygithub}.
+	\item GitPython is a Python library build to interact with Git repositories using a combination of python and git command implementation \cite{gitpython}.
+	\item Secbench Mining Tool is a repository mining tool build by The Quasar Research Group to mine vulnerability patterns from GitHub repositories \cite{secbench}.
+\end{itemize}
+
+\section{Plan of Action}
+\begin{itemize}
+	\item \textbf{Week 1}: Discuss about the problems encountered when writing the description stage with supervisor. Ask supervisor for feedback if available.
+	\item \textbf{Week 2}: Should have finished the draft of description stage by the start of this week. Discuss the draft with supervisor to check for mistakes. Research work should be started during this week.
+	\item \textbf{Week 3}: Should have found at least 5 sources, which is related to the project. Plan the outline and start writing the introductory section for literature review.
+	\item \textbf{Week 4}: Perform a source analysis and note down the sentences that is related to this project. Started the research for suitable techniques and tools to be used in this project.
+	\item \textbf{Week 5}: Organise the sources and start writing the literature review.
+	\item \textbf{Week 6}: Finish the literature review and start writing the requirements and analysis.
+	\item \textbf{Week 7}: Finish the requirements and analysis. Proof read the document and write the abstract.
+	\item \textbf{Week 8}: Submit the first draft of survey and analysis to supervisor to seek early feedback.
+	\item \textbf{Week 9}: Amend the document based on the feedback.
+	\item \textbf{Week 10}: Ask the supervisor about any final changes.
+	\item \textbf{Week 11}: Survey and analysis stage should be completed and ready to submit. Discuss with supervisor about the work to do during the holiday.
+\end{itemize}
+
+% \chapter{Literature Review}
+% introductory section OWASP
+% Hoepman and Jacobs \cite{hoepman_2007} suggested that open source softwares will have better security and reliability than closed source softwares. However, Schryen \cite{schryen_2011} argued that open source and closed source software do not have significant difference in terms of security vulnerabilities. Therefore,
+% \section{foo}
+% \begin{table}[H]
+% 	\begin{center}
+% 		\begin{tabular}{ c c c }
+% 			cell1 & cell2 & cell3 \\
+% 			cell4 & cell5 & cell6 \\
+% 			cell7 & cell8 & cell9
+% 		\end{tabular}
+% 		\captionof{table}{cell table}\label{table:celltable}
+% 	\end{center}
+% \end{table}
+
+% According to \hyperref[table:celltable]{\textbf{Table 2.1}}, \ref{table:celltable}
+
+% \chapter{Requirements and Analysis}
+
+% \chapter{Design}
+
+% \chapter{Implementation and Testing}
+
+% \chapter{Results and Discussion}
+
+% \chapter{Conclusion}
+
+\printbibliography[heading=bibintoc]
+
+\end{document}
