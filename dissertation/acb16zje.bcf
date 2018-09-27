@@ -1978,10 +1978,15 @@
     <bcf:citekey order="1">crowston_2012</bcf:citekey>
     <bcf:citekey order="2">dabbish_2012</bcf:citekey>
     <bcf:citekey order="3">arora_2005</bcf:citekey>
-    <bcf:citekey order="4">linux_repo</bcf:citekey>
-    <bcf:citekey order="5">pygithub</bcf:citekey>
-    <bcf:citekey order="6">gitpython</bcf:citekey>
-    <bcf:citekey order="7">secbench</bcf:citekey>
+    <bcf:citekey order="4">owasp_2017</bcf:citekey>
+    <bcf:citekey order="5">linux_repo</bcf:citekey>
+    <bcf:citekey order="6">pygithub</bcf:citekey>
+    <bcf:citekey order="7">gitpython</bcf:citekey>
+    <bcf:citekey order="8">secbench</bcf:citekey>
+    <bcf:citekey order="9">payne_2002</bcf:citekey>
+    <bcf:citekey order="10">hoepman_2007</bcf:citekey>
+    <bcf:citekey order="11">schryen_2011</bcf:citekey>
+    <bcf:citekey order="12">cowan_2003</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="nty">

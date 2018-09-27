@@ -95,39 +95,39 @@ included fixing the software vulnerabilities \cite{dabbish_2012}.
 Building a secure software is expensive, difficult, and time-consuming. In \textbf{FLOSS} projects,
 it is necessary to know when and how a security vulnerability is fixed. Therefore, having a list of
 changelogs or informative git commit messages that record the fixed security vulnerabilities is
-helpful. However, Arora and Telang \cite{arora_2005} stated that some open source developers
-believe that public disclosure of security vulnerabilities patch is dangerous, and thus
-vulnerability fixing commits are not commonly identified in some open source software repositories
-to prevent malicious exploits. In this case, a repository mining tool that investigate vulnerability
-patterns and identify vulnerable software components can be developed to reduce the time and cost
-required to mitigate the vulnerabilities.
+helpful. However, Arora and Telang \cite{arora_2005} stated that some open source developers believe
+that public disclosure of security vulnerabilities patch is dangerous, and thus vulnerability fixing
+commits are not commonly identified in some open source software repositories to prevent malicious
+exploits. In this case, a repository mining tool that investigate vulnerability patterns and
+identify vulnerable software components can be developed to reduce the time and cost required to
+mitigate the vulnerabilities.
 
 \section{Objectives}
 \label{sec:objectives}
 \begin{itemize}
-	\item Develop a repository mining tool that searches through the commit history to find the actual
-	code commits which addressed the vulnerabilities.
-	\item Mine commit messages from a list of software repositories to collect the vulnerability
-	patterns. The patterns should be represented using regular expressions.
-	\item Extend the project and the repository mining tool by using the identified patterns to
-	determine whether an application is affected by potential vulnerabilities.
+	\item Identify the security patterns of the most popular security issues in OWASP Top Ten Project
+	\cite{owasp_2017}. The patterns should be expressed using regular expressions.
+	\item Develop a repository mining tool to search through the commit history of a repository and
+	find a list of commit messages that match the patterns.
+	\item Extend the mining tool to run an evaluation process which checks the code difference in the
+	commits found, where the added lines represent the fix for a vulnerability and the deleted lines represent the vulnerability.
 \end{itemize}
 
 \section{Challenges}
 \begin{itemize}
-	\item \textbf{Data}: There are a lot of popular open source repositories available on GitHub.
+	\item \textbf{Data}: There are a large numbers of open source repositories available on GitHub.
 	However, it is challenging to find a set of sample repositories that can produce accurate and
 	consistent results.
-	\item \textbf{Time}: Large repository such as Linux which have more than 780,000 commits in total
-	\cite{linux_repo} could be extremely time-consuming for the repository mining tool to complete the
-	search.
 	\item \textbf{Evaluation}: After mining a list of commit messages that contain the identified
-	patterns, it might not be be intuitive for the tool to determine which one is the real patch
-	containing the fixed security vulnerabilities.
+	patterns, the evaluation process might not correctly locate the lines of code that addressed the
+	security vulnerability.
+	\item \textbf{Time}: Large repository such as Linux which has more than 780,000 commits in total
+	\cite{linux_repo} could be extremely time-consuming for the repository mining tool to complete the
+	search and evaluation process.
 \end{itemize}
 
 \section{Report Structure}
-\textbf{Chapter 2} reviews a range of academic articles, theories and previous implementations that
+\textbf{Chapter 2} reviews a range of academic articles, theories and previous studies that
 is related to this project, as well as investigating the techniques and tools to be used.
 
 \noindent\textbf{Chapter 3} is a list of detailed requirements and a thorough analysis for design,
@@ -142,7 +142,7 @@ the algorithms used. Testing are performed by following a suitable model to eval
 implementation.
 
 \noindent\textbf{Chapter 6} presents all the results along with critical discussions about the main
-findings,	and outlines the possible improvements that could be made for future work.
+findings,	and outlines the possible improvements that could be made in the future work.
 
 \noindent\textbf{Chapter 7} summarises the main points of previous chapters and emphasise the
 results found.
@@ -164,7 +164,7 @@ able to detect commits that contain distinct patterns such as \textit{fix}, \tex
 \textit{vulnerability} etc. After extracting a possible list of commits, it should perform an
 evaluation process to identify the actual commits that fixed security vulnerability.	This could be
 hard because not all open source software repositories are using the same programming language.
-Hence, it could might be difficult to determine the actual lines of code that addressed the
+Hence, it might be difficult to determine the actual lines of code that addressed the
 vulnerabilities.
 
 \section{Tools}
@@ -206,7 +206,7 @@ reviewing the security issues that might exist in an open source Git repository.
 
 \section{Software Security}
 There are currently two approaches to the license distribution of software: open source and closed
-source. The users of closed source software are only allowed to accept the level of security
+source. The users of closed source software are limited to accept the level of security
 provided by their chosen vendor. In contrast, open source softwares provide more flexibility and
 freedom over the security option to their users \cite{payne_2002}, where the users can decide to
 wait for a patch from the vendor or collaborate with the community to develop their own. In this
@@ -224,12 +224,18 @@ availability model.
 \subsection{OWASP}
 
 \section{foo}
-\begin{table}[H] \begin{center} \begin{tabular}{ c c c } cell1 & cell2 & cell3 \\
+\begin{table}[H]
+	\begin{center}
+		\begin{tabular}{ c c c }
+			cell1 & cell2 & cell3 \\
       cell4 & cell5 & cell6 \\
-      cell7 & cell8 & cell9 \end{tabular} \captionof{table}{cell table}\label{table:celltable}
-    \end{center} \end{table}
+			cell7 & cell8 & cell9
+		\end{tabular}
+		\captionof{table}{cell table} \label{table:celltable}
+	\end{center}
+\end{table}
 
-According to \hyperref[table:celltable]{\textbf{Table 2.1}}, \ref{table:celltable}
+According to \hyperref[table:celltable]{\textbf{Table 3.1}}, \ref{table:celltable}
 
 % \chapter{Requirements and Analysis}
 
