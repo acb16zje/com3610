@@ -10,6 +10,7 @@
 \usepackage{graphicx}
 \usepackage[hidelinks]{hyperref}
 \usepackage{parskip}
+\usepackage{pgfgantt}
 
 \linespread{1.2}
 \restoreparindent
@@ -84,8 +85,8 @@ will be considered grounds for failure in this project and the degree examinatio
 
 \chapter{Introduction}
 \section{Background}
-Free/Libre and Open Source Software (\textbf{FLOSS}) is a type of software which license allows the
-users to inspect, use, modify and redistribute the software's source code \cite{crowston_2012}.
+Free/Libre and Open Source Software (\textbf{FLOSS}) is a type of software which its license allows
+the users to inspect, use, modify and redistribute the software's source code \cite{crowston_2012}.
 Since the introduction of Git, and later the Git repositories hosting site such as GitHub, many
 users have started to make their softwares open source by storing them as public repositories on
 GitHub. As a result, the participation of global communities into \textbf{FLOSS} projects has
@@ -98,7 +99,7 @@ changelogs or informative git commit messages that record the fixed security vul
 helpful. However, Arora and Telang \cite{arora_2005} stated that some open source developers believe
 that public disclosure of security vulnerabilities patch is dangerous, and thus vulnerability fixing
 commits are not commonly identified in some open source software repositories to prevent malicious
-exploits. In this case, a repository mining tool that investigate vulnerability patterns and
+exploits. Hence, a repository mining tool that investigate vulnerability patterns and
 identify vulnerable software components can be developed to reduce the time and cost required to
 mitigate the vulnerabilities.
 
@@ -110,7 +111,7 @@ mitigate the vulnerabilities.
 	\item Develop a repository mining tool to search through the commit history of a repository and
 	find a list of commit messages that match the patterns.
 	\item Extend the mining tool to run an evaluation process which checks the code difference in the
-	commits found, where the added lines represent the fix for a vulnerability and the deleted lines represent the vulnerability.
+	commits found in order to obtain the actual commits fixing the security vulnerabilities.
 \end{itemize}
 
 \section{Challenges}
@@ -154,8 +155,8 @@ different security vulnerabilities patch. This relates to the 'Software Engineer
 requires a good understanding in version control system and it aims to improve softwares quality by
 reducing the time and effort needed to locate and fix security vulnerabilities in the source code.
 
-\chapter{Analysis} % Discussion of problems to be solved and possible techniques and tools The
-purpose of this chapter is to discuss the problems to be solved and consider some of the core
+\chapter{Analysis} % Discussion of problems to be solved and possible techniques and tools
+The purpose of this chapter is to discuss the problems to be solved and consider some of the core
 decisions to be made before starting the implementation.
 
 \section{Problems}
@@ -177,6 +178,23 @@ vulnerabilities.
 \end{itemize}
 
 \section{Plan of Action}
+\subsection{Semester 1}
+\begin{ganttchart}[
+		hgrid=true,
+		vgrid={draw=none, dotted},
+		expand chart=\textwidth
+	]{1}{12}
+	\gantttitle{Semester 1}{12} \\
+	\gantttitlelist{1,...,12}{1} \\
+	\ganttbar{Background Reading}{1}{10} \\
+	\ganttbar{Introduction}{1}{1} \\
+	\ganttbar{Analysis}{1}{1} \\
+	\ganttbar{Literature Review}{2}{5} \\
+	\ganttbar{Requirements}{6}{7} \\
+	\ganttbar{Further Analysis}{7}{8} \\
+	\ganttbar{Proof reading and amendment}{9}{10}
+\end{ganttchart}
+
 \begin{itemize}
 	\item \textbf{Week 1}: Discuss about the problems encountered when writing the description stage
 	with supervisor. Ask supervisor for feedback if available.
@@ -196,9 +214,42 @@ vulnerabilities.
 	feedback.
 	\item \textbf{Week 9}: Amend the document based on the feedback.
 	\item \textbf{Week 10}: Ask the supervisor about any final changes.
-	\item \textbf{Week 11}: Survey and analysis stage should be completed and ready to submit. Discuss
+	\item \textbf{Week 11}: Survey and analysis stage should be completed and submitted. Discuss
 	with supervisor about the work to do during the holiday.
 \end{itemize}
+
+\subsection{Semester 2}
+\begin{ganttchart}[
+	hgrid=true,
+	vgrid={draw=none, dotted},
+	expand chart=\textwidth
+]{1}{12}
+\gantttitle{Semester 2}{12} \\
+\gantttitlelist{1,...,12}{1} \\
+\ganttbar{Design}{1}{2} \\
+\ganttbar{Implement prototype}{3}{5} \\
+\ganttbar{Testing prototype}{5}{6} \\
+\ganttbar{Write dissertation}{7}{9} \\
+\ganttbar{Submit project}{10}{10} \\
+\ganttbar{Poster session}{11}{11}
+\end{ganttchart}
+
+\begin{itemize}
+	\item \textbf{Week 1}: Meet with supervisor to discuss the design prototype. If possible, finish
+	an initial draft during the Christmas holiday.
+	\item \textbf{Week 2}: Make changes based on feedback and finish the final design.
+	\item \textbf{Week 3}: Start the implementing process. Meet with supervisor to discuss about the
+	ideas and techniques for developing the tool.
+	\item \textbf{Week 4}: Initial prototype should be done, it does not need to have full
+	funtionality. Show the prototype to the supervisor and ask for feedback.
+	\item \textbf{Week 5}: Finish implementing the prototype. Ask supervisor for any final changes.
+	\item \textbf{Week 6}: Start testing the prototype with
+	\item \textbf{Week 7 - Week 8}: Write the dissertation.
+	\item \textbf{Week 9}: Proof read the dissertation. Make any final changes before submitting.
+	\item \textbf{Week 10}: Submit the project and start preparing for poster session.
+	\item \textbf{Week 11}: Attend the poster session.
+\end{itemize}
+
 
 \chapter{Literature Review}
 This chapter will explore the previous and existing works related to this project, as well as
