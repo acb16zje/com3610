@@ -49,22 +49,22 @@
 
 \pagenumbering{roman}
 
-\chapter*{Declaration}
-\addcontentsline{toc}{chapter}{Declaration}
-All sentences or passages quoted in this report from other people's work have been specifically
-acknowledged by clear cross-referencing to author, work and page(s). Any illustrations that are not
-the work of the author of this report have been used with the explicit permission of the originator
-and are specifically acknowledged. I understand that failure to do this amounts to plagiarism and
-will be considered grounds for failure in this project and the degree examination as a whole.
-\vspace{2cm}
+% \chapter*{Declaration}
+% \addcontentsline{toc}{chapter}{Declaration}
+% All sentences or passages quoted in this report from other people's work have been specifically
+% acknowledged by clear cross-referencing to author, work and page(s). Any illustrations that are not
+% the work of the author of this report have been used with the explicit permission of the originator
+% and are specifically acknowledged. I understand that failure to do this amounts to plagiarism and
+% will be considered grounds for failure in this project and the degree examination as a whole.
+% \vspace{2cm}
 
-\noindent \begin{tabular}{llp{4.5cm}}
-	Name & : & Zer Jun Eng \\ \cline{3-3}
-	\\ [-0.5em]
-	Date & : & \today      \\ \cline{3-3}
-\end{tabular}
+% \noindent \begin{tabular}{llp{4.5cm}}
+% 	Name & : & Zer Jun Eng \\ \cline{3-3}
+% 	\\ [-0.5em]
+% 	Date & : & \today      \\ \cline{3-3}
+% \end{tabular}
 
-\newpage
+% \newpage
 
 % \chapter*{Abstract} \addcontentsline{toc}{chapter}{Abstract}
 
@@ -106,12 +106,12 @@ mitigate the vulnerabilities.
 \section{Objectives}
 \label{sec:objectives}
 \begin{itemize}
-	\item Identify the security patterns of the most popular security issues in OWASP Top Ten Project
-	\cite{owasp_2017}. The patterns should be expressed using regular expressions.
+	\item Identify the security patterns of the most popular security issues in OWASP Top Ten Project.
+	The patterns should be expressed using regular expressions.
 	\item Develop a repository mining tool to search through the commit history of a repository and
 	find a list of commit messages that match the patterns.
-	\item Extend the mining tool to run an evaluation process which checks the code difference in the
-	commits found in order to obtain the actual commits fixing the security vulnerabilities.
+	\item Extend the mining tool which checks the code difference in the commits found to obtain the
+	actual commits fixing the security vulnerabilities.
 \end{itemize}
 
 \section{Challenges}
@@ -149,13 +149,14 @@ findings,	and outlines the possible improvements that could be made in the futur
 results found.
 
 \section{Relationship to Degree Programme}
-This project focusses on researching real-world software security problem by deploying a repository
-mining tool to open source software repositories with the purpose of studying the patterns of
-different security vulnerabilities patch. This relates to the 'Software Engineering' degree as it
-requires a good understanding in version control system and it aims to improve softwares quality by
-reducing the time and effort needed to locate and fix security vulnerabilities in the source code.
+This project will be focused on researching real-world software security problem by deploying a
+repository mining tool to open source software repositories with the purpose of studying the
+patterns of different security vulnerabilities patch. This relates to the 'Software Engineering'
+degree as it requires a good understanding in version control system and it aims to improve
+softwares quality by reducing the time and effort needed to locate and fix security vulnerabilities
+in the source code.
 
-\chapter{Analysis} % Discussion of problems to be solved and possible techniques and tools
+\chapter{Analysis}
 The purpose of this chapter is to discuss the problems to be solved and consider some of the core
 decisions to be made before starting the implementation.
 
@@ -252,41 +253,65 @@ vulnerabilities.
 
 
 \chapter{Literature Review}
-This chapter will explore the previous and existing works related to this project, as well as
-reviewing the security issues that might exist in an open source Git repository.
+This chapter will start with the background contents of the project, and then focus on discussing
+the security aspect of open source softwares. Lastly, previous and existing relevant work are
+reviewed and a critical analysis is provided for the comparison of these resources and this project.
 
-\section{Software Security}
+\section{Open Source Security}
 There are currently two approaches to the license distribution of software: open source and closed
 source. The users of closed source software are limited to accept the level of security
 provided by their chosen vendor. In contrast, open source softwares provide more flexibility and
 freedom over the security option to their users \cite{payne_2002}, where the users can decide to
-wait for a patch from the vendor or collaborate with the community to develop their own. In this
-project, it is worth investigating that whether the security issues exis
+wait for a patch from the vendor or collaborate with the community to develop their own.
 
 Hoepman and Jacobs \cite{hoepman_2007} suggested that open source softwares will have better
 security and reliability than closed source softwares through the power of open data and
 crowdsourcing. Conversely, Schryen \cite{schryen_2011} has shown that open source and closed source
-softwares do not have significant difference in terms of security vulnerabilities in his experiment.
-However, Cowan \cite{cowan_2003} stated that both statements are not totally true, which he
-indicated that the security of a software is largely determined by the developers but not the source
-availability model.
+softwares do not have significant difference in terms of security vulnerabilities in his experiment
+and concluded that the policy of the developers is the main factor that determines the security.
+Wheeler \cite{wheeler_2015} agrees with Schryen's view, but he also pointed out that open source
+systems are more resistant to attacks based on his researches.
 
-\section{Security Issues in Open Source Sotware Repositories}
-\subsection{OWASP}
+While both statements might be true, Cowan \cite{cowan_2003} indicates that there are many factors
+determining the security of a software, and the source availability model is not the primary factor.
+Othmane et al. \cite{othmane_2015} have classified the main factors that affects the time required
+to fix a vulnerability into different categories, and one of them that is related to this project is
+the vulnerabilities characteristics. Vulnerabilities characteristics is the categorisation of
+security attacks into different types, which will be discussed in the next section.
 
-\section{foo}
-\begin{table}[H]
-	\begin{center}
-		\begin{tabular}{ c c c }
-			cell1 & cell2 & cell3 \\
-      cell4 & cell5 & cell6 \\
-			cell7 & cell8 & cell9
-		\end{tabular}
-		\captionof{table}{cell table} \label{table:celltable}
-	\end{center}
-\end{table}
+\section{Security Issues in Open Source Softwares}
+The Open Web Application Security Project (\textbf{OWASP}) is a worldwide non-profit organization
+committed to improve the software security of the open source community \cite{owasp_home}. The
+project members of \textbf{OWASP} have worked together to produce a list of the most critical web
+application security risks based on the community feedback and comprehensive data contributed by
+different organizations. The list consists of ten categories of security attacks which are
+considered to be the most dangerous and popular in the recent years. The list published by
+\textbf{OWASP} in 2017 \cite{owasp_top10} will be analysed and the security risks listed in older
+versions of the top ten project will covered in this section too.
 
-According to \hyperref[table:celltable]{\textbf{Table 3.1}}, \ref{table:celltable}
+\subsection{Injection}
+An injection attack is the exploitation of a software vulnerability where the attacker injects
+malicious code into the software and perform harmful executions. The most common types of injection
+attacks are Structured Query Language (\textbf{SQL}) injection, cross-site scripting (\textbf{XSS}),
+and command injection \cite{pietraszek_2006}. Injection flaws are very widespread and easy to
+discover when attackers have access to the source code, where they could use a code scanner tool to
+find all possible ways of the injection attacks.
+
+\subsection{Broken Authentication}
+
+% \section{foo}
+% \begin{table}[H]
+% 	\begin{center}
+% 		\begin{tabular}{ c c c }
+% 			cell1 & cell2 & cell3 \\
+%       cell4 & cell5 & cell6 \\
+% 			cell7 & cell8 & cell9
+% 		\end{tabular}
+% 		\captionof{table}{cell table} \label{table:celltable}
+% 	\end{center}
+% \end{table}
+
+% According to \hyperref[table:celltable]{\textbf{Table 3.1}}, \ref{table:celltable}
 
 % \chapter{Requirements and Analysis}
 
