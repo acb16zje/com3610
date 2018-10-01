@@ -49,22 +49,22 @@
 
 \pagenumbering{roman}
 
-% \chapter*{Declaration}
-% \addcontentsline{toc}{chapter}{Declaration}
-% All sentences or passages quoted in this report from other people's work have been specifically
-% acknowledged by clear cross-referencing to author, work and page(s). Any illustrations that are not
-% the work of the author of this report have been used with the explicit permission of the originator
-% and are specifically acknowledged. I understand that failure to do this amounts to plagiarism and
-% will be considered grounds for failure in this project and the degree examination as a whole.
-% \vspace{2cm}
+\chapter*{Declaration}
+\addcontentsline{toc}{chapter}{Declaration}
+All sentences or passages quoted in this report from other people's work have been specifically
+acknowledged by clear cross-referencing to author, work and page(s). Any illustrations that are not
+the work of the author of this report have been used with the explicit permission of the originator
+and are specifically acknowledged. I understand that failure to do this amounts to plagiarism and
+will be considered grounds for failure in this project and the degree examination as a whole.
+\vspace{2cm}
 
-% \noindent \begin{tabular}{llp{4.5cm}}
-% 	Name & : & Zer Jun Eng \\ \cline{3-3}
-% 	\\ [-0.5em]
-% 	Date & : & \today      \\ \cline{3-3}
-% \end{tabular}
+\noindent \begin{tabular}{llp{4.5cm}}
+	Name & : & Zer Jun Eng \\ \cline{3-3}
+	\\ [-0.5em]
+	Date & : & \today      \\ \cline{3-3}
+\end{tabular}
 
-% \newpage
+\newpage
 
 % \chapter*{Abstract} \addcontentsline{toc}{chapter}{Abstract}
 
@@ -169,6 +169,13 @@ hard because not all open source software repositories are using the same progra
 Hence, it might be difficult to determine the actual lines of code that addressed the
 vulnerabilities.
 
+\section{Proposed Method}
+Build a command-line interface program that is able to run two separate process: the mining process
+and the evaluation process. The \textbf{mining} process takes a Git repository as input, searches
+through the commit log, and return the list of commits that might potentially contain a patch as a
+log file (JSON, HTML, etc.). The \textbf{evaluation} process takes a log file as input, and check
+the code difference of every commit in the log file to identify the real patches.
+
 \section{Tools}
 \begin{itemize}
 	\item PyGithub is a Python library build to access the GitHub API \cite{pygithub}.
@@ -190,33 +197,20 @@ vulnerabilities.
 	\ganttbar{Background Reading}{1}{10} \\
 	\ganttbar{Introduction}{1}{1} \\
 	\ganttbar{Analysis}{1}{1} \\
-	\ganttbar{Literature Review}{2}{5} \\
-	\ganttbar{Requirements}{6}{7} \\
-	\ganttbar{Further Analysis}{7}{8} \\
-	\ganttbar{Proof reading and amendment}{9}{10}
+	\ganttbar{Literature Review}{2}{4} \\
+	\ganttbar{Requirements and Analysis}{5}{6} \\
+	\ganttbar{Proof reading and amendment}{7}{9} \\
+	\ganttbar{Design and Implement}{10}{12}
+	\ganttlink{elem2}{elem3}
+	\ganttlink{elem3}{elem4}
+	\ganttlink{elem4}{elem5}
+	\ganttlink{elem5}{elem6}
 \end{ganttchart}
 
 \begin{itemize}
-	\item \textbf{Week 1}: Discuss about the problems encountered when writing the description stage
-	with supervisor. Ask supervisor for feedback if available.
-	\item \textbf{Week 2}: Should have finished the draft of description stage by the start of this
-	week. Discuss the draft with supervisor to check for mistakes. Research work should be started
-	during this week.
-	\item \textbf{Week 3}: Should have found at least 5 sources, which is related to the project. Plan
-	the outline and start writing the introductory section for literature review.
-	\item \textbf{Week 4}: Perform a source analysis and note down the sentences that is related to
-	this project. Started the research for suitable techniques and tools to be used in this project.
-	\item \textbf{Week 5}: Organise the sources and start writing the literature review.
-	\item \textbf{Week 6}: Finish the literature review and start writing the requirements and
-	analysis.
-	\item \textbf{Week 7}: Finish the requirements and analysis. Proof read the document and write the
-	abstract.
-	\item \textbf{Week 8}: Submit the first draft of survey and analysis to supervisor to seek early
-	feedback.
-	\item \textbf{Week 9}: Amend the document based on the feedback.
-	\item \textbf{Week 10}: Ask the supervisor about any final changes.
-	\item \textbf{Week 11}: Survey and analysis stage should be completed and submitted. Discuss
-	with supervisor about the work to do during the holiday.
+	\item \textbf{Week 7}: Starting from this week, discuss with the supervisor weekly about the
+	document, also it is best to start the design stage early, and show the prototype to the
+	supervisor.
 \end{itemize}
 
 \subsection{Semester 2}
@@ -227,30 +221,23 @@ vulnerabilities.
 ]{1}{12}
 \gantttitle{Semester 2}{12} \\
 \gantttitlelist{1,...,12}{1} \\
-\ganttbar{Design}{1}{2} \\
-\ganttbar{Implement prototype}{3}{5} \\
-\ganttbar{Testing prototype}{5}{6} \\
+\ganttbar{Design}{1}{1} \\
+\ganttbar{Implement prototype}{2}{4} \\
+\ganttbar{Testing prototype}{3}{6} \\
 \ganttbar{Write dissertation}{7}{9} \\
 \ganttbar{Submit project}{10}{10} \\
 \ganttbar{Poster session}{11}{11}
+\ganttlink{elem0}{elem1}
+\ganttlink{elem2}{elem3}
+\ganttlink{elem3}{elem4}
+\ganttlink{elem4}{elem5}
 \end{ganttchart}
 
 \begin{itemize}
-	\item \textbf{Week 1}: Meet with supervisor to discuss the design prototype. If possible, finish
-	an initial draft during the Christmas holiday.
-	\item \textbf{Week 2}: Make changes based on feedback and finish the final design.
-	\item \textbf{Week 3}: Start the implementing process. Meet with supervisor to discuss about the
-	ideas and techniques for developing the tool.
-	\item \textbf{Week 4}: Initial prototype should be done, it does not need to have full
-	funtionality. Show the prototype to the supervisor and ask for feedback.
-	\item \textbf{Week 5}: Finish implementing the prototype. Ask supervisor for any final changes.
-	\item \textbf{Week 6}: Start testing the prototype with
-	\item \textbf{Week 7 - Week 8}: Write the dissertation.
-	\item \textbf{Week 9}: Proof read the dissertation. Make any final changes before submitting.
-	\item \textbf{Week 10}: Submit the project and start preparing for poster session.
-	\item \textbf{Week 11}: Attend the poster session.
+	\item \textbf{Week 1}: Finished the design and started implementation during holiday.
+	\item \textbf{Week 2}: The implementing and testing stage is a repetitive process. It is very
+	likely that the program will run into errors in the testing and had to spend more time fixing it.
 \end{itemize}
-
 
 \chapter{Literature Review}
 This chapter will start with the background contents of the project, and then focus on discussing
