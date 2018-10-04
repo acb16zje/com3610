@@ -66,18 +66,30 @@ will be considered grounds for failure in this project and the degree examinatio
 
 \newpage
 
-% \chapter*{Abstract} \addcontentsline{toc}{chapter}{Abstract}
+% \chapter*{Abstract}
+% \addcontentsline{toc}{chapter}{Abstract}
 
-% \chapter*{Acknowledgements} \addcontentsline{toc}{chapter}{Acknowledgements} I would like to thank
-% my family for...
+\chapter*{Acknowledgements}
+\addcontentsline{toc}{chapter}{Acknowledgements}
+I would firstly like to thank my parents for their unconditional love and the full financial supoprt
+throughout my university life. It would not be possible for me to finish this project and my course
+without them.
 
-% \newpage
+I would also like to thank my supervisor, Dr. Achim Brucker, who are continuously providing
+constructive advice for my project. I am honoured to work with you, and I look forward for more
+working opportunities with you in the future.
+
+Finally, I would like to thank my friends: Jia Hua, Wei Kin, Justin and Grace, who have spent
+countless sleepless night with me in the Diamond for the past two years. It was a truly memorable
+and unforgettable experience. I am glad to have them as my friends.
+
+\newpage
 
 \tableofcontents
 
-% \listoffigures \addcontentsline{toc}{chapter}{List of Figures}
+\listoffigures \addcontentsline{toc}{chapter}{List of Figures}
 
-% \listoftables \addcontentsline{toc}{chapter}{List of Tables}
+\listoftables \addcontentsline{toc}{chapter}{List of Tables}
 
 \newpage
 
@@ -99,9 +111,9 @@ changelogs or informative git commit messages that record the fixed security vul
 helpful. However, Arora and Telang \cite{arora_2005} stated that some open source developers believe
 that public disclosure of security vulnerabilities patch is dangerous, and thus vulnerability fixing
 commits are not commonly identified in some open source software repositories to prevent malicious
-exploits. Hence, a repository mining tool that investigate vulnerability patterns and
-identify vulnerable software components can be developed to reduce the time and cost required to
-mitigate the vulnerabilities.
+exploits. Hence, a repository mining tool that investigate vulnerability patterns and identify
+vulnerable software components can be developed to reduce the time and cost required to mitigate the
+vulnerabilities.
 
 \section{Objectives}
 \label{sec:objectives}
@@ -109,9 +121,11 @@ mitigate the vulnerabilities.
 	\item Identify the security patterns of the most popular security issues in OWASP Top Ten Project.
 	The patterns should be expressed using regular expressions.
 	\item Develop a repository mining tool to search through the commit history of a repository and
-	find a list of commit messages that match the patterns.
+	find a list of commit messages that match the patterns. The list should be produced in a suitable
+	file format such as JSON, XML, or CSV.
 	\item Extend the mining tool which checks the code difference in the commits found to obtain the
-	actual commits fixing the security vulnerabilities.
+	actual commits fixing the security vulnerabilities. This extension should separate from the mining
+	process to make the mining results easier to verify and debug.
 \end{itemize}
 
 \section{Challenges}
@@ -119,9 +133,13 @@ mitigate the vulnerabilities.
 	\item \textbf{Data}: There are a large numbers of open source repositories available on GitHub.
 	However, it is challenging to find a set of sample repositories that can produce accurate and
 	consistent results.
-	\item \textbf{Evaluation}: After mining a list of commit messages that contain the identified
-	patterns, the evaluation process might not correctly locate the lines of code that addressed the
-	security vulnerability.
+	\item \textbf{Misclassification}: Commit messages for a same vulnerability patch are not always
+	the same, thus misclassification of commit messages is inevitable. Using regular expressions to
+	match the patterns in the mining process does not guarantee correctness of the result.
+	\item \textbf{Evaluation}: After mining a list of commits that contain the identified patterns in
+	its message, the evaluation process might not correctly locate the lines of code that addressed
+	the security vulnerability. It might be required to perform manual evaluation to correctly
+	identify some of the results.
 	\item \textbf{Time}: Large repository such as Linux which has more than 780,000 commits in total
 	\cite{linux_repo} could be extremely time-consuming for the repository mining tool to complete the
 	search and evaluation process.
@@ -156,89 +174,6 @@ degree as it requires a good understanding in version control system and it aims
 softwares quality by reducing the time and effort needed to locate and fix security vulnerabilities
 in the source code.
 
-\chapter{Analysis}
-The purpose of this chapter is to discuss the problems to be solved and consider some of the core
-decisions to be made before starting the implementation.
-
-\section{Problems}
-As mentioned in \hyperref[sec:objectives]{\textbf{Section 1.2}}, the repository mining tool must be
-able to detect commits that contain distinct patterns such as \textit{fix}, \textit{patch},
-\textit{vulnerability} etc. After extracting a possible list of commits, it should perform an
-evaluation process to identify the actual commits that fixed security vulnerability.	This could be
-hard because not all open source software repositories are using the same programming language.
-Hence, it might be difficult to determine the actual lines of code that addressed the
-vulnerabilities.
-
-\section{Proposed Method}
-Build a command-line interface program that is able to run two separate process: the mining process
-and the evaluation process. The \textbf{mining} process takes a Git repository as input, searches
-through the commit log, and return the list of commits that might potentially contain a patch as a
-log file (JSON, HTML, etc.). The \textbf{evaluation} process takes a log file as input, and check
-the code difference of every commit in the log file to identify the real patches.
-
-\section{Tools}
-\begin{itemize}
-	\item PyGithub is a Python library build to access the GitHub API \cite{pygithub}.
-	\item GitPython is a Python library build to interact with Git repositories using a combination of
-	python and git command implementation \cite{gitpython}.
-	\item Secbench Mining Tool is a repository mining tool build by The Quasar Research Group to mine
-	vulnerability patterns from GitHub repositories \cite{secbench}.
-\end{itemize}
-
-\section{Plan of Action}
-\subsection{Semester 1}
-\begin{ganttchart}[
-		hgrid=true,
-		vgrid={draw=none, dotted},
-		expand chart=\textwidth
-	]{1}{12}
-	\gantttitle{Semester 1}{12} \\
-	\gantttitlelist{1,...,12}{1} \\
-	\ganttbar{Background Reading}{1}{10} \\
-	\ganttbar{Introduction}{1}{1} \\
-	\ganttbar{Analysis}{1}{1} \\
-	\ganttbar{Literature Review}{2}{4} \\
-	\ganttbar{Requirements and Analysis}{5}{6} \\
-	\ganttbar{Proof reading and amendment}{7}{9} \\
-	\ganttbar{Design and Implement}{10}{12}
-	\ganttlink{elem2}{elem3}
-	\ganttlink{elem3}{elem4}
-	\ganttlink{elem4}{elem5}
-	\ganttlink{elem5}{elem6}
-\end{ganttchart}
-
-\begin{itemize}
-	\item \textbf{Week 7}: Starting from this week, discuss with the supervisor weekly about the
-	document, also it is best to start the design stage early, and show the prototype to the
-	supervisor.
-\end{itemize}
-
-\subsection{Semester 2}
-\begin{ganttchart}[
-	hgrid=true,
-	vgrid={draw=none, dotted},
-	expand chart=\textwidth
-]{1}{12}
-\gantttitle{Semester 2}{12} \\
-\gantttitlelist{1,...,12}{1} \\
-\ganttbar{Design}{1}{1} \\
-\ganttbar{Implement prototype}{2}{4} \\
-\ganttbar{Testing prototype}{3}{6} \\
-\ganttbar{Write dissertation}{7}{9} \\
-\ganttbar{Submit project}{10}{10} \\
-\ganttbar{Poster session}{11}{11}
-\ganttlink{elem0}{elem1}
-\ganttlink{elem2}{elem3}
-\ganttlink{elem3}{elem4}
-\ganttlink{elem4}{elem5}
-\end{ganttchart}
-
-\begin{itemize}
-	\item \textbf{Week 1}: Finished the design and started implementation during holiday.
-	\item \textbf{Week 2}: The implementing and testing stage is a repetitive process. It is very
-	likely that the program will run into errors in the testing and had to spend more time fixing it.
-\end{itemize}
-
 \chapter{Literature Review}
 This chapter will start with the background contents of the project, and then focus on discussing
 the security aspect of open source softwares. Lastly, previous and existing relevant work are
@@ -268,11 +203,11 @@ security attacks into different types, which will be discussed in the next secti
 
 \section{Security Issues in Open Source Softwares}
 The Open Web Application Security Project (\textbf{OWASP}) is a worldwide non-profit organization
-committed to improve the software security of the open source community \cite{owasp_home}. The
-project members of \textbf{OWASP} have worked together to produce a list of the most critical web
-application security risks based on the community feedback and comprehensive data contributed by
-different organizations. The list consists of ten categories of security attacks which are
-considered to be the most dangerous and popular in the recent years. The list published by
+committed to improve and raise the awareness of software security in the open source community
+\cite{owasp_home}. The project members of \textbf{OWASP} have worked together to produce a list of
+the most critical web application security risks based on the community feedback and comprehensive
+data contributed by different organizations. The list consists of ten categories of security attacks
+which are considered to be the most dangerous and popular in the recent years. The list published by
 \textbf{OWASP} in 2017 \cite{owasp_top10} will be analysed and the security risks listed in older
 versions of the top ten project will covered in this section too.
 
@@ -285,6 +220,20 @@ discover when attackers have access to the source code, where they could use a c
 find all possible ways of the injection attacks.
 
 \subsection{Broken Authentication}
+Broken authentication happens when the attackers are allowed to perform malicious actions such as
+brute force dictionary attack on the authentication system. It might also be one of the outcome of a
+successful injection attack. According to Huluka and Popov \cite{huluka_2012}, this vulnerability
+are very prevalent and has various causes, in which the lack of attention to security details is the
+most critial because developers often overlook certain scenarios which are likely to be exploited by
+attackers.
+
+\subsection{Using Componenets with Known Vulnerabilities}
+Components such as plugins, libraries, and other modules can be found in most of the softwares.
+Using components could reduce the amount of work and time required to develop a software. However,
+these components are very likely to be maintained by different developers or organizations.
+
+\section{Related Work}
+
 
 % \section{foo}
 % \begin{table}[H]
@@ -300,7 +249,34 @@ find all possible ways of the injection attacks.
 
 % According to \hyperref[table:celltable]{\textbf{Table 3.1}}, \ref{table:celltable}
 
-% \chapter{Requirements and Analysis}
+\chapter{Requirements and Analysis}
+The purpose of this chapter is to discuss the problems to be solved and consider some of the core
+decisions to be made before starting the implementation.
+
+\section{Problems}
+As mentioned in \hyperref[sec:objectives]{\textbf{Section 1.2}}, the repository mining tool must be
+able to detect commits that contain distinct patterns such as \textit{fix}, \textit{patch},
+\textit{vulnerability} etc. After extracting a possible list of commits, it should perform an
+evaluation process to identify the actual commits that fixed security vulnerability.	This could be
+hard because not all open source software repositories are using the same programming language.
+Hence, it might be difficult to determine the actual lines of code that addressed the
+vulnerabilities.
+
+\section{Proposed Method}
+Build a command-line interface program that is able to run two separate process: the mining process
+and the evaluation process. The \textbf{mining} process takes a Git repository as input, searches
+through the commit log, and return the list of commits that might potentially contain a patch as a
+log file (JSON, HTML, etc.). The \textbf{evaluation} process takes a log file as input, and check
+the code difference of every commit in the log file to identify the real patches.
+
+\section{Tools}
+\begin{itemize}
+	\item PyGithub is a Python library build to access the GitHub API \cite{pygithub}.
+	\item GitPython is a Python library build to interact with Git repositories using a combination of
+	python and git command implementation \cite{gitpython}.
+	\item Secbench Mining Tool is a repository mining tool build by The Quasar Research Group to mine
+	vulnerability patterns from GitHub repositories \cite{secbench}.
+\end{itemize}
 
 % \chapter{Design}
 
