@@ -76,20 +76,16 @@ throughout my university life. It would not be possible for me to finish this pr
 without them.
 
 I would also like to thank my supervisor, Dr. Achim Brucker, who are continuously providing
-constructive advice for my project. I am honoured to work with you, and I look forward for more
-working opportunities with you in the future.
-
-Finally, I would like to thank my friends: Jia Hua, Wei Kin, Justin and Grace, who have spent
-countless sleepless night with me in the Diamond for the past two years. It was a truly memorable
-and unforgettable experience. I am glad to have them as my friends.
+constructive advice for my project. I am honoured to work with you, and I look forward to working
+with you in the future.
 
 \newpage
 
 \tableofcontents
 
-\listoffigures \addcontentsline{toc}{chapter}{List of Figures}
+% \listoffigures \addcontentsline{toc}{chapter}{List of Figures}
 
-\listoftables \addcontentsline{toc}{chapter}{List of Tables}
+% \listoftables \addcontentsline{toc}{chapter}{List of Tables}
 
 \newpage
 
@@ -109,7 +105,7 @@ Building a secure software is expensive, difficult, and time-consuming. In \text
 it is necessary to know when and how a security vulnerability is fixed. Therefore, having a list of
 changelogs or informative git commit messages that record the fixed security vulnerabilities is
 helpful. However, Arora and Telang \cite{arora_2005} stated that some open source developers believe
-that public disclosure of security vulnerabilities patch is dangerous, and thus vulnerability fixing
+that public disclosure of security vulnerabilities patch is dangerous, thus vulnerability fixing
 commits are not commonly identified in some open source software repositories to prevent malicious
 exploits. Hence, a repository mining tool that investigate vulnerability patterns and identify
 vulnerable software components can be developed to reduce the time and cost required to mitigate the
@@ -150,7 +146,8 @@ vulnerabilities.
 is related to this project, as well as investigating the techniques and tools to be used.
 
 \noindent\textbf{Chapter 3} is a list of detailed requirements and a thorough analysis for design,
-implementation and testing stage.
+implementation and testing stage. Some core decisions are reviewed in the analysis part to ensure
+the feasibility of the project.
 
 \noindent\textbf{Chapter 4} is a comparison between different design concepts, where the advantages
 and disadvantages of difference approach are stated. The chosen design is justified with suitable
@@ -167,12 +164,13 @@ findings,	and outlines the possible improvements that could be made in the futur
 results found.
 
 \section{Relationship to Degree Programme}
-This project will be focused on researching real-world software security problem by deploying a
-repository mining tool to open source software repositories with the purpose of studying the
-patterns of different security vulnerabilities patch. This relates to the 'Software Engineering'
-degree as it requires a good understanding in version control system and it aims to improve
-softwares quality by reducing the time and effort needed to locate and fix security vulnerabilities
-in the source code.
+This project focuses on the reserach of real-world software security problems, and offers a valuable
+insights into the computer security. By studying the patterns of security vulnerabilities patch,
+practical knowledge for building and ensuring a secure system could be gained. Moreover, the
+difficulty of improving software security could be experienced during the evaluation process in this
+project. This relates to the Software Engineering degree as it requires a good understanding in
+version control system and it aims to improve softwares quality by reducing the time and effort
+needed to find security vulnerabilities in the source code.
 
 \chapter{Literature Review}
 This chapter will start with the background contents of the project, and then focus on discussing
@@ -189,33 +187,37 @@ wait for a patch from the vendor or collaborate with the community to develop th
 Hoepman and Jacobs \cite{hoepman_2007} suggested that open source softwares will have better
 security and reliability than closed source softwares through the power of open data and
 crowdsourcing. Conversely, Schryen \cite{schryen_2011} has shown that open source and closed source
-softwares do not have significant difference in terms of security vulnerabilities in his experiment
-and concluded that the policy of the developers is the main factor that determines the security.
-Wheeler \cite{wheeler_2015} agrees with Schryen's view, but he also pointed out that open source
-systems are more resistant to attacks based on his researches.
+softwares do not have significant security dfference in his experiment and concluded that the policy
+of the developers is the main factor that determines the security. Wheeler \cite{wheeler_2015}
+agrees with Schryen's conclusion, but he argued that Schryen's experiment had a small sample size,
+so the results may not be accurate.
 
-While both statements might be true, Cowan \cite{cowan_2003} indicates that there are many factors
-determining the security of a software, and the source availability model is not the primary factor.
-Othmane et al. \cite{othmane_2015} have classified the main factors that affects the time required
-to fix a vulnerability into different categories, and one of them that is related to this project is
-the vulnerabilities characteristics. Vulnerabilities characteristics is the categorisation of
-security attacks into different types, which will be discussed in the next section.
+While both statements might be true, Cowan \cite{cowan_2003} indicated that the security of a
+software is determined by many factors, and the source availability model is not the primary driver.
+Witten, Landwehr, and Caloyannides \cite{witten_2001} stated that code review is the most effective
+method to improve system security and deduced that closed source systems could reach the same
+security level as open source systems if there were sufficient review processes being carried out.
+In recent years, the growing popularity of open source softwares has attracted a large numbers of
+people to join the community. Some open source softwares are now believed to have better quality as
+compared to their respective closed source softwares. However, this argument has yet to be proven in
+a formal way.
 
 \section{Security Issues in Open Source Softwares}
 The Open Web Application Security Project (\textbf{OWASP}) is a worldwide non-profit organization
-committed to improve and raise the awareness of software security in the open source community
-\cite{owasp_home}. The project members of \textbf{OWASP} have worked together to produce a list of
-the most critical web application security risks based on the community feedback and comprehensive
-data contributed by different organizations. The list consists of ten categories of security attacks
-which are considered to be the most dangerous and popular in the recent years. The list published by
+committed to improve and raise the awareness of software security \cite{owasp_home}. The project
+members of \textbf{OWASP} have worked together to produce a list of the most critical web
+application security risks based on the community feedback and comprehensive data contributed by
+different organizations. The list consists of ten categories of security attacks which are
+considered to be the most dangerous and popular in the recent years. The vulnerabilities listed by
 \textbf{OWASP} in 2017 \cite{owasp_top10} will be analysed and the security risks listed in older
-versions of the top ten project will covered in this section too.
+versions of the top ten project will covered too.
 
 \subsection{Injection}
 An injection attack is the exploitation of a software vulnerability where the attacker injects
 malicious code into the software and perform harmful executions. The most common types of injection
 attacks are Structured Query Language (\textbf{SQL}) injection, cross-site scripting (\textbf{XSS}),
-and command injection \cite{pietraszek_2006}. Injection flaws are very widespread and easy to
+and command injection \cite{pietraszek_2006}. In addition, \textbf{SQL} injection attacks
+required the most effort to fix \cite{othmane_2015}. Injection flaws are very widespread and easy to
 discover when attackers have access to the source code, where they could use a code scanner tool to
 find all possible ways of the injection attacks.
 
@@ -229,11 +231,36 @@ attackers.
 
 \subsection{Using Componenets with Known Vulnerabilities}
 Components such as plugins, libraries, and other modules can be found in most of the softwares.
-Using components could reduce the amount of work and time required to develop a software. However,
-these components are very likely to be maintained by different developers or organizations.
+Using components could reduce the amount of work and time required to develop a software, but they
+also increase the risk of known vulnerabilities being introduced into the softwares. Third-party
+components are mostly maintened by different developers or organisations.
+
+\section{Vulnerabilities Classification Techniques}
+Many classification techniques of computer attacks have been introduced before open source became
+popular, and these early works have significant influence on the later work of finding and
+classifying security issues in open source software repositories. An early work of Lindqvist and
+Jonsson \cite{lindqvist_1999} implied that the \textit{location} of a computer flaw is a determining
+factor in the classification process, in which their results are obtained through real penetration
+attacks. Hansman and Hunt \cite{hansman_2005} adapted the ideas of Lindqvist and Jonsson and
+suggested the concept of dimensions, where they categorised the attacks into several layers.
 
 \section{Related Work}
+Matsushita, Sasaki, and Inoue \cite{matsushita_2005} developed a system known as CoxR that is able
+to analyse open source repositories to search for code fragments, files and commit logs through the
+keywords provided. The CoxR system has an integrated analysis module, and the module consists of two
+functions: lexical analysis function and token comparing function. Although the main objective of
+CoxR system is not about finding security related commits in open source repositories, the
+methodology of CoxR system for searching the commit log is suitable to be used as an implementation
+reference.
 
+Cadariu et al. \cite{cadariu_2015} used \textbf{OWASP} Dependency Check tool \cite{owasp_dependency}
+to find all known vulnerabilities in proprietary softwares written in Java. However, their results
+contained a considerable amount of both false positives and false negatives, which directly affected
+the precision of their technique. Therefore, it is also expected that the final results produced in
+this project might encounter the same problem.
+
+This project extends prior work on the GitHub repository mining tool created by Reis and Abreu
+\cite{secbench}.
 
 % \section{foo}
 % \begin{table}[H]
@@ -250,8 +277,17 @@ these components are very likely to be maintained by different developers or org
 % According to \hyperref[table:celltable]{\textbf{Table 3.1}}, \ref{table:celltable}
 
 \chapter{Requirements and Analysis}
-The purpose of this chapter is to discuss the problems to be solved and consider some of the core
-decisions to be made before starting the implementation.
+The purpose of this chapter is to express the aims in more details, and discuss the problems to be
+solved. This chapter will outline the requirements of the project and list the criteria to be met.
+The analysis part will cover every aspect of the design, implementation and testing stage to ensure
+that the project is feasible.
+
+\section{Software Specification}
+
+\begin{itemize}
+	\item \textbf{Completeness}
+	\item \textbf{Repeatable}
+\end{itemize}
 
 \section{Problems}
 As mentioned in \hyperref[sec:objectives]{\textbf{Section 1.2}}, the repository mining tool must be
