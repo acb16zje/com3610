@@ -1,8 +1,9 @@
 \documentclass[12pt, a4paper]{report}
 \edef\restoreparindent{\parindent=\the\parindent\relax}
 \usepackage[UKenglish]{babel}
-\usepackage[bibstyle=ieee, sorting=nty]{biblatex}
+\usepackage[bibstyle=ieee, dashed=false, sorting=nty]{biblatex}
 \usepackage[labelfont=bf]{caption}
+\usepackage{colortbl}
 \usepackage{csquotes}
 \usepackage{fancyhdr}
 \usepackage{float}
@@ -85,7 +86,7 @@ with you in the future.
 
 % \listoffigures \addcontentsline{toc}{chapter}{List of Figures}
 
-% \listoftables \addcontentsline{toc}{chapter}{List of Tables}
+\listoftables \addcontentsline{toc}{chapter}{List of Tables}
 
 \newpage
 
@@ -214,12 +215,12 @@ versions of the top ten project will covered too.
 
 \subsection{Injection}
 An injection attack is the exploitation of a software vulnerability where the attacker injects
-malicious code into the software and perform harmful executions. The most common types of injection
-attacks are Structured Query Language (\textbf{SQL}) injection, cross-site scripting (\textbf{XSS}),
-and command injection \cite{pietraszek_2006}. In addition, \textbf{SQL} injection attacks
-required the most effort to fix \cite{othmane_2015}. Injection flaws are very widespread and easy to
-discover when attackers have access to the source code, where they could use a code scanner tool to
-find all possible ways of the injection attacks.
+malicious code into the software and perform harmful executions. Structured Query Language
+(\textbf{SQL}) injection is the most common type of injection attack in web applications
+\cite{pietraszek_2006}. In addition, \textbf{SQL} injection attacks required the most effort to fix
+\cite{othmane_2015}. Injection flaws are very widespread and easy to discover when attackers have
+access to the source code, where they could use a code scanner tool to find all possible ways of the
+injection attacks.
 
 \subsection{Broken Authentication}
 Broken authentication happens when the attackers are allowed to perform malicious actions such as
@@ -230,10 +231,12 @@ most critial because developers often overlook certain scenarios which are likel
 attackers.
 
 \subsection{Using Componenets with Known Vulnerabilities}
-Components such as plugins, libraries, and other modules can be found in most of the softwares.
-Using components could reduce the amount of work and time required to develop a software, but they
-also increase the risk of known vulnerabilities being introduced into the softwares. Third-party
-components are mostly maintened by different developers or organisations.
+Components such as plugins, libraries, and modules can often be found in different parts of a
+software. Third-party components are increasingly being integrated into softwares to reduce the
+amount of time and effort required for development \cite{balzarotti_2006}, but they also increase
+the risk of vulnerabilities being introduced into the softwares. These components are mostly
+maintened by different developers or organisations hence it is unable to guarantee that all the
+components used will be provided with the latest security patch.
 
 \section{Vulnerabilities Classification Techniques}
 Many classification techniques of computer attacks have been introduced before open source became
@@ -259,22 +262,13 @@ contained a considerable amount of both false positives and false negatives, whi
 the precision of their technique. Therefore, it is also expected that the final results produced in
 this project might encounter the same problem.
 
-This project extends prior work on the GitHub repository mining tool created by Reis and Abreu
-\cite{secbench}.
-
-% \section{foo}
-% \begin{table}[H]
-% 	\begin{center}
-% 		\begin{tabular}{ c c c }
-% 			cell1 & cell2 & cell3 \\
-%       cell4 & cell5 & cell6 \\
-% 			cell7 & cell8 & cell9
-% 		\end{tabular}
-% 		\captionof{table}{cell table} \label{table:celltable}
-% 	\end{center}
-% \end{table}
-
-% According to \hyperref[table:celltable]{\textbf{Table 3.1}}, \ref{table:celltable}
+This project extends prior work on Reis and Abreu's \cite{secbench} Secbench Mining Tool. The tool
+aims to find vulnerabilities patch in GitHub repositories by using specific regular expressions for
+each vulnerability pattern. Then it creates a test case for every vulnerability found and these test
+cases are evaluated manually. Reis and Abreu \cite{reis_2017} discussed the procedure of the
+evaluation and explained that human errors could occur due to source code complexity and similarity
+of vulnerability pattern. The approach of Secbench Mining Tool is similar to the concept of this
+project. However, it is not practical to perform manual evaluation on every result.
 
 \chapter{Requirements and Analysis}
 The purpose of this chapter is to express the aims in more details, and discuss the problems to be
@@ -284,10 +278,24 @@ that the project is feasible.
 
 \section{Software Specification}
 
-\begin{itemize}
-	\item \textbf{Completeness}
-	\item \textbf{Repeatable}
-\end{itemize}
+\begin{table}[H]
+	\begin{center}
+		\begin{tabular}{|p{9.5cm}|c|}
+			\hline
+			\rowcolor[HTML]{D8D8D8}
+			\multicolumn{1}{|c|}{Criteria} & Importance \\ \hline
+			\textbf{Compatibility}: The mining tool should be able to run on all machines that meet the system requirements. & Essential \\ \hline
+			\textbf{Completeness}: The mining tool should be able to find all commits that match the
+			regular expressions. & Essential \\ \hline
+			\textbf{Repeatable}: The results should be repeatable and reproducible. & Essential \\ \hline
+			\textbf{Automated Evaluation} The process of classifying and evaluating the commits into
+			different vulnerabilities patch should be automated. & Desirable \\ \hline
+			\end{tabular}
+		\captionof{table}{Criteria to be met in this project} \label{table:criteria}
+	\end{center}
+\end{table}
+
+% According to \hyperref[table:celltable]{\textbf{Table 3.1}}, \ref{table:celltable}
 
 \section{Problems}
 As mentioned in \hyperref[sec:objectives]{\textbf{Section 1.2}}, the repository mining tool must be
@@ -296,6 +304,9 @@ able to detect commits that contain distinct patterns such as \textit{fix}, \tex
 evaluation process to identify the actual commits that fixed security vulnerability.	This could be
 hard because not all open source software repositories are using the same programming language.
 Hence, it might be difficult to determine the actual lines of code that addressed the
+vulnerabilities.
+
+One of the major challenges in this project is the classification or evaluation of the
 vulnerabilities.
 
 \section{Proposed Method}

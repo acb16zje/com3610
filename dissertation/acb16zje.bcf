@@ -1990,15 +1990,17 @@
     <bcf:citekey order="13">pietraszek_2006</bcf:citekey>
     <bcf:citekey order="14">othmane_2015</bcf:citekey>
     <bcf:citekey order="15">huluka_2012</bcf:citekey>
-    <bcf:citekey order="16">lindqvist_1999</bcf:citekey>
-    <bcf:citekey order="17">hansman_2005</bcf:citekey>
-    <bcf:citekey order="18">matsushita_2005</bcf:citekey>
-    <bcf:citekey order="19">cadariu_2015</bcf:citekey>
-    <bcf:citekey order="20">owasp_dependency</bcf:citekey>
-    <bcf:citekey order="21">secbench</bcf:citekey>
-    <bcf:citekey order="22">pygithub</bcf:citekey>
-    <bcf:citekey order="23">gitpython</bcf:citekey>
-    <bcf:citekey order="24">secbench</bcf:citekey>
+    <bcf:citekey order="16">balzarotti_2006</bcf:citekey>
+    <bcf:citekey order="17">lindqvist_1999</bcf:citekey>
+    <bcf:citekey order="18">hansman_2005</bcf:citekey>
+    <bcf:citekey order="19">matsushita_2005</bcf:citekey>
+    <bcf:citekey order="20">cadariu_2015</bcf:citekey>
+    <bcf:citekey order="21">owasp_dependency</bcf:citekey>
+    <bcf:citekey order="22">secbench</bcf:citekey>
+    <bcf:citekey order="23">reis_2017</bcf:citekey>
+    <bcf:citekey order="24">pygithub</bcf:citekey>
+    <bcf:citekey order="25">gitpython</bcf:citekey>
+    <bcf:citekey order="26">secbench</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="nty">
