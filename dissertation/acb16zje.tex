@@ -127,7 +127,7 @@ vulnerabilities.
 
 \section{Challenges}
 \begin{itemize}
-	\item \textbf{Data}: There are a large numbers of open source repositories available on GitHub.
+	\item \textbf{Data}: There are a large number of open source repositories available on GitHub.
 	However, it is challenging to find a set of sample repositories that can produce accurate and
 	consistent results.
 	\item \textbf{Misclassification}: Commit messages for a same vulnerability patch are not always
@@ -198,10 +198,27 @@ software is determined by many factors, and the source availability model is not
 Witten, Landwehr, and Caloyannides \cite{witten_2001} stated that code review is the most effective
 method to improve system security and deduced that closed source systems could reach the same
 security level as open source systems if there were sufficient review processes being carried out.
-In recent years, the growing popularity of open source softwares has attracted a large numbers of
+In recent years, the growing popularity of open source softwares has attracted a large number of
 people to join the community. Some open source softwares are now believed to have better quality as
 compared to their respective closed source softwares. However, this argument has yet to be proven in
 a formal way.
+
+\section{Common Vulnerabilities and Exposures}
+The Common Vulnerabilities and Exposures (\textbf{CVE}) is a project launched by Mitre Corporation
+and sponsored by the National Cyber Security Division of the United States Department of Homeland
+Security \cite{cve}. The \textbf{CVE} system provides the computer security community with a
+complete list of publicly known security vulnerabilities, and each vulnerability is identified by a
+unique \textbf{CVE} ID number. It is now the standardised solution and industry-recognised standard
+for identifying vulnerabilities and exposures.
+
+\section{Common Weakness Enumeration}
+The Common Weakness Enumeration (\textbf{CWE}) is another project of Mitre Corporation \cite{cwe}
+that organises the software weaknesses into a list of different categories, known as the
+\textbf{CWE} list. Software weaknesses are defined as the errors that can lead to software
+vulnerabilities, which includes buffer overflows, authentication errors, code injection, etc.
+\cite{cwe_faq}. The \textbf{CWE} is now a formal standard for representing software weaknesses. Each
+entry in the \textbf{CWE} are identified by a unique ID number, and contained detailed information
+about the specific weakness.
 
 \section{Security Issues in Open Source Softwares}
 The Open Web Application Security Project (\textbf{OWASP}) is a worldwide non-profit organization
@@ -238,6 +255,12 @@ the risk of vulnerabilities being introduced into the softwares. These component
 maintened by different developers or organisations hence it is unable to guarantee that all the
 components used will be provided with the latest security patch.
 
+Cadariu et al. \cite{cadariu_2015} used \textbf{OWASP} Dependency Check tool \cite{owasp_dependency}
+to find all known vulnerabilities in proprietary softwares written in Java. However, their results
+contained a considerable amount of both false positives and false negatives, which directly affected
+the precision of their technique. Therefore, it is also expected that the final results produced in
+this project might encounter the same problem.
+
 \section{Vulnerabilities Classification Techniques}
 Many classification techniques of computer attacks have been introduced before open source became
 popular, and these early works have significant influence on the later work of finding and
@@ -247,20 +270,33 @@ factor in the classification process, in which their results are obtained throug
 attacks. Hansman and Hunt \cite{hansman_2005} adapted the ideas of Lindqvist and Jonsson and
 suggested the concept of dimensions, where they categorised the attacks into several layers.
 
-\section{Related Work}
+\section{Mining Software Repositories}
+Mining Software Repositories (\textbf{MSR}) is a process of collecting and analysing big data from
+repositories, which includes version control repositories, mailing list repositories, and bug
+tracking repositories. The purpose of mining software repositories is to extract practical
+information from rich metadata and discover hidden trends about a specific evolutionary
+characteristic \cite{kagdi_2007}. The information collected could be used in various development
+process. For example, some developers could gain insight by mining repositories, which may help them
+to enhance their software quality based on previous implementation evidence of other developers
+\cite{hassan_2008}.
+
 Matsushita, Sasaki, and Inoue \cite{matsushita_2005} developed a system known as CoxR that is able
 to analyse open source repositories to search for code fragments, files and commit logs through the
 keywords provided. The CoxR system has an integrated analysis module, and the module consists of two
 functions: lexical analysis function and token comparing function. Although the main objective of
 CoxR system is not about finding security related commits in open source repositories, the
-methodology of CoxR system for searching the commit log is suitable to be used as an implementation
-reference.
+methodology of CoxR system for searching the commit history is suitable to be used as an
+implementation reference.
 
-Cadariu et al. \cite{cadariu_2015} used \textbf{OWASP} Dependency Check tool \cite{owasp_dependency}
-to find all known vulnerabilities in proprietary softwares written in Java. However, their results
-contained a considerable amount of both false positives and false negatives, which directly affected
-the precision of their technique. Therefore, it is also expected that the final results produced in
-this project might encounter the same problem.
+Williams and Hollingsworth \cite{williams_2005} developed a source code analysis tool that searches
+for bug fixes and combines with information mined from repositories to improve the results. It is
+stated that the most efficient way to utilise the historical information is to ignore the commit
+messages and focus on mining the code changes. In order to locate the actual code changes for the
+bug fix, a function return value checker was implemented to compares the number of warnings produced
+by a same function across different versions. Williams and Hollingsworth assumed that a bug is fixed
+if the warnings produced by the same function have decreased between two versions, and the final
+result produced is a list of functions that are related to a potential bug fix in the commit
+history.
 
 This project extends prior work on Reis and Abreu's \cite{secbench} Secbench Mining Tool. The tool
 aims to find vulnerabilities patch in GitHub repositories by using specific regular expressions for
@@ -268,7 +304,9 @@ each vulnerability pattern. Then it creates a test case for every vulnerability 
 cases are evaluated manually. Reis and Abreu \cite{reis_2017} discussed the procedure of the
 evaluation and explained that human errors could occur due to source code complexity and similarity
 of vulnerability pattern. The approach of Secbench Mining Tool is similar to the concept of this
-project. However, it is not practical to perform manual evaluation on every result.
+project. However, it is not practical to perform manual evaluation on every result. In this project,
+the tool developed should be able to automate the evaulation process to some extent, while
+preserving the accuracy of the results.
 
 \chapter{Requirements and Analysis}
 The purpose of this chapter is to express the aims in more details, and discuss the problems to be
@@ -284,12 +322,13 @@ that the project is feasible.
 			\hline
 			\rowcolor[HTML]{D8D8D8}
 			\multicolumn{1}{|c|}{Criteria} & Importance \\ \hline
-			\textbf{Compatibility}: The mining tool should be able to run on all machines that meet the system requirements. & Essential \\ \hline
+			\textbf{Compatibility}: The mining tool should be able to run on all machines that meet the
+			system requirements. & Essential \\ \hline
 			\textbf{Completeness}: The mining tool should be able to find all commits that match the
 			regular expressions. & Essential \\ \hline
 			\textbf{Repeatable}: The results should be repeatable and reproducible. & Essential \\ \hline
 			\textbf{Automated Evaluation} The process of classifying and evaluating the commits into
-			different vulnerabilities patch should be automated. & Desirable \\ \hline
+			different vulnerabilities patch should be automated to a certain extent. & Desirable \\ \hline
 			\end{tabular}
 		\captionof{table}{Criteria to be met in this project} \label{table:criteria}
 	\end{center}
@@ -297,33 +336,33 @@ that the project is feasible.
 
 % According to \hyperref[table:celltable]{\textbf{Table 3.1}}, \ref{table:celltable}
 
-\section{Problems}
-As mentioned in \hyperref[sec:objectives]{\textbf{Section 1.2}}, the repository mining tool must be
-able to detect commits that contain distinct patterns such as \textit{fix}, \textit{patch},
-\textit{vulnerability} etc. After extracting a possible list of commits, it should perform an
-evaluation process to identify the actual commits that fixed security vulnerability.	This could be
-hard because not all open source software repositories are using the same programming language.
-Hence, it might be difficult to determine the actual lines of code that addressed the
-vulnerabilities.
+% \section{Problems}
+% As mentioned in \hyperref[sec:objectives]{\textbf{Section 1.2}}, the repository mining tool must be
+% able to detect commits that contain distinct patterns such as \textit{fix}, \textit{patch},
+% \textit{vulnerability} etc. After extracting a possible list of commits, it should perform an
+% evaluation process to identify the actual commits that fixed security vulnerability.	This could be
+% hard because not all open source software repositories are using the same programming language.
+% Hence, it might be difficult to determine the actual lines of code that addressed the
+% vulnerabilities.
 
-One of the major challenges in this project is the classification or evaluation of the
-vulnerabilities.
+% One of the major challenges in this project is the classification or evaluation of the
+% vulnerabilities.
 
-\section{Proposed Method}
-Build a command-line interface program that is able to run two separate process: the mining process
-and the evaluation process. The \textbf{mining} process takes a Git repository as input, searches
-through the commit log, and return the list of commits that might potentially contain a patch as a
-log file (JSON, HTML, etc.). The \textbf{evaluation} process takes a log file as input, and check
-the code difference of every commit in the log file to identify the real patches.
+% \section{Proposed Method}
+% Build a command-line interface program that is able to run two separate process: the mining process
+% and the evaluation process. The \textbf{mining} process takes a Git repository as input, searches
+% through the commit log, and return the list of commits that might potentially contain a patch as a
+% log file (JSON, HTML, etc.). The \textbf{evaluation} process takes a log file as input, and check
+% the code difference of every commit in the log file to identify the real patches.
 
-\section{Tools}
-\begin{itemize}
-	\item PyGithub is a Python library build to access the GitHub API \cite{pygithub}.
-	\item GitPython is a Python library build to interact with Git repositories using a combination of
-	python and git command implementation \cite{gitpython}.
-	\item Secbench Mining Tool is a repository mining tool build by The Quasar Research Group to mine
-	vulnerability patterns from GitHub repositories \cite{secbench}.
-\end{itemize}
+% \section{Tools}
+% \begin{itemize}
+% 	\item PyGithub is a Python library build to access the GitHub API \cite{pygithub}.
+% 	\item GitPython is a Python library build to interact with Git repositories using a combination of
+% 	python and git command implementation \cite{gitpython}.
+% 	\item Secbench Mining Tool is a repository mining tool build by The Quasar Research Group to mine
+% 	vulnerability patterns from GitHub repositories \cite{secbench}.
+% \end{itemize}
 
 % \chapter{Design}
 
