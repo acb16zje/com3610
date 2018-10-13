@@ -98,12 +98,12 @@ Free/Libre and Open Source Software (\textbf{FLOSS}) is a type of software which
 the users to inspect, use, modify and redistribute the software's source code \cite{crowston_2012}.
 Since the introduction of Git, and later the Git repositories hosting site such as GitHub, many
 users have started to make their softwares open source by storing them as public repositories on
-GitHub. As a result, the participation of global communities into \textbf{FLOSS} projects has
-started to grow and different contributions were made to improve the softwares quality, which
-included fixing the software vulnerabilities \cite{dabbish_2012}.
+GitHub. As a result, the participation of global communities into FLOSS projects has started to grow
+and different contributions were made to improve the softwares quality, which included fixing the
+software vulnerabilities \cite{dabbish_2012}.
 
-Building a secure software is expensive, difficult, and time-consuming. In \textbf{FLOSS} projects,
-it is necessary to know when and how a security vulnerability is fixed. Therefore, having a list of
+Building a secure software is expensive, difficult, and time-consuming. In FLOSS projects, it is
+necessary to know when and how a security vulnerability is fixed. Therefore, having a list of
 changelogs or informative git commit messages that record the fixed security vulnerabilities is
 helpful. However, Arora and Telang \cite{arora_2005} stated that some open source developers believe
 that public disclosure of security vulnerabilities patch is dangerous, thus vulnerability fixing
@@ -206,38 +206,50 @@ a formal way.
 \section{Common Vulnerabilities and Exposures}
 The Common Vulnerabilities and Exposures (\textbf{CVE}) is a project launched by Mitre Corporation
 and sponsored by the National Cyber Security Division of the United States Department of Homeland
-Security \cite{cve}. The \textbf{CVE} system provides the computer security community with a
-complete list of publicly known security vulnerabilities, and each vulnerability is identified by a
-unique \textbf{CVE} ID number. It is now the standardised solution and industry-recognised standard
-for identifying vulnerabilities and exposures.
+Security \cite{cve}. The CVE system provides the computer security community with a complete list of
+publicly known security vulnerabilities, and each vulnerability is identified by a unique CVE ID
+number. It is now the standardised solution and industry-recognised standard for identifying
+vulnerabilities and exposures.
 
 \section{Common Weakness Enumeration}
 The Common Weakness Enumeration (\textbf{CWE}) is another project of Mitre Corporation \cite{cwe}
-that organises the software weaknesses into a list of different categories, known as the
-\textbf{CWE} list. Software weaknesses are defined as the errors that can lead to software
-vulnerabilities, which includes buffer overflows, authentication errors, code injection, etc.
-\cite{cwe_faq}. The \textbf{CWE} is now a formal standard for representing software weaknesses. Each
-entry in the \textbf{CWE} are identified by a unique ID number, and contained detailed information
-about the specific weakness.
+that organises the software weaknesses into a list of different categories, known as the CWE list.
+Software weaknesses are defined as the errors that can lead to software vulnerabilities, which
+includes buffer overflows, authentication errors, code injection, etc. \cite{cwe_faq}. The CWE is
+now a formal standard for representing software weaknesses. Each entry in the CWE are identified by
+a unique ID number, and contained detailed information about the specific weakness.
 
 \section{Security Issues in Open Source Softwares}
 The Open Web Application Security Project (\textbf{OWASP}) is a worldwide non-profit organization
 committed to improve and raise the awareness of software security \cite{owasp_home}. The project
-members of \textbf{OWASP} have worked together to produce a list of the most critical web
-application security risks based on the community feedback and comprehensive data contributed by
-different organizations. The list consists of ten categories of security attacks which are
-considered to be the most dangerous and popular in the recent years. The vulnerabilities listed by
-\textbf{OWASP} in 2017 \cite{owasp_top10} will be analysed and the security risks listed in older
-versions of the top ten project will covered too.
+members of OWASP have worked together to produce a list of the most critical web application
+security risks based on the community feedback and comprehensive data contributed by different
+organizations. The list consists of ten categories of security attacks which are considered to be
+the most dangerous and popular in the recent years. The vulnerabilities listed by OWASP in 2017
+\cite{owasp_top10} will be analysed and the security risks listed in older versions of the top ten
+project will covered too.
 
 \subsection{Injection}
 An injection attack is the exploitation of a software vulnerability where the attacker injects
-malicious code into the software and perform harmful executions. Structured Query Language
-(\textbf{SQL}) injection is the most common type of injection attack in web applications
-\cite{pietraszek_2006}. In addition, \textbf{SQL} injection attacks required the most effort to fix
-\cite{othmane_2015}. Injection flaws are very widespread and easy to discover when attackers have
-access to the source code, where they could use a code scanner tool to find all possible ways of the
-injection attacks.
+malicious code into the software applications and perform harmful executions. The most common types
+of injection attacks are Structured Query Language (\textbf{SQL}) injection, cross-site scripting,
+and shell injection \cite{pietraszek_2006}. Among these attacks, SQL injection attacks required the
+most effort to fix \cite{othmane_2015}. This is because a successful SQL injection attack could
+delete an entire database that could cause a massive data loss in extreme situation. SQL injection
+attacks are very widespread and easy to discover especially when attackers have access to the source
+code, or they could use a code scanner tool such as sqlmap \cite{sqlmap} to find all possible ways
+of the injection attacks.
+
+Vast majority of web applications make use of JavaScript to add automation and interactivity to
+their web pages to enhances the user experience. However, the growing usage of JavaScript has also
+increased the frequency and popularity of cross-site scripting (\textbf{XSS}) attacks. There three
+types of XSS attacks are: \textit{reflected XSS}, \textit{stored XSS}, and \textit{DOM XSS}
+\cite{kieyzun_2009}. While the attack approach of different XSS methods may vary, their end goal is
+to steal or access the sensitive information of the victims \cite{vogt_2007}. XSS vulnerabilities
+could be easily detected and exploited at the same time, for example, the open source tool XSStrike
+\cite{xsstrike} can scan a web page for possible {XSS vulnerabilities. A promising approach to
+tackle this problem would be adding an extra security mechanism for handling the user inputs on the
+web pages.
 
 \subsection{Broken Authentication}
 Broken authentication happens when the attackers are allowed to perform malicious actions such as
@@ -255,11 +267,11 @@ the risk of vulnerabilities being introduced into the softwares. These component
 maintened by different developers or organisations hence it is unable to guarantee that all the
 components used will be provided with the latest security patch.
 
-Cadariu et al. \cite{cadariu_2015} used \textbf{OWASP} Dependency Check tool \cite{owasp_dependency}
-to find all known vulnerabilities in proprietary softwares written in Java. However, their results
-contained a considerable amount of both false positives and false negatives, which directly affected
-the precision of their technique. Therefore, it is also expected that the final results produced in
-this project might encounter the same problem.
+Cadariu et al. \cite{cadariu_2015} used OWASP Dependency Check tool \cite{owasp_dependency} to find
+all known vulnerabilities in proprietary softwares written in Java. However, their results contained
+a considerable amount of both false positives and false negatives, which directly affected the
+precision of their technique. Therefore, it is also expected that the final results produced in this
+project might encounter the same problem.
 
 \section{Vulnerabilities Classification Techniques}
 Many classification techniques of computer attacks have been introduced before open source became
@@ -314,8 +326,22 @@ solved. This chapter will outline the requirements of the project and list the c
 The analysis part will cover every aspect of the design, implementation and testing stage to ensure
 that the project is feasible.
 
-\section{Software Specification}
+\section{Project Objectives}
+Initially, the objectives set in \hyperref[sec:objectives]{\textbf{Section 1.2}} are an ideal
+concept of this project. Having completed the background research and literature review, it is now
+possible to provide a detailed description and more clearly defined objectives that improve the
+feasibility of this project.
 
+\begin{enumerate}
+	\item \textbf{Vulnerability patterns}: Identifying the each of the vulnerability pattern
+	independently and individually is a time-comsuming process. There is also no guarantee that the
+	patterns will produce accurate results during the testing stage. Therefore, it is decided to reuse
+	and improve the patterns provided in previous related work.
+	\item \textbf{Mining the commits}:
+	\item \textbf{Evaluating the mined commits}:
+\end{enumerate}
+
+\section{Software Specification}
 \begin{table}[H]
 	\begin{center}
 		\begin{tabular}{|p{9.5cm}|c|}
@@ -333,6 +359,16 @@ that the project is feasible.
 		\captionof{table}{Criteria to be met in this project} \label{table:criteria}
 	\end{center}
 \end{table}
+
+
+\section{Considerations}
+The aim of this section is to contemplate the options available for the development of this project
+and decide some of the fundamental decisions.
+
+\subsection{Programming Language}
+Python is chosen to be the main programming language for this project.
+
+\subsection{Testing}
 
 % According to \hyperref[table:celltable]{\textbf{Table 3.1}}, \ref{table:celltable}
 
