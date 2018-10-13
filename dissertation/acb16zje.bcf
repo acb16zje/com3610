@@ -2008,6 +2008,9 @@
     <bcf:citekey order="31">williams_2005</bcf:citekey>
     <bcf:citekey order="32">secbench</bcf:citekey>
     <bcf:citekey order="33">reis_2017</bcf:citekey>
+    <bcf:citekey order="34">python</bcf:citekey>
+    <bcf:citekey order="35">pygithub</bcf:citekey>
+    <bcf:citekey order="36">gitpython</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="nty">

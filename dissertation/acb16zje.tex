@@ -337,8 +337,15 @@ feasibility of this project.
 	independently and individually is a time-comsuming process. There is also no guarantee that the
 	patterns will produce accurate results during the testing stage. Therefore, it is decided to reuse
 	and improve the patterns provided in previous related work.
-	\item \textbf{Mining the commits}:
-	\item \textbf{Evaluating the mined commits}:
+	\item \textbf{Mining the commits}: This task involves creating a repository mining tool that makes
+	extensive use of the pre-defined regular expressions to search for the relative commits. It will
+	be necessary to consider how closely a commit needs to match with the patterns for it to be
+	included in the result. The file format of the result will be discussed in the later section.
+	\item \textbf{Evaluating the mined commits}: The tool can be extended to include a separate
+	function that evaluates the commits mined to find the actual code commit addressing the security
+	vulnerabilities. However, all previous related work performed did not use automated techinques for
+	the evaluation. This project will consider to automate the evaluation process to some extent while
+	maintaining the accuracy of the results at the standard level.
 \end{enumerate}
 
 \section{Software Specification}
@@ -353,22 +360,35 @@ feasibility of this project.
 			\textbf{Completeness}: The mining tool should be able to find all commits that match the
 			regular expressions. & Essential \\ \hline
 			\textbf{Repeatable}: The results should be repeatable and reproducible. & Essential \\ \hline
-			\textbf{Automated Evaluation} The process of classifying and evaluating the commits into
+			\textbf{Robustness}: The mining tool should be able to handle all possible errors without
+			terminating the mining process. & Essential \\ \hline
+			\textbf{Automated Evaluation}: The process of classifying and evaluating the commits into
 			different vulnerabilities patch should be automated to a certain extent. & Desirable \\ \hline
 			\end{tabular}
 		\captionof{table}{Criteria to be met in this project} \label{table:criteria}
 	\end{center}
 \end{table}
 
-
 \section{Considerations}
 The aim of this section is to contemplate the options available for the development of this project
 and decide some of the fundamental decisions.
 
 \subsection{Programming Language}
-Python is chosen to be the main programming language for this project.
+Python 3 \cite{python} is chosen to be the main programming language for the repository mining tool.
+While other programming languages may be more suitable for tackling specific problems of this
+project, Python 3 provides sufficient coverage over every aspect with its comprehensive
+functionality. The greatest advantage of Python 3 is that it has a wide range of libraries that
+facilitate the development environment, which fully justified that a complete working solution can
+be produced using Python 3.
 
-\subsection{Testing}
+\subsection{Libraries and Tools}
+\begin{itemize}
+	\item PyGithub is a Python library build to access the GitHub API \cite{pygithub}.
+	\item GitPython is a Python library build to interact with Git repositories using a combination of
+	python and git command implementation \cite{gitpython}.
+\end{itemize}
+
+% \subsection{Testing}
 
 % According to \hyperref[table:celltable]{\textbf{Table 3.1}}, \ref{table:celltable}
 
@@ -390,15 +410,6 @@ Python is chosen to be the main programming language for this project.
 % through the commit log, and return the list of commits that might potentially contain a patch as a
 % log file (JSON, HTML, etc.). The \textbf{evaluation} process takes a log file as input, and check
 % the code difference of every commit in the log file to identify the real patches.
-
-% \section{Tools}
-% \begin{itemize}
-% 	\item PyGithub is a Python library build to access the GitHub API \cite{pygithub}.
-% 	\item GitPython is a Python library build to interact with Git repositories using a combination of
-% 	python and git command implementation \cite{gitpython}.
-% 	\item Secbench Mining Tool is a repository mining tool build by The Quasar Research Group to mine
-% 	vulnerability patterns from GitHub repositories \cite{secbench}.
-% \end{itemize}
 
 % \chapter{Design}
 
