@@ -359,19 +359,21 @@ feasibility of this project.
 			system requirements. & Essential \\ \hline
 			\textbf{Completeness}: The mining tool should be able to find all commits that match the
 			regular expressions. & Essential \\ \hline
+			\textbf{Lightweight}: The mining tool should have a compact design and require the minimum
+			amount of dependencies to run. & Essential \\ \hline
 			\textbf{Repeatable}: The results should be repeatable and reproducible. & Essential \\ \hline
 			\textbf{Robustness}: The mining tool should be able to handle all possible errors without
 			terminating the mining process. & Essential \\ \hline
 			\textbf{Automated Evaluation}: The process of classifying and evaluating the commits into
 			different vulnerabilities patch should be automated to a certain extent. & Desirable \\ \hline
 			\end{tabular}
-		\captionof{table}{Criteria to be met in this project} \label{table:criteria}
+		\captionof{table}{Specification of the mining tool} \label{table:criteria}
 	\end{center}
 \end{table}
 
 \section{Considerations}
-The aim of this section is to contemplate the options available for the development of this project
-and decide some of the fundamental decisions.
+The aim of this section is to contemplate the options available for this project and review some of
+the fundamental decisions to be made before the implementation.
 
 \subsection{Programming Language}
 Python 3 \cite{python} is chosen to be the main programming language for the repository mining tool.
@@ -382,15 +384,40 @@ facilitate the development environment, which fully justified that a complete wo
 be produced using Python 3.
 
 \subsection{Libraries and Tools}
+Since the mining tool is decided to be programmed in Python 3, a wide range of libraries could be
+integrated into the tool to enhance its functionality.
 \begin{itemize}
 	\item PyGithub is a Python library build to access the GitHub API \cite{pygithub}.
 	\item GitPython is a Python library build to interact with Git repositories using a combination of
 	python and git command implementation \cite{gitpython}.
 \end{itemize}
 
-% \subsection{Testing}
+\subsection{File Format of Result}
+The JavaScript Object Notation (\textbf{JSON}) \cite{json} has been chosen as the file format for
+storing the results in this project. While various alternative data interchange formats such as the
+Extensible Markup Language (\textbf{XML}) \cite{xml} has its unique advantages, it is important to
+choose a data interchange format that consumes less resource and have lower processing time for
+large amount of data. Since it has been proved that JSON has better performance than XML in terms of
+processing time and resource utilisation \cite{nurseitov_2009}, it is considered that JSON would be
+the best option for this project.
 
-% According to \hyperref[table:celltable]{\textbf{Table 3.1}}, \ref{table:celltable}
+\section{Testing}
+This section covers a brief overview of the testing stage. It will be necessary to consider some of
+the test cases and scenarios in advance to ensure that the requirements and criteria listed are
+practical and feasible.
+
+\subsection{Unit Testing}
+Python provides an unit testing framework as part of its standard library, known as unittest
+\cite{unittest}, which offers a complete set of functions suffice to cover the testing stage of this
+project.
+
+\subsection{System Testing}
+After completing the unit testing, the mining tool has to be tested for its completeness and
+robustness, as mentioned in \hyperref[table:criteria]{\textbf{Table 3.1}}. It is expected that the
+program would not be able to handle complicated errors during the early implementation, and the
+project schedule would become a iterative process between implementation and testing. It is assumed
+that the testing stage would be the most time-consuming process in the whole project, thus it might
+be required to allocate more time and effort into this stage.
 
 % \section{Problems}
 % As mentioned in \hyperref[sec:objectives]{\textbf{Section 1.2}}, the repository mining tool must be

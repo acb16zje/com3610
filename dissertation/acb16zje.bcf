@@ -2011,6 +2011,10 @@
     <bcf:citekey order="34">python</bcf:citekey>
     <bcf:citekey order="35">pygithub</bcf:citekey>
     <bcf:citekey order="36">gitpython</bcf:citekey>
+    <bcf:citekey order="37">json</bcf:citekey>
+    <bcf:citekey order="38">xml</bcf:citekey>
+    <bcf:citekey order="39">nurseitov_2009</bcf:citekey>
+    <bcf:citekey order="40">unittest</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="nty">
