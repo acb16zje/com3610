@@ -67,8 +67,8 @@ will be considered grounds for failure in this project and the degree examinatio
 
 \newpage
 
-% \chapter*{Abstract}
-% \addcontentsline{toc}{chapter}{Abstract}
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
 
 \chapter*{Acknowledgements}
 \addcontentsline{toc}{chapter}{Acknowledgements}
@@ -293,6 +293,7 @@ process. For example, some developers could gain insight by mining repositories,
 to enhance their software quality based on previous implementation evidence of other developers
 \cite{hassan_2008}.
 
+\subsection{}
 Matsushita, Sasaki, and Inoue \cite{matsushita_2005} developed a system known as CoxR that is able
 to analyse open source repositories to search for code fragments, files and commit logs through the
 keywords provided. The CoxR system has an integrated analysis module, and the module consists of two
@@ -405,7 +406,7 @@ the best option for this project.
 \section{Proposed Method}
 The ideal concept of this project is to build a command-line interface program that is able to run
 two separate process: the \textbf{mining} process and the \textbf{evaluation} process. The
-\textbf{mining} process takes a Git repository as input, searches through the commit log, and return
+\textbf{mining} process takes a Git repository as input, searches through the commit log, and stores
 the list of commits that might potentially contain a patch in a JSON file. The \textbf{evaluation}
 process takes a JSON file as input, and check the code difference of every commit in the log file to
 identify the real patches.
@@ -417,17 +418,19 @@ will discuss the problems in detail and review several ways of mitigating them, 
 the possible constraints that might affect the progress of the project.
 
 It is expected that some problems might be solved and new problems could emerge in the course of the
-project. There are several ways of mitigating the problems to reduce the possible risk, provided
-that the problems are clearly identified and the scope of these problems is under the project limit.
-However, the \textbf{evaluation} process that is considered to be a diffucult part in previous work
-might be the major constraint of this project.
+project. There are several ways of mitigating the problems to reduce the risk, provided that the
+problems are clearly identified and they are under the project scope. It is estimated that the
+\textbf{evaluation} process would be the biggest challenge of this project since it was regarded as
+a complicated and difficult area in previous researches. Moreover, this project plans to implement
+an automated version of the evaluation process, which will further increases the difficulty level.
 
-% the repository mining tool must be able to detect commits that contain distinct patterns such as
-% \textit{fix}, \textit{patch}, \textit{vulnerability} etc. After extracting a possible list of
-% commits, it should perform an evaluation process to identify the actual commits that fixed security
-% vulnerability.	This could be hard because not all open source software repositories are using the
-% same programming language. Hence, it might be difficult to determine the actual lines of code that
-% addressed the vulnerabilities.
+Automated evaulation is hard and does not guarantee to provide a good result. It is also extremely
+challenging for the tool to work across repositories programmed in different programming languages.
+The constraint is that the tool has to be exhaustively tested to find the optimal threshold value
+and for it to be automated and produce good results. Although the tool might produce good results on
+some repositories, it does not indicate that the tool will produce consistent results on all
+repositories. To ensure the minimum quality of the results, one of the solutions might be using both
+automated method for basic filtering and manual method for advance refinement.
 
 \section{Testing}
 This section covers a brief overview of the testing stage. It will be necessary to consider some of
