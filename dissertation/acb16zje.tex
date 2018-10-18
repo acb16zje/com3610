@@ -284,24 +284,37 @@ attacks. Hansman and Hunt \cite{hansman_2005} adapted the ideas of Lindqvist and
 suggested the concept of dimensions, where they categorised the attacks into several layers.
 
 \section{Mining Software Repositories}
-Mining Software Repositories (\textbf{MSR}) is a process of collecting and analysing big data from
-repositories, which includes version control repositories, mailing list repositories, and bug
-tracking repositories. The purpose of mining software repositories is to extract practical
+The term `Mining Software Repositories' (\textbf{MSR}) is a process of collecting and analysing big
+data from repositories, which includes version control repositories, mailing list repositories, and
+bug tracking repositories. The purpose of mining software repositories is to extract practical
 information from rich metadata and discover hidden trends about a specific evolutionary
 characteristic \cite{kagdi_2007}. The information collected could be used in various development
 process. For example, some developers could gain insight by mining repositories, which may help them
 to enhance their software quality based on previous implementation evidence of other developers
 \cite{hassan_2008}.
 
-\subsection{}
-Matsushita, Sasaki, and Inoue \cite{matsushita_2005} developed a system known as CoxR that is able
-to analyse open source repositories to search for code fragments, files and commit logs through the
-keywords provided. The CoxR system has an integrated analysis module, and the module consists of two
-functions: lexical analysis function and token comparing function. Although the main objective of
-CoxR system is not about finding security related commits in open source repositories, the
-methodology of CoxR system for searching the commit history is suitable to be used as an
-implementation reference.
+In order to identify both hidden and publicly disclosed patches, it is required to make effective
+use of MSR technique. A MSR process is normally carried out using tools or scripts made by the
+researchers themselves. Although there are many researches in the MSR field in the recent years, the
+majority of the tools or scrips used are not made available to the public \cite{robles_2010}. As a
+result, it is not possible to fully replicate and make improvements of the previous research
+methods. In spite of not having all the key information about the previous work, Shang
+\cite{shang_2009} suggested that the MSR process should be splitted into several stages, with each
+stage focusing on specific topic of the problem to maximise the efficiency.
 
+\subsection{Keywords Search}
+Keywords search is the initial procedure of retrieving information from a repository. The
+prerequisite is that the repository must have sufficient amount of valuable information, which can
+be estimated by judging the history of the repository. To correctly and precisely retrieve the
+information from a query, it is required to integrate some algorithms and modules into the search
+function.
+
+Matsushita, Sasaki, and Inoue \cite{matsushita_2005} developed a repository search system
+that make use of two functions: lexical analysis function and token comparing function. The system
+produced very detailed results by deploying recursive search strategy into every commit. On the
+contrary, Mockus and Votta \cite{mockus_2000} designed an automated program that
+
+\subsection{Vulnerability Patch Prediction}
 Williams and Hollingsworth \cite{williams_2005} developed a source code analysis tool that searches
 for bug fixes and combines with information mined from repositories to improve the results. It is
 stated that the most efficient way to utilise the historical information is to ignore the commit
@@ -312,6 +325,7 @@ if the warnings produced by the same function have decreased between two version
 result produced is a list of functions that are related to a potential bug fix in the commit
 history.
 
+\subsection{Mining Vulnerabilities}
 This project extends prior work on Reis and Abreu's \cite{secbench} Secbench Mining Tool. The tool
 aims to find vulnerabilities patch in GitHub repositories by using specific regular expressions for
 each vulnerability pattern. Then it creates a test case for every vulnerability found and these test
@@ -396,20 +410,23 @@ integrated into the tool to enhance its functionality.
 
 \subsection{File Format of Result}
 The JavaScript Object Notation (\textbf{JSON}) \cite{json} has been chosen as the file format for
-storing the results in this project. While various alternative data interchange formats such as the
-Extensible Markup Language (\textbf{XML}) \cite{xml} has its unique advantages, it is important to
-choose a data interchange format that consumes less resource and have lower processing time for
-large amount of data. Since it has been proved that JSON has better performance than XML in terms of
-processing time and resource utilisation \cite{nurseitov_2009}, it is considered that JSON would be
-the best option for this project.
+storing the results in this project. This is because JSON is supported in Python and it does not
+require complicated operations in Python to access the data. While various alternative data
+interchange formats such as the Extensible Markup Language (\textbf{XML}) \cite{xml} has its unique
+advantages, it is important to choose a data interchange format that consumes less resource and have
+lower processing time for large amount of data. Since it has been proved that JSON has better
+performance than XML in terms of processing time and resource utilisation \cite{nurseitov_2009}, it
+is considered that JSON would be the best option for this project.
 
 \section{Proposed Method}
-The ideal concept of this project is to build a command-line interface program that is able to run
-two separate process: the \textbf{mining} process and the \textbf{evaluation} process. The
-\textbf{mining} process takes a Git repository as input, searches through the commit log, and stores
-the list of commits that might potentially contain a patch in a JSON file. The \textbf{evaluation}
-process takes a JSON file as input, and check the code difference of every commit in the log file to
-identify the real patches.
+This project strongly emphasises the need for finding security issues in open source repositories
+through MSR. While it might be impossible to discover the security patches in a repository through a
+single search, the problem could be solved using divide and conquer. The ideal concept of this
+project is to build a command-line interface program that is able to run two separate process: the
+\textbf{mining} process and the \textbf{evaluation} process. The \textbf{mining} process takes a Git
+repository as input, searches through the commit log, and stores the list of commits that might
+potentially contain a patch in a JSON file. The \textbf{evaluation} process takes a JSON file as
+input, and check the code difference of every commit in the log file to identify the real patches.
 
 \section{Problems and Constraints}
 As mentioned in \hyperref[sec:challenges]{\textbf{Section 1.3}}, the main challenges of this project
@@ -449,9 +466,6 @@ program would not be able to handle complicated errors during the early implemen
 project schedule would become a iterative process between implementation and testing. It is assumed
 that the testing stage would be the most time-consuming process in the whole project, thus it might
 be required to allocate more time and effort into this stage
-
-% One of the major challenges in this project is the classification or evaluation of the
-% vulnerabilities.
 
 % \chapter{Design}
 

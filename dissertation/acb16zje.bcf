@@ -2004,17 +2004,20 @@
     <bcf:citekey order="27">hansman_2005</bcf:citekey>
     <bcf:citekey order="28">kagdi_2007</bcf:citekey>
     <bcf:citekey order="29">hassan_2008</bcf:citekey>
-    <bcf:citekey order="30">matsushita_2005</bcf:citekey>
-    <bcf:citekey order="31">williams_2005</bcf:citekey>
-    <bcf:citekey order="32">secbench</bcf:citekey>
-    <bcf:citekey order="33">reis_2017</bcf:citekey>
-    <bcf:citekey order="34">python</bcf:citekey>
-    <bcf:citekey order="35">pygithub</bcf:citekey>
-    <bcf:citekey order="36">gitpython</bcf:citekey>
-    <bcf:citekey order="37">json</bcf:citekey>
-    <bcf:citekey order="38">xml</bcf:citekey>
-    <bcf:citekey order="39">nurseitov_2009</bcf:citekey>
-    <bcf:citekey order="40">unittest</bcf:citekey>
+    <bcf:citekey order="30">robles_2010</bcf:citekey>
+    <bcf:citekey order="31">shang_2009</bcf:citekey>
+    <bcf:citekey order="32">matsushita_2005</bcf:citekey>
+    <bcf:citekey order="33">mockus_2000</bcf:citekey>
+    <bcf:citekey order="34">williams_2005</bcf:citekey>
+    <bcf:citekey order="35">secbench</bcf:citekey>
+    <bcf:citekey order="36">reis_2017</bcf:citekey>
+    <bcf:citekey order="37">python</bcf:citekey>
+    <bcf:citekey order="38">pygithub</bcf:citekey>
+    <bcf:citekey order="39">gitpython</bcf:citekey>
+    <bcf:citekey order="40">json</bcf:citekey>
+    <bcf:citekey order="41">xml</bcf:citekey>
+    <bcf:citekey order="42">nurseitov_2009</bcf:citekey>
+    <bcf:citekey order="43">unittest</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="nty">
