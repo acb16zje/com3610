@@ -51,7 +51,6 @@
 \pagenumbering{roman}
 
 \chapter*{Declaration}
-\addcontentsline{toc}{chapter}{Declaration}
 All sentences or passages quoted in this report from other people's work have been specifically
 acknowledged by clear cross-referencing to author, work and page(s). Any illustrations that are not
 the work of the author of this report have been used with the explicit permission of the originator
@@ -68,10 +67,8 @@ will be considered grounds for failure in this project and the degree examinatio
 \newpage
 
 \chapter*{Abstract}
-\addcontentsline{toc}{chapter}{Abstract}
 
 \chapter*{Acknowledgements}
-\addcontentsline{toc}{chapter}{Acknowledgements}
 I would firstly like to thank my parents for their unconditional love and the full financial supoprt
 throughout my university life. It would not be possible for me to finish this project and my course
 without them.
@@ -84,9 +81,9 @@ with you in the future.
 
 \tableofcontents
 
-% \listoffigures \addcontentsline{toc}{chapter}{List of Figures}
+% \listoffigures
 
-\listoftables \addcontentsline{toc}{chapter}{List of Tables}
+\listoftables
 
 \newpage
 
@@ -296,19 +293,18 @@ to enhance their software quality based on previous implementation evidence of o
 In order to identify both hidden and publicly disclosed patches, it is required to make effective
 use of MSR technique. A MSR process is normally carried out using tools or scripts made by the
 researchers themselves. Although there are many researches in the MSR field in the recent years, the
-majority of the tools or scrips used are not made available to the public \cite{robles_2010}. As a
-result, it is not possible to fully replicate and make improvements of the previous research
-methods. In spite of not having all the key information about the previous work, Shang
+majority of the tools or scrips used are not published publicly \cite{robles_2010}. As a result, it
+is not possible to fully replicate the previous research methods and make improvements based on
+that. Despite the undisclosed information of research methods in many papers, Shang
 \cite{shang_2009} suggested that the MSR process should be splitted into several stages, with each
-stage focusing on specific topic of the problem to maximise the efficiency.
+stage focusing on specific topic of the problem to achieve the optimal efficiency.
 
 \subsection{Keywords Search}
-Keywords search is the initial procedure of retrieving information from a repository. The
-prerequisite is that the repository must have sufficient amount of valuable information, which can
-be estimated by judging the history of the repository. To correctly and precisely retrieve the
-information from a query, it is required to integrate some algorithms and modules into the search
-function.
-
+Keywords search is the core procedure of retrieving information from a repository. The prerequisite
+is that the repository must have sufficient amount of valuable information, which can be estimated
+by judging the history of the repository. To correctly and precisely retrieve the information from a
+query, it is required to integrate some algorithms and modules into the search function.
+% bookmark
 Matsushita, Sasaki, and Inoue \cite{matsushita_2005} developed a repository search system
 that make use of two functions: lexical analysis function and token comparing function. The system
 produced very detailed results by deploying recursive search strategy into every commit. On the
@@ -466,6 +462,13 @@ program would not be able to handle complicated errors during the early implemen
 project schedule would become a iterative process between implementation and testing. It is assumed
 that the testing stage would be the most time-consuming process in the whole project, thus it might
 be required to allocate more time and effort into this stage
+
+\section{Ethical Issues}
+In this project, it has to be clearly declared that any known or unknown vulnerabilities found by
+the tool in any repositories will not be publicly disclosed without the permission of the original
+authors. The reason is that there are no guarantee that the respective software vendors will respond
+to any of the vulnerabilities found, and publishing the vulnerabilities publicly would make the
+softwares highly vulnerable to attackers \cite{arora_2010}.
 
 % \chapter{Design}
 
