@@ -66,7 +66,7 @@ will be considered grounds for failure in this project and the degree examinatio
 
 \newpage
 
-\chapter*{Abstract}
+% \chapter*{Abstract}
 
 \chapter*{Acknowledgements}
 I would firstly like to thank my parents for their unconditional love and the full financial supoprt
@@ -112,8 +112,7 @@ that investigate commit messages and identify vulnerable software components can
 reduce the time and cost required to mitigate the vulnerabilities. Moreover, the mining tool should
 be applicable to all types of software projects that are using Git as their version control system.
 
-\section{Objectives}
-\label{sec:objectives}
+\section{Objectives} \label{sec:objectives}
 \begin{itemize}
 	\item Identify the security patterns of the most popular security issues in OWASP Top Ten Project.
 	The patterns should be expressed using regular expressions.
@@ -125,8 +124,7 @@ be applicable to all types of software projects that are using Git as their vers
 	process to make the mining results easier to verify and debug.
 \end{itemize}
 
-\section{Challenges}
-\label{sec:challenges}
+\section{Challenges} \label{sec:challenges}
 \begin{itemize}
 	\item \textbf{Data}: There are a large number of open source repositories available on GitHub.
 	However, it is challenging to find a set of sample repositories that can produce accurate and
@@ -180,29 +178,20 @@ the security aspect of open source softwares. Lastly, previous and existing rele
 reviewed and a critical analysis is provided for the comparison of these resources and this project.
 
 \section{Open Source Security}
-There are currently two approaches to the license distribution of software: open source and closed
-source. The users of closed source software are limited to accept the level of security
-provided by their chosen vendor. In contrast, open source softwares provide more flexibility and
-freedom over the security option to their users \cite{payne_2002}, where the users can decide to
-wait for a patch from the vendor or collaborate with the community to develop their own.
+The security of open source softwares mostly rely on the collaboration of the community with the
+developers. It is deduced that the power of open data and crowdsourcing will make open source
+security more reliable \cite{hoepman_2007, witten_2001}, and provides more flexibility and freedom
+over the security option to their users \cite{payne_2002}. However, when it comes to publishing the
+vulnerability information, it is suggested that the list of unconfirmed vulnerabilities should not
+be published publicly to protect the users from potential harms \cite{schryen_2011}.
 
-Hoepman and Jacobs \cite{hoepman_2007} suggested that open source softwares will have better
-security and reliability than closed source softwares through the power of open data and
-crowdsourcing. Conversely, Schryen \cite{schryen_2011} has shown that open source and closed source
-softwares do not have significant security dfference in his experiment and concluded that the policy
-of the developers is the main factor that determines the security. Wheeler \cite{wheeler_2015}
-agrees with Schryen's conclusion, but he argued that Schryen's experiment had a small sample size,
-so the results may not be accurate.
-
-While both statements might be true, Cowan \cite{cowan_2003} indicated that the security of a
-software is determined by many factors, and the source availability model is not the primary driver.
-Witten, Landwehr, and Caloyannides \cite{witten_2001} stated that code review is the most effective
-method to improve system security and deduced that closed source systems could reach the same
-security level as open source systems if there were sufficient review processes being carried out.
-In recent years, the growing popularity of open source softwares has attracted a large number of
-people to join the community. Some open source softwares are now believed to have better quality as
-compared to their respective closed source softwares. However, this argument has yet to be proven in
-a formal way.
+Arora, Nandkumar and Telang \cite{arora_2006} have shown that vulnerabilities that are either secret
+or published but not patched attract fewer attacks than patched vulnerabilities. This implies that
+developers might secretly include a patch into some of the commits, and it is not explicitly
+recorded in the commit messages. It is a rational approach for not disclosing the work attempted to
+fix a vulnerability, but this could make it harder to trace back the solution if a similar
+vulnerability is discovered in the future. Therefore, it would be very useful for the developers if
+the mining tool developed in this project could detect the silent patches.
 
 \section{Common Vulnerabilities and Exposures}
 The Common Vulnerabilities and Exposures (\textbf{CVE}) is a project launched by Mitre Corporation
@@ -228,11 +217,27 @@ committed to improve and raise the awareness of software security \cite{owasp_ho
 members of OWASP have worked together to produce a list of the most critical web application
 security risks based on the community feedback and comprehensive data contributed by different
 organizations. The list consists of ten categories of security attacks which are considered to be
-the most dangerous and popular in the recent years. The vulnerabilities listed by OWASP in 2017
-\cite{owasp_top10} will be analysed and the security risks listed in older versions of the top ten
-project will covered too.
+the most dangerous and popular in the recent years. One of the vulnerabilities that is closely
+related to this project is \textit{Using Components with Known Vulnerabilities}, which will be
+extensively discussed. In addition, \textit{Injection} and \textit{Broken Authentication} will be
+discussed as a reference for this project because they are listed as the top two vulnerabilities in
+OWASP Top Ten 2017 \cite{owasp_top10}.
 
-\subsection{Injection}
+\subsection{Using Components with Known Vulnerabilities} \label{subsec:components}
+Components such as plugins, libraries, and modules can often be found in different parts of a
+software. Third-party components are increasingly being integrated into softwares to reduce the
+amount of time and effort required for development \cite{balzarotti_2006}, but they also increase
+the risk of vulnerabilities being introduced into the softwares. These components are mostly
+maintened by different developers or organisations hence it is unable to guarantee that all the
+components used will be provided with the latest security patch.
+
+Cadariu et al. \cite{cadariu_2015} used OWASP Dependency Check tool \cite{owasp_dependency} to find
+all known vulnerabilities in proprietary softwares written in Java. However, their results contained
+a considerable amount of both false positives and false negatives, which directly affected the
+precision of their technique. Therefore, it is also expected that the final results produced in this
+project might encounter the same problem.
+
+\subsection{Injection} \label{subsec:injection}
 An injection attack is the exploitation of a software vulnerability where the attacker injects
 malicious code into the software applications and perform harmful executions. The most common types
 of injection attacks are Structured Query Language (\textbf{SQL}) injection, cross-site scripting,
@@ -254,7 +259,7 @@ could be easily detected and exploited at the same time, for example, the open s
 tackle this problem would be adding an extra security mechanism for handling the user inputs on the
 web pages.
 
-\subsection{Broken Authentication}
+\subsection{Broken Authentication} \label{subsec:authentication}
 Broken authentication happens when the attackers are allowed to perform malicious actions such as
 brute force dictionary attack on the authentication system. It might also be one of the outcome of a
 successful injection attack. According to Huluka and Popov \cite{huluka_2012}, this vulnerability
@@ -262,38 +267,18 @@ are very prevalent and has various causes, in which the lack of attention to sec
 most critial because developers often overlook certain scenarios which are likely to be exploited by
 attackers.
 
-\subsection{Using Components with Known Vulnerabilities}
-Components such as plugins, libraries, and modules can often be found in different parts of a
-software. Third-party components are increasingly being integrated into softwares to reduce the
-amount of time and effort required for development \cite{balzarotti_2006}, but they also increase
-the risk of vulnerabilities being introduced into the softwares. These components are mostly
-maintened by different developers or organisations hence it is unable to guarantee that all the
-components used will be provided with the latest security patch.
-
-Cadariu et al. \cite{cadariu_2015} used OWASP Dependency Check tool \cite{owasp_dependency} to find
-all known vulnerabilities in proprietary softwares written in Java. However, their results contained
-a considerable amount of both false positives and false negatives, which directly affected the
-precision of their technique. Therefore, it is also expected that the final results produced in this
-project might encounter the same problem.
-
-\section{Vulnerabilities Classification Techniques}
-Many classification techniques of computer attacks have been introduced before open source became
-popular, and these early works have significant influence on the later work of finding and
-classifying security issues in open source software repositories. An early work of Lindqvist and
-Jonsson \cite{lindqvist_1999} implied that the \textit{location} of a computer flaw is a determining
-factor in the classification process, in which their results are obtained through real penetration
-attacks. Hansman and Hunt \cite{hansman_2005} adapted the ideas of Lindqvist and Jonsson and
-suggested the concept of dimensions, where they categorised the attacks into several layers.
-
 \section{Mining Software Repositories}
-The term `Mining Software Repositories' (\textbf{MSR}) is a process of collecting and analysing big
-data from repositories, which includes version control repositories, mailing list repositories, and
-bug tracking repositories. The purpose of mining software repositories is to extract practical
+Mining Software Repositories (\textbf{MSR}) is a process of collecting and analysing big data from
+repositories, which includes version control repositories, mailing list repositories, and bug
+tracking repositories. MSR is applicable to a wide range of fields such as business, research, and
+security \cite{poncin_2011}. The purpose of mining software repositories is to extract practical
 information from rich metadata and discover hidden trends about a specific evolutionary
 characteristic \cite{kagdi_2007}. The information collected could be used in various development
 process. For example, some developers could gain insight by mining repositories, which may help them
 to enhance their software quality based on previous implementation evidence of other developers
-\cite{hassan_2008}.
+\cite{hassan_2008}. While MSR have various usages in different areas, the primary objective of this
+project will be focusing on finding the security issues in open source software repositories through
+MSR.
 
 In order to identify both hidden and publicly disclosed patches, it is required to make effective
 use of MSR technique. A MSR process is normally carried out using tools or scripts made by the
@@ -326,7 +311,25 @@ if the warnings produced by the same function have decreased between two version
 result produced is a list of functions that are related to a potential bug fix in the commit
 history.
 
+\subsection{Vulnerabilities Classification Techniques}
+Many classification techniques of computer attacks have been introduced before open source became
+popular, and these early works have significant influence on the later work of finding and
+classifying security issues in open source software repositories. An early work of Lindqvist and
+Jonsson \cite{lindqvist_1999} implied that the \textit{location} of a computer flaw is a determining
+factor in the classification process, in which their results are obtained through real penetration
+attacks. Hansman and Hunt \cite{hansman_2005} adapted the ideas of Lindqvist and Jonsson and
+suggested the concept of dimensions, where they categorised the attacks into several layers.
+
 \subsection{Mining Vulnerabilities}
+Cowan \cite{cowan_2003} suggested a list of software auditing and vulnerability mitigation tools
+that perform static code and runtime analysis respectively to find bugs and vulnerabilities. This
+approach is popular because it is able to find simple bugs in a short amount of time. However,
+Bessey et al. \cite{bessey_2010} claimed that static tools have negative effect on technical
+develoepment due to its high false positives nature. While this statement might be true, it does not
+imply that all static tools are not effective as they differ in the techniques used in finding
+vulnerabilities \cite{moser_2008}. It might require several experiments of different configurations
+to obtain the best result, and the result may vary across different data sets.
+
 This project extends prior work on Reis and Abreu's \cite{secbench} Secbench Mining Tool. The tool
 aims to find vulnerabilities patch in GitHub repositories by using specific regular expressions for
 each vulnerability pattern. Then it creates a test case for every vulnerability found and these test
@@ -350,17 +353,18 @@ possible to provide a detailed description and more clearly defined objectives t
 feasibility of this project.
 
 \begin{enumerate}
-	\item \textbf{Vulnerability patterns}: Identifying the each of the vulnerability pattern
-	independently and individually is a time-comsuming process. There is also no guarantee that the
-	patterns will produce accurate results during the testing stage. Therefore, it is decided to reuse
-	and improve the patterns provided in previous related work.
+	\item \textbf{Vulnerability patterns}: The term `vulnerability pattern' is used to represent the
+  commit message pattern of different vulnerabilities. Correctly identifying the regular
+  expression of each vulnerability pattern is a time-comsuming process. It would need considerable
+  refinement throughout the whole project. Hence, it could be more appropriate to reuse and
+  improve the patterns provided in previous related work.
 	\item \textbf{Mining the commits}: This task involves creating a repository mining tool that makes
 	extensive use of the pre-defined regular expressions to search for the relative commits. It will
 	be necessary to consider how closely a commit needs to match with the patterns for it to be
 	included in the result. The file format of the result will be discussed in the later section.
 	\item \textbf{Evaluating the mined commits}: The mining tool can be extended to include a separate
 	function that evaluates the commits mined to find the actual code commit addressing the security
-	vulnerabilities. However, all previous related work performed did not use automated techinques for
+	vulnerabilities. However, all previous related work performed did not use automated techniques for
 	the evaluation. This project will consider to automate the evaluation process to some extent while
 	maintaining the accuracy of the results at the standard level.
 \end{enumerate}
@@ -368,7 +372,7 @@ feasibility of this project.
 \section{Software Specification}
 \begin{table}[H]
 	\begin{center}
-		\begin{tabular}{|p{9.5cm}|c|}
+		\begin{tabular}{|p{10.3cm}|c|}
 			\hline
 			\rowcolor[HTML]{D8D8D8}
 			\multicolumn{1}{|c|}{Criteria} & Importance \\ \hline
@@ -485,11 +489,9 @@ original authors. The reason is that publishing the vulnerabilities publicly wou
 softwares highly vulnerable to attackers \cite{arora_2010}, and it is recommended to wait for the
 official announcement from the software vendors.
 
-\chapter*{Progress}
-
 \chapter*{Conclusions and Project Plan}
-\section{Plan of Action}
-\subsection{Semester 1 and Christmas Vacation}
+\section*{Plan of Action}
+\subsection*{Semester 1 and Christmas Vacation}
 \begin{ganttchart}[
 		hgrid=true,
 		vgrid={draw=none, dotted},
@@ -516,7 +518,7 @@ official announcement from the software vendors.
 	supervisor.
 \end{itemize}
 
-\subsection{Semester 2}
+\subsection*{Semester 2}
 \begin{ganttchart}[
 	hgrid=true,
 	vgrid={draw=none, dotted},
