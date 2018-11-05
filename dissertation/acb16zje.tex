@@ -67,7 +67,16 @@ will be considered grounds for failure in this project and the degree examinatio
 
 \newpage
 
-% \chapter*{Abstract}
+\chapter*{Abstract}
+Each time a vulnerability is identified in a Free/Libre and Open Source Software (FLOSS) project,
+the developers will start the fixing process and publish several commits to address the
+vulnerability. The same condition also applies to FLOSS components, which are widely used in both
+proprietary and open source softwares. The purpose of this project is to develop a repository mining
+tool that is able to detect commits that fix both known and unknown vulnerabilities. From the
+identified commits, the tool can determine whether an application is using a vulnerable component.
+
+To improve the correctness of the mining results, the tool can be extended to evaluate the lines of
+code changed between commits to identify the real vulnerability fixing commits. \textit{RESULTS OBTAINED ARE BRIEFLY DISCUSSED HERE}
 
 \chapter*{Acknowledgements}
 I would like to thank my parents for their unconditional love and the full financial support
@@ -102,7 +111,7 @@ software vulnerabilities \cite{dabbish_2012}.
 
 Building a secure software is expensive, difficult, and time-consuming. It is necessary to know when
 and how a security vulnerability is fixed throughout the software lifecycle. Software components
-such as plugins and application processing interfaces (\textbf{APIs}) are generally developed by
+such as plugins and application processing interfaces (\textbf{APIs}) are usually developed by
 third-party developers and widely reused in both open source and closed source softwares
 \cite{khan_2001}. An important factor of the software security is determined by the
 information provided by the vendor of the software components for deciding whether to perform
@@ -112,24 +121,24 @@ vulnerabilities identified in the software components used. Furthermore, it woul
 the developers of the software components clearly record the list of changes or provide informative
 Git commit messages for every version update of their component.
 
-To perform a risk assessment of a potentially vulnerable component, it is required to have
-a deep understanding of the vulnerable methods. This information is often described explicitly in
-the vulnerability report such as the NVD and the CVE. Therefore, identifying the vulnerability
-fixing commits is a great approach of locating the vulnerable lines of code, which allows checking
-if a vulnerable component is being used or not. However, some developers believe that public
-disclosure of security vulnerabilities patch is dangerous, thus vulnerability fixing commits are not
-commonly identified and recorded specifically in some open source software repositories to prevent
-malicious exploits \cite{arora_2005}. As a result, there is a practical difficulty in applying this
-analysis approach to find security relevant commits that are not documented using a CVE or similar
-format, where these commits are known as the silent patches.
+To perform a risk assessment of a potentially vulnerable component, it is required to have a deep
+understanding of the vulnerable methods. This information is often described explicitly in the
+vulnerability report such as the NVD and the CVE. Therefore, identifying the vulnerability fixing
+commits is a great approach of locating the vulnerable lines of code, which allows checking if a
+vulnerable component is being used or not. However, some developers believe that public disclosure
+of security vulnerabilities patch is dangerous, thus vulnerability fixing commits are not commonly
+identified and recorded specifically in some open source software repositories to prevent malicious
+exploits \cite{arora_2005}. As a result, there is a practical difficulty in applying this analysis
+approach to find the security relevant commits that are not documented using CVE or a similar
+format, which are known as the silent patches.
 
 To address these issues, a repository mining tool that investigates commit messages and identifies
 vulnerable software components can be developed to reduce the time and cost required to mitigate the
-vulnerabilities. The repository mining tool should be able to detect the silent patches through a
-more advanced process, which the tool must analyse the source code changes between commits to locate
-the vulnerable lines of code. Moreover, the mining tool should be applicable to all types of
-software projects that are using Git as their version control system. Projects that are using a
-different version control system are only supported after they have been migrated to Git.
+vulnerabilities. The repository mining tool should be able to detect the silent patches through an
+advanced process, which the tool must analyse the source code changes between commits to locate the
+vulnerable lines of code. Moreover, the mining tool should be applicable to all types of software
+projects that are using Git as their version control system. Projects that are using a different
+version control system are also supported after they have been migrated to Git.
 
 \section{Objectives} \label{sec:objectives}
 \begin{itemize}
@@ -188,16 +197,16 @@ results found.
 
 \section{Relationship to Degree Programme}
 This project focuses on the research of real-world software security problems and offers valuable
-insights into computer security. By studying the patterns of security vulnerabilities patch, the
-practical knowledge for building and ensuring a secure system could be gained. Moreover, the
-difficulty of improving software security could be experienced during the evaluation process in this
-project. This relates to the Software Engineering degree as it requires a good understanding in
-version control system and it aims to improve softwares quality by reducing the time and effort
-needed to find security vulnerabilities in the source code.
+insights into computer security. By studying the patterns of security vulnerabilities patch in open
+source repositories, the practical knowledge for building and ensuring a secure system could be
+gained. Moreover, the difficulty of improving software security could be experienced during the
+evaluation process in this project. This relates to the Software Engineering degree as it requires a
+good understanding in version control system and it aims to improve softwares quality by reducing
+the time and effort needed to find security vulnerabilities in the source code.
 
 \chapter{Literature Review}
 This chapter will start with the background contents of the project, and then focus on discussing
-the security aspect of open source softwares. Lastly, previous and existing relevant works are
+the security aspect of open source softwares. Additionally, previous and existing relevant works are
 reviewed and a critical analysis is provided for the comparison of these resources and this project.
 
 \section{Open Source Security}
@@ -210,12 +219,13 @@ publicly to protect the users from potential harms \cite{schryen_2011}.
 
 Arora, Nandkumar and Telang \cite{arora_2006} have shown that vulnerabilities that are either secret
 or published but not patched attract fewer attacks than patched vulnerabilities. Although the
-research was conducted in 2006 and the results might be outdated, it implies that developers might
-include a silent patch into some of the commits, and it is not explicitly recorded in the commit
-messages. It is a rational approach for not disclosing the work attempted to fix a vulnerability,
-but this could make it harder to trace back the solution if a similar vulnerability is discovered in
-the future. Therefore, it would be very useful for the developers if the mining tool developed in
-this project could detect the silent patches.
+research was conducted in 2006 and the results might be outdated, it still implies that developers
+might include a silent patch into some of the commits that is not explicitly recorded in the commit
+messages. It might be a rational approach for not disclosing the work attempted to fix a
+vulnerability, but other developers might not be informed of the content change. Furthermore, if a
+similar vulnerability is discovered in the future, developers would need more effort for finding the
+previous solution. Therefore, it would be very useful for the developers if the mining tool
+developed in this project could detect the silent patches.
 
 \section{Common Weakness Enumeration}
 The Common Weakness Enumeration (\textbf{CWE}) is a project launched by the Mitre Corporation and
@@ -228,13 +238,14 @@ entry in the CWE list contains detailed information about the specific weakness 
 a unique ID number.
 
 \section{Common Vulnerabilities and Exposures}
-The Common Vulnerabilities and Exposures (\textbf{CVE}) is a project launched by the Mitre
-Corporation \cite{cve} to provides the computer security community with a complete list of publicly
-known security vulnerabilities, and each vulnerability is identified by a unique CVE ID number. It
-is now the standardised solution and industry-recognised standard for identifying vulnerabilities
-and exposures. However, developers and vendors are not required to publish security vulnerabilities
-of their projects in CVE format, and they are allowed to use their own naming scheme for the
-vulnerabilities, even though the same vulnerability has been recorded in the CVE list.
+The Common Vulnerabilities and Exposures (\textbf{CVE}) is another security project launched by the
+Mitre Corporation \cite{cve} to provide the community with a complete list of publicly known
+security vulnerabilities, known as the CVE entries. Each CVE entry is defined by an ID number, and
+includes a description followed by any relevant resources about the vulnerability. It is now the
+standardised solution and industry-recognised standard for identifying vulnerabilities and
+exposures. However, developers and vendors are not required to publish security vulnerabilities of
+their projects in CVE format. They are allowed to use their own naming scheme for the
+vulnerabilities, even if the same vulnerability has already been recorded in the CVE list.
 
 \section{Security Issues in Open Source Softwares}
 The Open Web Application Security Project (\textbf{OWASP}) is a worldwide non-profit organization
@@ -242,36 +253,72 @@ committed to improve and raise the awareness of software security \cite{owasp_ho
 members of OWASP have worked together to produce a list of the most critical web application
 security risks based on the community feedback and comprehensive data contributed by different
 organizations. The list consists of ten categories of security attacks which are considered to be
-the most dangerous and popular in recent years. In OWASP Top Ten 2017 \cite{owasp_top10}, One of the
+the most dangerous and popular in recent years. In OWASP Top Ten 2017 \cite{owasp_top10}, one of the
 vulnerabilities that is closely related to this project is \textit{Using Components with Known
 Vulnerabilities}, which will be extensively discussed.
 
 \subsection{Using Components with Known Vulnerabilities} \label{subsec:components}
-Components such as plugins, libraries, and modules can often be found in different parts of a
-software. Third-party components are increasingly being integrated into softwares to reduce the
-amount of time and effort required for development \cite{balzarotti_2006}, but they also increase
-the risk of vulnerabilities being introduced into the softwares. These components are mostly
-maintained by different developers or organisations hence it is unable to guarantee that all the
-components used will be provided with the latest security patch.
+It has been indicated that a small software component could create a large error in a software
+system \cite{basili_1984, munson_1992, selby_1988}. Components such as plugins, libraries, and
+modules are ubiquitous in both open source and proprietary softwares. Third-party components are
+increasingly being integrated into softwares to reduce the amount of time and effort required for
+development \cite{balzarotti_2006}, but they also increase the risk of vulnerabilities being
+introduced into the softwares. These components are mostly maintained by different developers or
+organisations, and the time required to fix a vulnerability varies between developers. While the
+majority of third-party components are still being actively maintained after a long time, some of
+them might have depreciated and security patches are no longer being released. The users might
+continue to use a depreciated component if they could not find a better alternative. However, using
+outdated components greatly increase the risk of software exploits. Therefore, for any large-scale
+system, the developers must scan for vulnerabilities regularly and subscribe to the security news
+related to the components used to reduce the risk of security vulnerabilities being introduced into
+the system.
 
-Cadariu et al. \cite{cadariu_2015} used OWASP Dependency Check tool \cite{owasp_dependency} to find
-all known vulnerabilities in proprietary softwares written in Java. However, their results contained
-a considerable amount of both false positives and false negatives, which directly affected the
-precision of their technique. Therefore, it is also expected that the final results produced in this
-project might encounter the same problem.
+Vulnerable components can be found using methods ranging from dependency checking to machine
+learning. While this project focuses on studying the former approach, the latter approach
+concentrates on finding the relationship between software errors and vulnerabilities to identify or
+predict high-risk components. Dependency checking is an approach of detecting dependencies (plugins,
+libraries, etc.) with known vulnerabilities in a software. Several open source tools including OWASP
+Dependency Check \cite{owasp_dependency}, Retire.js \cite{retirejs}, and Safety \cite{safety} are
+applications that identifies vulnerable dependencies in a software project. Cadariu et al.
+\cite{cadariu_2015} have used the OWASP Dependency Check tool to find all known vulnerabilities that
+have a unique CVE identifier in proprietary softwares written in Java. According to their study, the
+OWASP Dependency Check tool has low precision due to the high false positives rate in the large data
+sets. However, Cadariu et al. justified that the tool is still usable by taking into account that
+the checking process is automated and any security issue found is considered a valuable information
+for the users.
+
+Machine learning-based approaches are also applicable to find vulnerable components in a software
+system. Briand, Basili and Hetmanski \cite{briand_1993} have developed a model with Optimised Set
+Reduction (OSR) algorithm that uses set theory, predicate logic, probability, and vector in the
+calculation. The model focused on identifying the components that are more likely to produce a large
+number of errors and it was proved to be effective, but the main drawbacks are the complexity of the
+implementation and the extensive calculations required. In comparison to Briand's approach,
+Scandariato et al. \cite{scandariato_2014} have built a model that uses text mining techniques to
+predict vulnerable components. While Briand's model is capable of identifying high-risk components,
+Scandariato's model is able to predict vulnerabilities in the future releases of a software
+components, and the results achieved are satisfactory.
+
+As a conclusion, static dependency checking tools provide a fast and easy way to scan for vulnerable
+components, but the users are required to verify the validity and compatibility of the Results with
+their softwares. In contrast, models that use machine learning technique has been proved to be
+effective and are more likely to produce consistent and accurate results. However, such models
+require a large amount of training data and are only designed for a specific area. While dependency
+checking approach is more related to the scope of this project, the capability of predicting
+vulnerable software components through machine learning is a great way of preventing severe software
+errors. In future work, machine learning could be incorporated into the tool developed in this
+project to improve its overall effectiveness.
 
 \section{Mining Software Repositories}
 Mining Software Repositories (\textbf{MSR}) is a process of collecting and analysing data from
 repositories, which includes version control repositories, mailing list repositories, and bug
 tracking repositories. MSR applies to a wide range of fields such as business, research, and
-security \cite{poncin_2011}. The purpose of mining software repositories is to extract practical
-information from rich metadata and discover hidden trends about a specific evolutionary
-characteristic \cite{kagdi_2007}. The information collected could be used in various development
-process. For example, some developers could gain insight by mining repositories, which may help them
-to enhance their software quality based on previous implementation evidence of other developers
-\cite{hassan_2008}. While MSR have various usages in different areas, the primary objective of this
-project will be focusing on finding the security issues in open source software repositories through
-MSR.
+security \cite{poncin_2011}. The purpose of MSR is to extract practical information from rich
+metadata and discover hidden trends about a specific evolutionary characteristic \cite{kagdi_2007}.
+The information collected could be used in various development process. For example, some developers
+could gain insight by mining repositories, which may help them to enhance their software quality
+based on previous implementation evidence of other developers \cite{hassan_2008}. While MSR have
+various usages in different areas, the primary objective of this project will be focusing on finding
+the security issues in open source software repositories through MSR.
 
 In order to identify both hidden and publicly disclosed patches, it is required to make effective
 use of MSR technique. A MSR process is normally carried out using tools or scripts made by the
@@ -283,42 +330,40 @@ that. Despite the undisclosed information of research methods in many papers, Sh
 stage focusing on a specific topic of the problem to achieve the optimal efficiency.
 
 \subsection{Keywords Search}
-Keywords search is the core procedure of retrieving information from a repository. The prerequisite
-is that the repository must have a sufficient amount of valuable information, which can be estimated
-by judging the history of the repository. To correctly and precisely retrieve the information from a
-query, it is required to integrate some algorithms and modules into the search function.
-% bookmark
-Matsushita, Sasaki, and Inoue \cite{matsushita_2005} developed a repository search system
-that makes use of two functions: lexical analysis function and token comparing function. The system
-produced very detailed results by deploying recursive search strategy into every commit. On the
-contrary, Mockus and Votta \cite{mockus_2000} designed an automated program that
-
-\subsection{Vulnerability Patch Prediction}
-Williams and Hollingsworth \cite{williams_2005} developed a source code analysis tool that searches
-for bug fixes and combines with information mined from repositories to improve the results. It is
-stated that the most efficient way to utilise the historical information is to ignore the commit
-messages and focus on mining the code changes. In order to locate the actual code changes for the
-bug fix, a function return value checker was implemented to compares the number of warnings produced
-by the same function across different versions. Williams and Hollingsworth assumed that a bug is
-fixed if the warnings produced by the same function have decreased between two versions, and the
-final result produced is a list of functions that are related to a potential bug fix in the commit
-history.
+Keywords search is the core procedure of retrieving information from a repository. For many complex
+approaches, the searching process is considered to be the fundamental step. If the initial results
+produced in the searching stage is good, a huge amount of effort could be reduced in the later
+stages. However, the prerequisite is that the repository must have a sufficient amount of valuable
+information, which can be estimated by judging the history of the repository. To correctly and
+precisely retrieve the information from a query, it is required to integrate some algorithms and
+modules into the search function. Matsushita, Sasaki, and Inoue \cite{matsushita_2005} developed a
+repository search system that makes use of two functions: lexical analysis function and token
+comparing function. The system produced very detailed results by deploying recursive search strategy
+into every commit. On the contrary, Mockus and Votta \cite{mockus_2000} designed an automated
+program that makes use of normalisation, word frequency analysis, and keyword clustering techniques
+to search the commit messages. Although the program is able to retrieve the results that include the
+keywords, the algorithm is unable to identify similar terms or inconsistent form of wording for the
+commit messages.
 
 \subsection{Finding Vulnerabilities}
-For every vulnerability identified in a repository, the vulnerability fixing process that involves
-analysis, implementation, testing, and release will be executed \cite{othmane_2015}. Most of the
-vulnerabilities fixing commits are pushed during the implementation and testing stage of the
-process. Hence, to search for a fixed vulnerability and investigate its details, it is necessary to
-find the respective fixing commits first.
+Meneely et al. \cite{meneely_2013} conducted a research to study the properties of commits that
+introduce vulnerabilities, and it is found that most vulnerabilities required an average 1175 days
+to fix. For every vulnerability identified in a repository, the vulnerability fixing process that
+involves analysis, implementation, testing, and release will be executed \cite{othmane_2015}. Most
+of the vulnerabilities fixing commits are pushed during the implementation and testing stage of the
+process. However, if the commit message of a fixing commit is ambiguous, it will be challenging for
+any repository mining tool to determine the correctness of the commit. In this situation, it is
+required to investigate the changed files to study the lines of code modified. This is a demanding
+task and often required manual investigation as code changes between commits are highly variable.
 
 Cowan \cite{cowan_2003} suggested a list of software auditing and vulnerability mitigation tools
-that perform static code and runtime analysis respectively to find bugs and vulnerabilities. This
-approach is popular because it is able to find simple bugs in a short amount of time. However,
-Bessey et al. \cite{bessey_2010} claimed that static tools have a negative effect on technical
-development due to its high false positives nature. While this statement might be true, it does not
-imply that all static tools are not effective as they differ in the techniques used in finding
-vulnerabilities \cite{moser_2008}. It might require several experiments of different configurations
-to obtain the best result, and the result may vary across different data sets.
+that perform static code and runtime analysis to find bugs and vulnerabilities. This approach is
+popular because it is able to find simple bugs in a short amount of time. However, Bessey et al.
+\cite{bessey_2010} claimed that static tools have a negative effect on technical development due to
+its high false positives nature. While this statement might be true, it does not imply that all
+static tools are not effective as they differ in the techniques used in finding vulnerabilities
+\cite{moser_2008}. It might require several experiments of different configurations to obtain the
+best result, and the result may vary across different data sets.
 
 This project extends prior work on Reis and Abreu's \cite{secbench} Secbench Mining Tool. The tool
 aims to find vulnerabilities patch in GitHub repositories by using specific regular expressions for
@@ -330,14 +375,22 @@ project. However, it is not practical to perform manual evaluation on every resu
 the tool developed should be able to automate the evaluation process to some extent, while
 preserving the accuracy of the results.
 
-\subsection{Vulnerabilities Classification Techniques}
-Many classification techniques of computer attacks have been introduced before open source became
-popular, and these early works have a significant influence on the later work of finding and
-classifying security issues in open source software repositories. An early work of Lindqvist and
-Jonsson \cite{lindqvist_1999} implied that the \textit{location} of a computer flaw is a determining
-factor in the classification process, in which their results are obtained through real penetration
-attacks. Hansman and Hunt \cite{hansman_2005} adapted the ideas of Lindqvist and Jonsson and
-suggested the concept of dimensions, where they categorised the attacks into several layers.
+\subsection{Vulnerability Patch Prediction}
+Using the results retrieved from the searching procedure, it is able to predict whether a certain
+commit message is indicating a vulnerability patch. Williams and Hollingsworth \cite{williams_2005}
+have developed a source code analysis tool that searches for bug fixes and combines with information
+mined from repositories to improve the results. It is stated that the most efficient way to utilise
+the historical information is to ignore the commit messages and focus on mining the code changes. In
+order to locate the actual code changes for the bug fix, a function return value checker was
+implemented to compares the number of warnings produced by the same function across different
+versions. Williams and Hollingsworth assumed that a bug is fixed if the warnings produced by the
+same function have decreased between two versions, and the final result produced is a list of
+functions that are related to a potential bug fix in the commit history. However, Ostrand and
+Weyuker \cite{ostrand_2004} focused on predicting the bug fixes through the most frequently modified
+files between version releases. It is hypothesised that a bug is more likely to occur in files that
+have more lines of code, as this implies that the files are more important and contain more
+functionality than others. Although these techniques are not focusing on predicting vulnerability
+patches, they can be reused and adjusted to suit this project needs.
 
 \chapter{Requirements and Analysis}
 The purpose of this chapter is to express the aims in more details and discuss the problems to be
@@ -353,14 +406,15 @@ feasibility of this project.
 
 \begin{enumerate}
 	\item \textbf{Vulnerability patterns}: The term `vulnerability pattern' is used to represent the
-  commit message pattern of different vulnerabilities. Correctly identifying the regular
-  expression of each vulnerability pattern is a time-consuming process. It would need considerable
-  refinement throughout the whole project. Hence, it could be more appropriate to reuse and
-  improve the patterns provided in previous related work.
+  commit message pattern of different vulnerabilities. Correctly identifying the regular expression
+  of each vulnerability pattern is a time-consuming process. Additionally, it would need
+  considerable refinement throughout the whole project. Hence, it might be more appropriate to reuse
+  and improve the patterns provided in previous related works.
 	\item \textbf{Mining the commits}: This task involves creating a repository mining tool that makes
 	extensive use of the pre-defined regular expressions to search for the relative commits. It will
 	be necessary to consider how closely a commit needs to match with the patterns for it to be
-	included in the result. The file format of the result will be discussed in the later section.
+	included in the result. The file format for storing the results will be discussed in the later
+	section.
 	\item \textbf{Evaluating the mined commits}: The mining tool can be extended to include a separate
 	function that evaluates the commits mined to find the actual code commit addressing the security
 	vulnerabilities. However, all previous related work performed did not use automated techniques for
@@ -391,7 +445,7 @@ feasibility of this project.
 	\end{center}
 \end{table}
 
-\section{Considerations}
+\section{Analysis}
 The aim of this section is to contemplate the options available for this project and review some of
 the fundamental decisions to be made before the implementation.
 
@@ -423,35 +477,48 @@ performance than XML in terms of processing time and resource utilisation \cite{
 is considered that JSON would be the best option for this project.
 
 \section{Proposed Method}
-This project strongly emphasises the need for finding security issues in open source repositories
-through MSR. While it might be impossible to discover the security patches in a repository through a
-single search, the problem could be solved using divide and conquer. The ideal concept of this
-project is to build a command-line interface program that is able to run two separate processes: the
-\textbf{mining} process and the \textbf{evaluation} process. The \textbf{mining} process takes a Git
-repository as input, searches through the commit log, and stores the list of commits that might
-potentially contain a patch in a JSON file. The \textbf{evaluation} process takes a JSON file as
-input, and check the code difference of every commit in the log file to identify the real patches.
+This project strongly emphasises the need for finding security issues in open source repositories by
+mining software repositories. While it might be impossible to discover the security patches in a
+repository through a single search, the problem could be solved using divide and conquer. The ideal
+concept of this project is to build a command-line interface program that is able to run two
+separate processes: the \textbf{mining} process and the \textbf{evaluation} process. The
+\textbf{mining} process takes a Git repository as input, searches through the commit log, and stores
+the list of commits that might potentially contain a patch in a JSON file. The \textbf{evaluation}
+process takes a JSON file as input, and check the code difference of every commit in the log file to
+identify the real patches.
 
 \section{Problems and Constraints} \label{sec:problems_and_constraints}
 As mentioned in \hyperref[sec:challenges]{\textbf{Section 1.3}}, the main challenges of this project
-are \textbf{data}, \textbf{misclassification}, \textbf{evaluation} and \textbf{time}. This section
-will discuss the problems in detail and review several ways of mitigating them, as well as analysing
-the possible constraints that might affect the progress of the project.
+are \textbf{data}, \textbf{misclassification}, \textbf{evaluation} and \textbf{time}. The subsequent
+challenge is the implementation difficulties, which the severity is dependent on the complexity of
+the problems and the resources available. It is also expected that some problems might not be solved
+and new problems could emerge in the course of the project. This section will discuss the problems
+in detail and review several ways of mitigating them, as well as analysing the possible constraints
+that might affect the progress of the project.
 
-It is expected that some problems might be solved and new problems could emerge in the course of the
-project. There are several ways of mitigating the problems to reduce the risk, provided that the
-problems are clearly identified and they are under the project scope. It is estimated that the
+Although there are a lot of open source repositories available online, the majority of them does not
+have a formal guideline for the documenting the changes in the commit messages. As part of the
+\textbf{data} problem, the commit messages in the real-world repositories
+(\hyperref[sec:realworld]{\textbf{Section 3.7.1}}) might have lower quality compared to a
+self-created repository. It has been reported that the terms \textit{fix}, \textit{add}, and
+\textit{test} have the top average term frequency in the commit messages \cite{alali_2008}. With
+these indistinct terms being widely used in the commit messages, the performance of the tool may
+drop on real-world repository test sets and it would require extra effort for finding the relevant
+vulnerability fixing commits.
+
+There are several ways of mitigating the problems to reduce the risk, provided that the problems are
+clearly identified and they are under the project scope. It is estimated that the
 \textbf{evaluation} process would be the biggest challenge of this project since it was regarded as
 a complicated and difficult area in previous researches. Moreover, this project plans to implement
 an automated version of the evaluation process, which will further increase the difficulty level.
-
-Automated evaluation is hard and does not guarantee to provide a good result. It is also extremely
-challenging for the mining tool to work across repositories programmed in different programming
-languages. The constraint is that the tool has to be exhaustively tested to find the optimal
-threshold value and for it to be automated and produce good results. Although the tool might produce
-good results on some repositories, it does not indicate that the tool will produce consistent
-results on all repositories. To ensure the minimum quality of the results, one of the solutions
-might be using both automated method for basic filtering and a manual method for advance refinement.
+The implementation of automated evaluation is hard and it does not guarantee to provide a good
+result. It is also extremely challenging for the mining tool to work across repositories programmed
+in different programming languages. The constraint is that the tool has to be exhaustively tested to
+find the optimal threshold value and for it to be automated and produce good results. Although the
+tool might produce good results on some repositories, it does not indicate that the tool will
+produce consistent results on all repositories. To ensure the minimum quality of the results, one of
+the solutions might be using both automated method for basic filtering and a manual method for
+advance refinement.
 
 \section{Testing}
 This section covers a brief overview of the testing stage. It will be necessary to consider some of
@@ -488,12 +555,14 @@ be required to allocate more time and effort into this stage.
 This section briefly discusses the approach to evaluate the mining tool on the real world projects
 to ensure that the requirements and criteria listed are practical and feasible.
 
-\subsection{Real-world Projects Evaluation}
-The mining tool will be evaluated by testing it on real-world open source projects. For the mining
-tool to be beneficial to the public, it must be able to produce results with a certain standard.
-This could be validated by verifying the accuracy and relevance of the results. It is presumed that
-the mining tool would only be suitable for a small set of repositories, and it might require
-comprehensive experiments of different configurations to achieve the best result.
+\subsection{Real-world Projects Evaluation} \label{sec:realworld}
+Real-world projects generally contain noise in their data due to inconsistency, incompleteness, and
+ambiguity. Evaluating the mining tool on several real-world projects will test its ability of
+handling noisy data. For the mining tool to be beneficial to the public, it must be able to produce
+results with a certain standard. This could be validated by verifying the accuracy and relevance of
+the results. It is presumed that the mining tool would only be suitable for a small set of
+repositories, and it might require comprehensive experiments of different configurations to achieve
+the best result.
 
 Real-world projects including the Linux kernel \cite{linux_repo}, Apache HTTP Server
 \cite{apache_httpd_repo}, Apache Tomcat \cite{apache_tomcat_repo}, GitLab Community Edition
@@ -521,8 +590,8 @@ original authors. The reason is that publishing the vulnerabilities publicly wou
 softwares highly vulnerable to attackers \cite{arora_2010}, and it is recommended to wait for the
 official announcement from the software vendors.
 
-\chapter*{Conclusions and Project Plan}
-\section*{Plan of Action}
+\chapter{Conclusions and Project Plan}
+\section{Plan of Action}
 \subsection*{Semester 1 and Christmas Vacation}
 \begin{ganttchart}[
 		hgrid=true,
@@ -556,7 +625,7 @@ official announcement from the software vendors.
   commits.
 \end{itemize}
 
-\subsection*{Semester 2}
+\subsection{Semester 2}
 \begin{ganttchart}[
 	hgrid=true,
 	vgrid={draw=none, dotted},
