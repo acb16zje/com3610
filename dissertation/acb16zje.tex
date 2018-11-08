@@ -70,13 +70,14 @@ will be considered grounds for failure in this project and the degree examinatio
 \chapter*{Abstract}
 Each time a vulnerability is identified in a Free/Libre and Open Source Software (FLOSS) project,
 the developers will start the fixing process and publish several commits to address the
-vulnerability. The same condition also applies to FLOSS components, which are widely used in both
-proprietary and open source softwares. The purpose of this project is to develop a repository mining
-tool that is able to detect commits that fix both known and unknown vulnerabilities. From the
-identified commits, the tool can determine whether an application is using a vulnerable component.
+vulnerability. Some FLOSS projects are also used as a component in both proprietary and open source
+softwares. The purpose of this project is to develop a repository mining tool that is able to detect
+commits that fix both known and unknown vulnerabilities. From the identified commits, the tool can
+determine whether an application is using a vulnerable component.
 
-To improve the correctness of the mining results, the tool can be extended to evaluate the lines of
-code changed between commits to identify the real vulnerability fixing commits. \textit{RESULTS OBTAINED ARE BRIEFLY DISCUSSED HERE}
+To achieve better correctness on the results, the tool can be extended to evaluate the lines of code
+changed between code commits to identify the real vulnerability-fixing commits. \textit{Results
+obtained will be summarised here in the final dissertation}
 
 \chapter*{Acknowledgements}
 I would like to thank my parents for their unconditional love and the full financial support
@@ -123,10 +124,10 @@ Git commit messages for every version update of their component.
 
 To perform a risk assessment of a potentially vulnerable component, it is required to have a deep
 understanding of the vulnerable methods. This information is often described explicitly in the
-vulnerability report such as the NVD and the CVE. Therefore, identifying the vulnerability fixing
+vulnerability report such as the NVD and the CVE. Therefore, identifying the vulnerability-fixing
 commits is a great approach of locating the vulnerable lines of code, which allows checking if a
 vulnerable component is being used or not. However, some developers believe that public disclosure
-of security vulnerabilities patch is dangerous, thus vulnerability fixing commits are not commonly
+of security vulnerabilities patch is dangerous, thus vulnerability-fixing commits are not commonly
 identified and recorded specifically in some open source software repositories to prevent malicious
 exploits \cite{arora_2005}. As a result, there is a practical difficulty in applying this analysis
 approach to find the security relevant commits that are not documented using CVE or a similar
@@ -227,7 +228,14 @@ similar vulnerability is discovered in the future, developers would need more ef
 previous solution. Therefore, it would be very useful for the developers if the mining tool
 developed in this project could detect the silent patches.
 
-\section{Common Weakness Enumeration}
+\section{Taxonomy of Software Vulnerabilities}
+There are many software vulnerabilities being identified each year. By using a common vulnerability
+identifier system, vulnerability data can be shared across separate vulnerability databases to
+facilitate the interoperability of different tools. As this project focuses on finding security
+issues in open source repositories, it is necessary to discuss the industry-endorsed standard of
+software vulnerabilities categorisation.
+
+\subsection{Common Weakness Enumeration}
 The Common Weakness Enumeration (\textbf{CWE}) is a project launched by the Mitre Corporation and
 sponsored by the National Cyber Security Division of the United States Department of Homeland
 Security \cite{cwe}. The CWE project organises the software weaknesses into a list of different
@@ -237,7 +245,7 @@ etc. \cite{cwe_faq}. The CWE is now a formal standard for representing software 
 entry in the CWE list contains detailed information about the specific weakness and is identified by
 a unique ID number.
 
-\section{Common Vulnerabilities and Exposures}
+\subsection{Common Vulnerabilities and Exposures}
 The Common Vulnerabilities and Exposures (\textbf{CVE}) is another security project launched by the
 Mitre Corporation \cite{cve} to provide the community with a complete list of publicly known
 security vulnerabilities, known as the CVE entries. Each CVE entry is defined by an ID number, and
@@ -274,9 +282,9 @@ related to the components used to reduce the risk of security vulnerabilities be
 the system.
 
 Vulnerable components can be found using methods ranging from dependency checking to machine
-learning. While this project focuses on studying the former approach, the latter approach
-concentrates on finding the relationship between software errors and vulnerabilities to identify or
-predict high-risk components. Dependency checking is an approach of detecting dependencies (plugins,
+learning. While this project is related to the former approach, the latter approach concentrates on
+finding the relationship between software errors and vulnerabilities to identify or predict
+high-risk components. Dependency checking is an approach of detecting dependencies (plugins,
 libraries, etc.) with known vulnerabilities in a software. Several open source tools including OWASP
 Dependency Check \cite{owasp_dependency}, Retire.js \cite{retirejs}, and Safety \cite{safety} are
 applications that identifies vulnerable dependencies in a software project. Cadariu et al.
@@ -330,32 +338,42 @@ that. Despite the undisclosed information of research methods in many papers, Sh
 stage focusing on a specific topic of the problem to achieve the optimal efficiency.
 
 \subsection{Keywords Search}
-Keywords search is the core procedure of retrieving information from a repository. For many complex
+As regular expressions are used in this project to find the vulnerability related commits, it is
+required to know the fundamental knowledge of keywords searching techniques. For many complex
 approaches, the searching process is considered to be the fundamental step. If the initial results
 produced in the searching stage is good, a huge amount of effort could be reduced in the later
 stages. However, the prerequisite is that the repository must have a sufficient amount of valuable
 information, which can be estimated by judging the history of the repository. To correctly and
-precisely retrieve the information from a query, it is required to integrate some algorithms and
+precisely retrieve the information for a query, it is required to integrate some algorithms and
 modules into the search function. Matsushita, Sasaki, and Inoue \cite{matsushita_2005} developed a
 repository search system that makes use of two functions: lexical analysis function and token
 comparing function. The system produced very detailed results by deploying recursive search strategy
-into every commit. On the contrary, Mockus and Votta \cite{mockus_2000} designed an automated
-program that makes use of normalisation, word frequency analysis, and keyword clustering techniques
-to search the commit messages. Although the program is able to retrieve the results that include the
-keywords, the algorithm is unable to identify similar terms or inconsistent form of wording for the
-commit messages.
+using the keywords found into every commit. On the contrary, Mockus and Votta \cite{mockus_2000}
+designed an automated program that makes use of normalisation, word frequency analysis, and keyword
+clustering techniques to search the commit messages. Although the program is able to retrieve the
+results that include the keywords, the algorithm is unable to identify similar terms or inconsistent
+form of wording for the commit messages.
+
+\subsection{Properties of Vulnerability-Fixing Commits}
+For every vulnerability identified in a repository, the vulnerability-fixing process that involves
+analysis, implementation, testing, and release will be executed \cite{othmane_2015}. Most of the
+vulnerability-fixing commits are pushed during the implementation and testing stage of the process.
+However, if the commit message of a fixing commit is ambiguous, it will be challenging for any
+repository mining tool to determine the correctness of the commit. By recognising the properties of
+vulnerability-fixing commits, it will ease the implementation of the repository mining tool and
+enhance the quality of the regular expressions used.
+
+Meneely et al. \cite{meneely_2013} conducted a research to study the properties of commits that
+introduce vulnerabilities, in which a reverse approach was used that finds
+vulnerability-contributing commit by backtracking from the vulnerability-fixing commits. Meneely et
+al. identified the vulnerability-fixing commits by investigating into each vulnerability manually to
+find the respective fixing commit. However, Meneely et al. did not explicitly record the process of
+identifying vulnerability-fixing commit, thus no constructive information about the properties or
+patterns of vulnerability-fixing commits is provided.
+
+
 
 \subsection{Finding Vulnerabilities}
-Meneely et al. \cite{meneely_2013} conducted a research to study the properties of commits that
-introduce vulnerabilities, and it is found that most vulnerabilities required an average 1175 days
-to fix. For every vulnerability identified in a repository, the vulnerability fixing process that
-involves analysis, implementation, testing, and release will be executed \cite{othmane_2015}. Most
-of the vulnerabilities fixing commits are pushed during the implementation and testing stage of the
-process. However, if the commit message of a fixing commit is ambiguous, it will be challenging for
-any repository mining tool to determine the correctness of the commit. In this situation, it is
-required to investigate the changed files to study the lines of code modified. This is a demanding
-task and often required manual investigation as code changes between commits are highly variable.
-
 Cowan \cite{cowan_2003} suggested a list of software auditing and vulnerability mitigation tools
 that perform static code and runtime analysis to find bugs and vulnerabilities. This approach is
 popular because it is able to find simple bugs in a short amount of time. However, Bessey et al.
@@ -375,27 +393,30 @@ project. However, it is not practical to perform manual evaluation on every resu
 the tool developed should be able to automate the evaluation process to some extent, while
 preserving the accuracy of the results.
 
-\subsection{Vulnerability Patch Prediction}
-Using the results retrieved from the searching procedure, it is able to predict whether a certain
-commit message is indicating a vulnerability patch. Williams and Hollingsworth \cite{williams_2005}
-have developed a source code analysis tool that searches for bug fixes and combines with information
-mined from repositories to improve the results. It is stated that the most efficient way to utilise
-the historical information is to ignore the commit messages and focus on mining the code changes. In
-order to locate the actual code changes for the bug fix, a function return value checker was
-implemented to compares the number of warnings produced by the same function across different
-versions. Williams and Hollingsworth assumed that a bug is fixed if the warnings produced by the
-same function have decreased between two versions, and the final result produced is a list of
-functions that are related to a potential bug fix in the commit history. However, Ostrand and
-Weyuker \cite{ostrand_2004} focused on predicting the bug fixes through the most frequently modified
-files between version releases. It is hypothesised that a bug is more likely to occur in files that
-have more lines of code, as this implies that the files are more important and contain more
-functionality than others. Although these techniques are not focusing on predicting vulnerability
-patches, they can be reused and adjusted to suit this project needs.
+\section{Usage of the repository mining tool in other areas}
+While the repository mining tool developed in this project is only capable of finding security
+issues through Git commits, it can be extended or modified to aid the researches in other areas.
+Some examples are briefly discussed in the subsections below.
+
+\subsection{Bugs Finding Model}
+Both Williams and Hollingsworth \cite{williams_2005} and Ostrand and Weyuker \cite{ostrand_2004}
+utilised MSR technique in their bugs finding model. Williams and Hollingsworth mined the code
+changes in each commit to find possible bugs, while Ostrand and Weyuker mined the most frequently
+modified files between version releases to predict the bugs-prone files.
+
+\subsection{Machine Learning Model for Automated Vulnerability Detection}
+In comparison to the static approach used in the mining tool, machine learning technique could be
+introduced to achieve higher reliability and accuracy on the result. Nguyen and Tran
+\cite{nguyen_2010} and Perl et al. \cite{perl_2015} have built their machine learning model with
+dependency graph and vulnerability-contributing commit as their main approach respectively, while Li
+et al. \cite{li_2016} and Russell et al. \cite{russell_2018} used source code analysis method in
+their machine learning model. According to their researches, machine learning models are able to
+produce relatively high accuracy results.
 
 \chapter{Requirements and Analysis}
-The purpose of this chapter is to express the aims in more details and discuss the problems to be
-solved. This chapter will outline the requirements of the project and list the criteria to be met.
-The analysis part will cover every aspect of the design, implementation, and testing stage to ensure
+The purpose of this chapter is to express the aims in details and discuss the problems to be solved.
+This chapter will outline the requirements of the project and list the criteria to be met. The
+analysis part will cover every aspect of the design, implementation, and testing stage to ensure
 that the project is feasible.
 
 \section{Project Objectives}
@@ -407,22 +428,21 @@ feasibility of this project.
 \begin{enumerate}
 	\item \textbf{Vulnerability patterns}: The term `vulnerability pattern' is used to represent the
   commit message pattern of different vulnerabilities. Correctly identifying the regular expression
-  of each vulnerability pattern is a time-consuming process. Additionally, it would need
-  considerable refinement throughout the whole project. Hence, it might be more appropriate to reuse
-  and improve the patterns provided in previous related works.
+  of each vulnerability pattern is time-consuming, and it would also need considerable refinement
+  throughout the whole project. Hence, it might be more appropriate to reuse and improve the
+  patterns provided in previous related works.
 	\item \textbf{Mining the commits}: This task involves creating a repository mining tool that makes
-	extensive use of the pre-defined regular expressions to search for the relative commits. It will
-	be necessary to consider how closely a commit needs to match with the patterns for it to be
-	included in the result. The file format for storing the results will be discussed in the later
-	section.
+	extensive use of the pre-defined regular expressions to search for the relevant commits. It is
+	necessary to consider how closely a commit needs to match with the patterns for it to be included
+	in the result. The file format for storing the results is JSON, and reasons are justified in \hyperref[subsec:file_format]{\textbf{Section 3.3.3}}.
 	\item \textbf{Evaluating the mined commits}: The mining tool can be extended to include a separate
 	function that evaluates the commits mined to find the actual code commit addressing the security
-	vulnerabilities. However, all previous related work performed did not use automated techniques for
-	the evaluation. This project will consider to automate the evaluation process to some extent while
-	maintaining the accuracy of the results at the standard level.
+	vulnerabilities. This project will consider to automate the evaluation process to some extent
+	while maintaining the accuracy of the results at the standard level.
 \end{enumerate}
 
-\section{Software Specification}
+\section{Software Requirements}
+\subsection{Functional Requirements}
 \begin{table}[H]
 	\begin{center}
 		\begin{tabular}{|p{10.3cm}|c|}
@@ -441,7 +461,26 @@ feasibility of this project.
 			\textbf{Automated Evaluation}: The process of classifying and evaluating the commits into
 			different vulnerabilities patch should be automated to a certain extent. & Desirable \\ \hline
 			\end{tabular}
-		\captionof{table}{Specification of the mining tool} \label{table:criteria}
+		\captionof{table}{Functional requirements of the mining tool} \label{table:func_req}
+	\end{center}
+\end{table}
+
+\subsection{Non-functional Requirements}
+\begin{table}[H]
+	\begin{center}
+		\begin{tabular}{|p{10.3cm}|c|}
+			\hline
+			\rowcolor[HTML]{D8D8D8}
+			\multicolumn{1}{|c|}{Criteria} & Importance \\ \hline
+			\textbf{Code Style}: The source code should be well-commented and follow a consistent coding
+      style. & Essential \\ \hline
+      \textbf{Documentation}: Installation and user manual should be provided. & Essential \\ \hline
+      \textbf{Lightweight}: The mining tool should have minimal dependencies. & Essential \\ \hline
+      \textbf{Open source}: As the mining tool is built for researching open source repositories, it
+      should be open source to suit the use cases. & Essential \\
+      \hline
+			\end{tabular}
+		\captionof{table}{Non-functional requirements of the mining tool} \label{table:nonfunc_req}
 	\end{center}
 \end{table}
 
@@ -466,7 +505,7 @@ integrated to enhance its functionality.
 	python and git command implementation \cite{gitpython}.
 \end{itemize}
 
-\subsection{File Format of Result}
+\subsection{File Format of Result} \label{subsec:file_format}
 The JavaScript Object Notation (\textbf{JSON}) \cite{json} has been chosen as the file format for
 storing the results in this project. This is because JSON is supported in Python and it does not
 require complicated operations in Python to access the data. While various alternative data
@@ -504,7 +543,7 @@ self-created repository. It has been reported that the terms \textit{fix}, \text
 \textit{test} have the top average term frequency in the commit messages \cite{alali_2008}. With
 these indistinct terms being widely used in the commit messages, the performance of the tool may
 drop on real-world repository test sets and it would require extra effort for finding the relevant
-vulnerability fixing commits.
+vulnerability-fixing commits.
 
 There are several ways of mitigating the problems to reduce the risk, provided that the problems are
 clearly identified and they are under the project scope. It is estimated that the
@@ -544,12 +583,12 @@ test cases are based on the functionality of the tool to cover every feature imp
 \end{table}
 
 \subsection{System Testing}
-After completing the unit testing, the mining tool has to be tested for its completeness and
-robustness, as mentioned in \hyperref[table:criteria]{\textbf{Table 3.1}}. It is expected that the
-program would not be able to handle complicated errors during the early implementation, and the
-project schedule would become an iterative process between implementation and testing. It is assumed
-that the testing stage would be the most time-consuming process in the whole project, thus it might
-be required to allocate more time and effort into this stage.
+After completing the unit testing, the mining tool has to be tested for its functional requirements,
+as mentioned in \hyperref[table:func_req]{\textbf{Table 3.1}}. It is expected that the program would
+not be able to handle complicated errors during the early implementation, and the project schedule
+would become an iterative process between implementation and testing. It is assumed that the testing
+stage would be the most time-consuming process in the whole project, thus it might be required to
+allocate more time and effort into this stage.
 
 \section{Evaluation}
 This section briefly discusses the approach to evaluate the mining tool on the real world projects
@@ -568,7 +607,7 @@ Real-world projects including the Linux kernel \cite{linux_repo}, Apache HTTP Se
 \cite{apache_httpd_repo}, Apache Tomcat \cite{apache_tomcat_repo}, GitLab Community Edition
 \cite{gitlab_repo}, Homebrew core \cite{homebrew_core_repo}, Nixpkgs \cite{nix_packages_repo} and
 Odoo \cite{odoo_repo} are a good starting point for this project as they all have a large number of
-commits. This approach is reasoable as larger repositories are more likely to contain vulnerability
+commits. This approach is reasoable as larger repositories are more likely to contain vulnerability-
 fixing commits and have a higher standard or informative commit messages.
 
 \subsection{Quality Evaluation}
@@ -591,6 +630,16 @@ softwares highly vulnerable to attackers \cite{arora_2010}, and it is recommende
 official announcement from the software vendors.
 
 \chapter{Conclusions and Project Plan}
+\section{Main achievements to date}
+\begin{itemize}
+  \item Completed Literature Review and Requirements and Analysis to a good quality, but not the best yet
+  \item Basic implementation such as mining commit messages and matching regular expressions.
+  \item Licensing issue considered.
+  \item Several design problems have been identified. For example, Git repositories converted from
+  Subversion generally do not have `master' as their main branch name, thus extra command line
+  options need to be provided.
+\end{itemize}
+
 \section{Plan of Action}
 \subsection*{Semester 1 and Christmas Vacation}
 \begin{ganttchart}[
