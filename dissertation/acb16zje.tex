@@ -13,6 +13,7 @@
 \usepackage{microtype}
 \usepackage{parskip}
 \usepackage{pgfgantt}
+\usepackage{subcaption}
 
 \linespread{1.2}
 \restoreparindent
@@ -27,7 +28,7 @@
 \begin{document}
 \begin{titlepage}
 	\centering
-	\includegraphics[width=10cm]{tuos_logo}\par\vspace{1cm}
+	\includegraphics[width=10cm]{images/tuos_logo}\par\vspace{1cm}
 	\vspace{1cm}
 
 	{\huge\bfseries Finding Security Issues in (Open Source) Software Repositories\par}
@@ -92,7 +93,7 @@ future.
 
 \tableofcontents
 
-% \listoffigures
+\listoffigures
 
 \listoftables
 
@@ -307,7 +308,7 @@ Scandariato's model is able to predict vulnerabilities in the future releases of
 components, and the results achieved are satisfactory.
 
 As a conclusion, static dependency checking tools provide a fast and easy way to scan for vulnerable
-components, but the users are required to verify the validity and compatibility of the Results with
+components, but the users are required to verify the validity and compatibility of the results with
 their softwares. In contrast, models that use machine learning technique has been proved to be
 effective and are more likely to produce consistent and accurate results. However, such models
 require a large amount of training data and are only designed for a specific area. While dependency
@@ -358,39 +359,76 @@ form of wording for the commit messages.
 For every vulnerability identified in a repository, the vulnerability-fixing process that involves
 analysis, implementation, testing, and release will be executed \cite{othmane_2015}. Most of the
 vulnerability-fixing commits are pushed during the implementation and testing stage of the process.
-However, if the commit message of a fixing commit is ambiguous, it will be challenging for any
-repository mining tool to determine the correctness of the commit. By recognising the properties of
-vulnerability-fixing commits, it will ease the implementation of the repository mining tool and
-enhance the quality of the regular expressions used.
+However, if the commit message of a fixing commit is ambiguous, it will be challenging for any tools
+to determine the correctness of the commit. In order to analyse the common features of the
+vulnerability-fixing commits, it is needed to find these commits in open source repositories first.
+By analysing the properties of vulnerability-fixing commits, it will ease the implementation of the
+repository mining tool and enhance the quality of the regular expressions used.
 
 Meneely et al. \cite{meneely_2013} conducted a research to study the properties of commits that
-introduce vulnerabilities, in which a reverse approach was used that finds
-vulnerability-contributing commit by backtracking from the vulnerability-fixing commits. Meneely et
-al. identified the vulnerability-fixing commits by investigating into each vulnerability manually to
-find the respective fixing commit. However, Meneely et al. did not explicitly record the process of
-identifying vulnerability-fixing commit, thus no constructive information about the properties or
-patterns of vulnerability-fixing commits is provided.
+introduce vulnerabilities, in which a reverse approach was used to find vulnerability-contributing
+commit by backtracking from the vulnerability-fixing commits. Meneely et al. identified the
+vulnerability-fixing commits by investigating into each vulnerability manually to find the
+respective fixing commit. However, the process of identifying vulnerability-fixing commit was not
+clearly explained by them, thus no constructive information about the properties of
+vulnerability-fixing commits is provided. On the contrary, V{\'a}squez, Bavota and Vel{\'a}squez
+\cite{linares_2017} discovered that some vulnerability-fixing commits are grouped with other commits
+to address a vulnerability, which matches the assumption of Neuhaus and Plattner
+\cite{neuhaus_2013}, and thus only part of the code commited is related to the vulnerability fix.
 
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{\textwidth}
+    \centering
+    \includegraphics{images/vuln_fixing_commit_good_ex.png}
+    \subcaption{Vulnerability fix in Linux kernel repository {\cite{good_vfc}} \label{figure:g_vfc}}
+  \end{subfigure} \\
+  \begin{subfigure}{\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{images/vuln_fixing_commit_bad_ex.png}
+    \subcaption{Vulerability fix in oauth2 proxy repository {\cite{bad_vfc}} \label{figure:bad_vfc}}
+  \end{subfigure}
+  \caption[Examples of vulnerability-fixing commit]%
+  %
+  {A comparison of \hyperref[figure:g_vfc]{\textbf{(a)}} a higher quality and
+  \hyperref[figure:bad_vfc]{\textbf{(b)}} a lower quality vulnerability-fixing commit.}
+  \label{figure:comparion_vfc}
+\end{figure}
 
+\subsection{Finding Security Vulnerabilities} \label{subsec:finding_vuln}
+It has been reported that the descriptions and references in vulnerability databases are often lack
+of complete documentation \cite{massacci_2010}, and vulnerability-fixing commit are not ubiquitous
+in every open source repository \cite{walden_2014}. Finding a security vulnerability could be hard
+if the resources available are limited. Having completed the researches on keywords searching
+techniques and properties of vulnerability-fixing commit, the approach for finding vulnerabilities
+can now be reviewed.
 
-\subsection{Finding Vulnerabilities}
-Cowan \cite{cowan_2003} suggested a list of software auditing and vulnerability mitigation tools
-that perform static code and runtime analysis to find bugs and vulnerabilities. This approach is
-popular because it is able to find simple bugs in a short amount of time. However, Bessey et al.
-\cite{bessey_2010} claimed that static tools have a negative effect on technical development due to
-its high false positives nature. While this statement might be true, it does not imply that all
+In this project, a static repository mining tool will be developed to find security vulnerabilities
+in open source repositories. Previous researches included the use of static software auditing and
+vulnerability mitigation tools to find bugs and vulnerabilities \cite{cowan_2003}. However, Bessey
+et al. \cite{bessey_2010} claimed that static tools have a negative effect on technical development
+due to its high false positives rate. While this statement might be true, it does not imply that all
 static tools are not effective as they differ in the techniques used in finding vulnerabilities
-\cite{moser_2008}. It might require several experiments of different configurations to obtain the
-best result, and the result may vary across different data sets.
+\cite{moser_2008}. Static tools usually require many experiments with different configurations to
+obtain the best result, and the result may vary across different data sets. This project differs
+from previous researches by aiming to find the security vulnerabilities through Git commit messages
+first, and then analyse the code changes in the commits. Researches have shown that
+vulnerability-fixing commits could be retrieved by extracting commit hashes from CVE references and
+gathering all commits that refer to a CVE number in its commit message \cite{jimenez_2016}, or by
+performing syntactic and semantic analysis on the commit messages \cite{sliwerski_2005}. To verify
+the validity of the commits retrieved, a screening test \cite{dashevskyi_2018} can be performed to
+investigate the code changes in a commit against several criteria and identify the correct
+vulnerability-fixing commits.
 
-This project extends prior work on Reis and Abreu's \cite{secbench} Secbench Mining Tool. The tool
+This project extends prior work on Reis and Abreu's Secbench Mining Tool \cite{secbench}. The tool
 aims to find vulnerabilities patch in GitHub repositories by using specific regular expressions for
 each vulnerability pattern. Then it creates a test case for every vulnerability found and these test
 cases are evaluated manually. Reis and Abreu \cite{reis_2017} discussed the procedure of the
 evaluation and explained that human errors could occur due to source code complexity and similarity
 of vulnerability pattern. The approach of Secbench Mining Tool is similar to the concept of this
-project. However, it is not practical to perform manual evaluation on every result. In this project,
-the tool developed should be able to automate the evaluation process to some extent, while
+project. However, performing manual evaluation on every result is not practical and it is proven
+that the use of automated algorithms can improve the detection process \cite{livshits_2005}. In this
+project, the tool developed should be able to automate the evaluation process to some extent, while
 preserving the accuracy of the results.
 
 \section{Usage of the repository mining tool in other areas}
@@ -404,7 +442,7 @@ utilised MSR technique in their bugs finding model. Williams and Hollingsworth m
 changes in each commit to find possible bugs, while Ostrand and Weyuker mined the most frequently
 modified files between version releases to predict the bugs-prone files.
 
-\subsection{Machine Learning Model for Automated Vulnerability Detection}
+\subsection{Machine Learning Model for Automated Vulnerability Prediction}
 In comparison to the static approach used in the mining tool, machine learning technique could be
 introduced to achieve higher reliability and accuracy on the result. Nguyen and Tran
 \cite{nguyen_2010} and Perl et al. \cite{perl_2015} have built their machine learning model with
@@ -434,7 +472,8 @@ feasibility of this project.
 	\item \textbf{Mining the commits}: This task involves creating a repository mining tool that makes
 	extensive use of the pre-defined regular expressions to search for the relevant commits. It is
 	necessary to consider how closely a commit needs to match with the patterns for it to be included
-	in the result. The file format for storing the results is JSON, and reasons are justified in \hyperref[subsec:file_format]{\textbf{Section 3.3.3}}.
+	in the result. The file format for storing the results is JSON, and reasons are justified in
+	\hyperref[subsec:file_format]{\textbf{Section 3.3.3}}.
 	\item \textbf{Evaluating the mined commits}: The mining tool can be extended to include a separate
 	function that evaluates the commits mined to find the actual code commit addressing the security
 	vulnerabilities. This project will consider to automate the evaluation process to some extent
@@ -461,7 +500,7 @@ feasibility of this project.
 			\textbf{Automated Evaluation}: The process of classifying and evaluating the commits into
 			different vulnerabilities patch should be automated to a certain extent. & Desirable \\ \hline
 			\end{tabular}
-		\captionof{table}{Functional requirements of the mining tool} \label{table:func_req}
+		\caption{Functional requirements of the mining tool} \label{table:func_req}
 	\end{center}
 \end{table}
 
@@ -480,7 +519,7 @@ feasibility of this project.
       should be open source to suit the use cases. & Essential \\
       \hline
 			\end{tabular}
-		\captionof{table}{Non-functional requirements of the mining tool} \label{table:nonfunc_req}
+		\caption{Non-functional requirements of the mining tool} \label{table:nonfunc_req}
 	\end{center}
 \end{table}
 
@@ -578,7 +617,7 @@ test cases are based on the functionality of the tool to cover every feature imp
       Result & Status \\ \hline
        &  &  &  &  \\ \hline
       \end{tabular}
-		\captionof{table}{Documentation format of the unit testing} \label{table:unittest}
+		\caption{Documentation format of the unit testing} \label{table:unittest}
 	\end{center}
 \end{table}
 
@@ -596,12 +635,13 @@ to ensure that the requirements and criteria listed are practical and feasible.
 
 \subsection{Real-world Projects Evaluation} \label{sec:realworld}
 Real-world projects generally contain noise in their data due to inconsistency, incompleteness, and
-ambiguity. Evaluating the mining tool on several real-world projects will test its ability of
-handling noisy data. For the mining tool to be beneficial to the public, it must be able to produce
-results with a certain standard. This could be validated by verifying the accuracy and relevance of
-the results. It is presumed that the mining tool would only be suitable for a small set of
-repositories, and it might require comprehensive experiments of different configurations to achieve
-the best result.
+ambiguity \cite{alqahtani_2016}, as shown in \hyperref[figure:comparion_vfc]{\textbf{Figure 2.1}}
+and discussed in \hyperref[subsec:finding_vuln]{\textbf{Section 2.4.3}}. Evaluating the mining tool
+on several real-world projects will test its ability of handling the noisy data. For the mining tool
+to be beneficial to the public, it must be able to produce results with a certain standard. This
+could be validated by verifying the accuracy and relevance of the results. It is presumed that the
+mining tool would only be suitable for a small set of repositories, and it might require
+comprehensive experiments of different configurations to achieve the best result.
 
 Real-world projects including the Linux kernel \cite{linux_repo}, Apache HTTP Server
 \cite{apache_httpd_repo}, Apache Tomcat \cite{apache_tomcat_repo}, GitLab Community Edition
@@ -632,7 +672,8 @@ official announcement from the software vendors.
 \chapter{Conclusions and Project Plan}
 \section{Main achievements to date}
 \begin{itemize}
-  \item Completed Literature Review and Requirements and Analysis to a good quality, but not the best yet
+  \item Completed Literature Review and Requirements and Analysis to a good quality, but not the
+  best yet
   \item Basic implementation such as mining commit messages and matching regular expressions.
   \item Licensing issue considered.
   \item Several design problems have been identified. For example, Git repositories converted from
