@@ -69,16 +69,14 @@ will be considered grounds for failure in this project and the degree examinatio
 \newpage
 
 \chapter*{Abstract}
-Each time a vulnerability is identified in a Free/Libre and Open Source Software (FLOSS) project,
-the developers will start the fixing process and publish several commits to address the
-vulnerability. Some FLOSS projects are also used as a component in both proprietary and open source
-softwares. The purpose of this project is to develop a repository mining tool that is able to detect
-commits that fix both known and unknown vulnerabilities. From the identified commits, the tool can
-determine whether an application is using a vulnerable component.
-
-To achieve better correctness on the results, the tool can be extended to evaluate the lines of code
-changed between code commits to identify the real vulnerability-fixing commits. \textit{Results
-obtained will be summarised here in the final dissertation}
+In both proprietary and Free/Libre and Open Source Softwares (FLOSS) components, not all security
+vulnerabilities are documented in CVE format nor published in the vulnerability databases such as
+NVD. These vulnerabilities could have been fixed by the developers. Finding these
+vulnerability-fixing commits could provide valuable insights for the developers using those
+components. Therefore, the objective of this project is to develop a repository mining tool that is
+able to detect vulnerability-fixing commits using MSR approach. Comparing to previous approaches,
+the tool will be focusing on searches the commit message first, and then investigates the code
+difference in each commit.
 
 \chapter*{Acknowledgements}
 I would like to thank my parents for their unconditional love and the full financial support
@@ -115,24 +113,25 @@ Building a secure software is expensive, difficult, and time-consuming. It is ne
 and how a security vulnerability is fixed throughout the software lifecycle. Software components
 such as plugins and application processing interfaces (\textbf{APIs}) are usually developed by
 third-party developers and widely reused in both open source and closed source softwares
-\cite{khan_2001}. An important factor of the software security is determined by the
-information provided by the vendor of the software components for deciding whether to perform
-the security update. Hence, the users of software components are advised to check the National
-Vulnerability Database (\textbf{NVD}) \cite{nvd} regularly for detailed information of the
-vulnerabilities identified in the software components used. Furthermore, it would be more helpful if
-the developers of the software components clearly record the list of changes or provide informative
-Git commit messages for every version update of their component.
+\cite{khan_2001}. An important factor of the software security is determined by the information
+provided by the vendor of the software components for deciding whether to perform the security
+update. Hence, the users of software components are advised to check the National Vulnerability
+Database (\textbf{NVD}) \cite{nvd} regularly for detailed information of the vulnerabilities
+identified in the software components used. Furthermore, it would be more helpful if the developers
+of the software components clearly record the list of changes or provide informative Git commit
+messages for every version update of their component.
 
 To perform a risk assessment of a potentially vulnerable component, it is required to have a deep
-understanding of the vulnerable methods. This information is often described explicitly in the
-vulnerability report such as the NVD and the CVE. Therefore, identifying the vulnerability-fixing
-commits is a great approach of locating the vulnerable lines of code, which allows checking if a
-vulnerable component is being used or not. However, some developers believe that public disclosure
-of security vulnerabilities patch is dangerous, thus vulnerability-fixing commits are not commonly
-identified and recorded specifically in some open source software repositories to prevent malicious
-exploits \cite{arora_2005}. As a result, there is a practical difficulty in applying this analysis
-approach to find the security relevant commits that are not documented using CVE or a similar
-format, which are known as the silent patches.
+understanding of the vulnerability entry points. However, not all projects follow the CVE format or
+publish CVEs, and CVE reports are usually lack of technical details that attribute the specific
+entry points of the vulnerability, which is an important aspect in part of the risk assessment. By
+identifying the vulnerability-fixing commits, the vulnerable lines of code can be located, which
+allows the users to check if a vulnerable component is being used or not. However, some developers
+believe that public disclosure of security vulnerabilities patch is dangerous, thus
+vulnerability-fixing commits are not commonly identified and recorded specifically in some open
+source software repositories to prevent malicious exploits \cite{arora_2005}. As a result, there is
+a practical difficulty in applying this analysis approach to find the security relevant commits that
+are not documented using CVE or a similar format, which are known as the silent patches.
 
 To address these issues, a repository mining tool that investigates commit messages and identifies
 vulnerable software components can be developed to reduce the time and cost required to mitigate the
@@ -145,7 +144,6 @@ version control system are also supported after they have been migrated to Git.
 \section{Objectives} \label{sec:objectives}
 \begin{itemize}
 	\item Identify the security patterns of the most popular security issues in OWASP Top Ten Project.
-	The patterns should be expressed using regular expressions.
 	\item Develop a repository mining tool to search through the commit history of a repository and
 	find a list of commit messages that match the patterns. The list should be produced in a suitable
 	file format such as JSON, XML, or CSV.
@@ -431,7 +429,7 @@ that the use of automated algorithms can improve the detection process \cite{liv
 project, the tool developed should be able to automate the evaluation process to some extent, while
 preserving the accuracy of the results.
 
-\section{Usage of the repository mining tool in other areas}
+\section{Usage of the Repository Mining Tool in Other Areas}
 While the repository mining tool developed in this project is only capable of finding security
 issues through Git commits, it can be extended or modified to aid the researches in other areas.
 Some examples are briefly discussed in the subsections below.
@@ -480,7 +478,7 @@ feasibility of this project.
 	while maintaining the accuracy of the results at the standard level.
 \end{enumerate}
 
-\section{Software Requirements}
+\section{Software Requirements and Scope}
 \subsection{Functional Requirements}
 \begin{table}[H]
 	\begin{center}
@@ -493,14 +491,14 @@ feasibility of this project.
 			\textbf{Completeness}: The mining tool should be able to find all relevant commits of security
 			vulnerabilities based on the regular expressions. & Essential \\ \hline
 			\textbf{Repeatable}: The results should be repeatable and reproducible. & Essential \\ \hline
-			\textbf{Robustness}: The mining tool should be able to handle all possible errors without
-			terminating the mining process. & Essential \\ \hline
 			\textbf{Scalability}: The mining tool should be able to work on different project sizes,
 			provided that the repository contains a certain amount of information. & Essential \\ \hline
 			\textbf{Automated Evaluation}: The process of classifying and evaluating the commits into
-			different vulnerabilities patch should be automated to a certain extent. & Desirable \\ \hline
-			\end{tabular}
-		\caption{Functional requirements of the mining tool} \label{table:func_req}
+      different vulnerabilities patch should be automated to a certain extent. & Desirable \\
+			\textbf{Robustness}: The mining tool should be able to handle all possible errors without
+			terminating the mining process. & Desirable \\ \hline
+    \end{tabular}
+    \caption{Functional requirements of the mining tool} \label{table:func_req}
 	\end{center}
 \end{table}
 
@@ -517,11 +515,50 @@ feasibility of this project.
       \textbf{Lightweight}: The mining tool should have minimal dependencies. & Essential \\ \hline
       \textbf{Open source}: As the mining tool is built for researching open source repositories, it
       should be open source to suit the use cases. & Essential \\
+      \textbf{Performance}: The performance of the mining tool should be optmised for different
+      project sizes. & Desirable \\
       \hline
 			\end{tabular}
 		\caption{Non-functional requirements of the mining tool} \label{table:nonfunc_req}
 	\end{center}
 \end{table}
+
+\subsection{Scope}
+In addition to \hyperref[table:func_req]{\textbf{Table 3.1}} and
+\hyperref[table:nonfunc_req]{\textbf{Table 3.2}}, several fundamental requirements can be included
+to define the scope of the mining tool.
+
+\begin{itemize}
+	\item \textbf{Language in Commit Messages}: The mining tool will only search for commit messages
+	that are written in English.
+	\item \textbf{Programming Language}: The source code analysis function in the mining tool will
+	only support Python 3.
+	\item \textbf{Repository type}: The mining tool will only support Git repositories. Hence, other
+	version control systems such will have to convert to Git first before using the mining tool.
+	\item \textbf{Vulnerability type}: It is aimed that the mining tool should be able to detect
+	CVE-identified vulnerabilities that have been fixed and recorded in the commit message
+	\hyperref[figure:cve_vuln]{\textbf{Figure 3.1 (a)}}, and vulnerabilities that are not identified
+	in CVE but recorded in the commit messages \hyperref[figure:common_vuln]{\textbf{Figure 3.1 (b)}}.
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{.5\textwidth}
+    \centering
+    \includegraphics[width=.85\linewidth]{images/cve_vuln.png}
+    \subcaption{CVE-identified vulnerability fix {\cite{cve_vuln}} \label{figure:cve_vuln}}
+  \end{subfigure}%
+  \begin{subfigure}{.5\textwidth}
+    \centering
+    \includegraphics[width=.85\linewidth]{images/common_vuln.png}
+    \subcaption{Common vulnerability fix {\cite{common_vuln}} \label{figure:common_vuln}}
+  \end{subfigure}
+  \caption[Comparison of a CVE-identified and common vulnerability-fixing commit]%
+  %
+  {An example of \hyperref[figure:cve_vuln]{\textbf{(a)}} a CVE-identified vulnerability fix and
+  \hyperref[figure:common_vuln]{\textbf{(b)}} a common vulnerability fix.}
+  \label{figure:fig_scope}
+\end{figure}
 
 \section{Analysis}
 The aim of this section is to contemplate the options available for this project and review some of
@@ -574,6 +611,7 @@ and new problems could emerge in the course of the project. This section will di
 in detail and review several ways of mitigating them, as well as analysing the possible constraints
 that might affect the progress of the project.
 
+\subsection{Quality of Commit Messages} \label{subsec:commit_quality}
 Although there are a lot of open source repositories available online, the majority of them does not
 have a formal guideline for the documenting the changes in the commit messages. As part of the
 \textbf{data} problem, the commit messages in the real-world repositories
@@ -584,19 +622,41 @@ these indistinct terms being widely used in the commit messages, the performance
 drop on real-world repository test sets and it would require extra effort for finding the relevant
 vulnerability-fixing commits.
 
-There are several ways of mitigating the problems to reduce the risk, provided that the problems are
-clearly identified and they are under the project scope. It is estimated that the
-\textbf{evaluation} process would be the biggest challenge of this project since it was regarded as
-a complicated and difficult area in previous researches. Moreover, this project plans to implement
-an automated version of the evaluation process, which will further increase the difficulty level.
-The implementation of automated evaluation is hard and it does not guarantee to provide a good
-result. It is also extremely challenging for the mining tool to work across repositories programmed
-in different programming languages. The constraint is that the tool has to be exhaustively tested to
-find the optimal threshold value and for it to be automated and produce good results. Although the
-tool might produce good results on some repositories, it does not indicate that the tool will
-produce consistent results on all repositories. To ensure the minimum quality of the results, one of
-the solutions might be using both automated method for basic filtering and a manual method for
-advance refinement.
+\subsection{Results Evaluation Process}
+It is estimated that the \textbf{evaluation} process would be the biggest challenge of this project
+since it was regarded as a complicated and difficult area in previous researches. Moreover, this
+project plans to implement an automated version of the evaluation process, which will further
+increase the difficulty level. The implementation of automated evaluation is hard and it does not
+guarantee to provide a good result. It is also extremely challenging for the mining tool to work
+across repositories programmed in different programming languages. The constraint is that the tool
+has to be exhaustively tested to find the optimal threshold value and for it to be automated and
+produce good results. Although the tool might produce good results on some repositories, it does not
+indicate that the tool will produce consistent results on all repositories. To ensure the minimum
+quality of the results, one of the solutions might be using both automated method for basic
+filtering and a manual method for advance refinement.
+
+\subsection{Code Changes Analysis}
+As discussed in \hyperref[subsec:commit_quality]{\textbf{Section 3.5.1}}, the commit messages in
+real-world repositories will contain noise and inconsistency that might affect the results
+retrieved. Therefore, it is expected that the results will contain a certain amount of false
+positive commits. By analysing the code changes of the commits retrieved, the validity of a commit
+can be verified by finding the changes for vulnerable lines of code, as shown in
+\hyperref[figure:code_diff]{\textbf{Figure 3.2}}.
+
+However, the step of correctly identifying the vulnerable lines of code is challenging as it varies
+with different programming languages. Firstly, different programming languages have different code
+syntax, and thus the code changes for addressing the same vulnerability might be different across
+different programming language. Secondly, the code changes of a commit only represent a small
+fragment of the whole source code, and there might be several code changes in different files that
+are addressing a same vulnerability. Simple source code analysis technique might not be sufficient
+to find the relationship between code changes in different files.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=.85\linewidth]{images/code_diff.png}
+  \caption{Example of code changes to prevent SQL injection \cite{code_diff}}
+  \label{figure:code_diff}
+\end{figure}
 
 \section{Testing}
 This section covers a brief overview of the testing stage. It will be necessary to consider some of
@@ -669,7 +729,7 @@ original authors. The reason is that publishing the vulnerabilities publicly wou
 softwares highly vulnerable to attackers \cite{arora_2010}, and it is recommended to wait for the
 official announcement from the software vendors.
 
-\chapter{Conclusions and Project Plan}
+\chapter{Project Plan}
 \section{Main achievements to date}
 \begin{itemize}
   \item Completed Literature Review and Requirements and Analysis to a good quality, but not the
@@ -740,6 +800,8 @@ official announcement from the software vendors.
 	\item \textbf{Week 2}: The implementing and testing stage is a repetitive process. It is very
 	likely that the program will run into errors in the testing and had to spend more time fixing it.
 \end{itemize}
+
+\chapter{Conclusions}
 
 % \chapter{Design}
 
