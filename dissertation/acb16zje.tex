@@ -7,7 +7,6 @@
 \usepackage{csquotes}
 \usepackage{fancyhdr}
 \usepackage{float}
-\usepackage[bottom]{footmisc}
 \usepackage{graphicx}
 \usepackage[hidelinks]{hyperref}
 \usepackage{microtype}
@@ -337,21 +336,19 @@ that. Despite the undisclosed information of research methods in many papers, Sh
 stage focusing on a specific topic of the problem to achieve the optimal efficiency.
 
 \subsection{Keywords Search}
-As regular expressions are used in this project to find the vulnerability related commits, it is
-required to know the fundamental knowledge of keywords searching techniques. For many complex
-approaches, the searching process is considered to be the fundamental step. If the initial results
-produced in the searching stage is good, a huge amount of effort could be reduced in the later
-stages. However, the prerequisite is that the repository must have a sufficient amount of valuable
-information, which can be estimated by judging the history of the repository. To correctly and
-precisely retrieve the information for a query, it is required to integrate some algorithms and
-modules into the search function. Matsushita, Sasaki, and Inoue \cite{matsushita_2005} developed a
-repository search system that makes use of two functions: lexical analysis function and token
-comparing function. The system produced very detailed results by deploying recursive search strategy
-using the keywords found into every commit. On the contrary, Mockus and Votta \cite{mockus_2000}
-designed an automated program that makes use of normalisation, word frequency analysis, and keyword
-clustering techniques to search the commit messages. Although the program is able to retrieve the
-results that include the keywords, the algorithm is unable to identify similar terms or inconsistent
-form of wording for the commit messages.
+For many complex approaches, the keywords searching process is considered to be the fundamental
+step. If the initial results produced in the searching stage is good, a huge amount of effort could
+be reduced in the later stages. However, the prerequisite is that the repository must have a
+sufficient amount of valuable information, which can be estimated by judging the history of the
+repository. To correctly and precisely retrieve the information for a query, it is required to
+integrate some algorithms and modules into the search function. Matsushita, Sasaki, and Inoue
+\cite{matsushita_2005} developed a repository search system that makes use of two functions: lexical
+analysis function and token comparing function. The system produced very detailed results by
+deploying recursive search strategy using the keywords found into every commit. On the contrary,
+Mockus and Votta \cite{mockus_2000} designed an automated program that makes use of normalisation,
+word frequency analysis, and keyword clustering techniques to search the commit messages. Although
+the program is able to retrieve the results that include the keywords, the algorithm is unable to
+identify similar terms or inconsistent form of wording for the commit messages.
 
 \subsection{Properties of Vulnerability-Fixing Commits}
 For every vulnerability identified in a repository, the vulnerability-fixing process that involves
@@ -428,6 +425,22 @@ project. However, performing manual evaluation on every result is not practical 
 that the use of automated algorithms can improve the detection process \cite{livshits_2005}. In this
 project, the tool developed should be able to automate the evaluation process to some extent, while
 preserving the accuracy of the results.
+
+\subsection{Source Code Analysis}
+This section is an extension to \hyperref[subsec:finding_vuln]{\textbf{Section 2.4.3}}. As this
+project involves in analysing the code changes in commits, it is necessary to review the techniques
+used to identify vulnerabilities by source code analysis.
+
+Finding vulnerabilities by source code analysis technique is relatively difficult than analysing
+commit messages as it requires a high-level understanding in both software vulnerabilities and the
+programming language of the source code. Source code analysis tools are generally designed for a
+specific task, and are only usable for some programming languages \cite{antunes_2009}. One of the
+advantages of source code analysis tool is that it can analyse the code without executing it
+\cite{livshits_finding_2005}, but this could also be the drawback as it might generate more false
+positives than dynamic analysis. Zitser, Lippmann, and Leek \cite{zitser_2004} have developed a
+static code analysis tool to find buffer overflow vulnerability in C programming language code.
+Their approach requires manual definitions of the overflow pattenrs in their tool, which is
+considered to be a general method in static analysis. 
 
 \section{Usage of the Repository Mining Tool in Other Areas}
 While the repository mining tool developed in this project is only capable of finding security
@@ -729,79 +742,91 @@ original authors. The reason is that publishing the vulnerabilities publicly wou
 softwares highly vulnerable to attackers \cite{arora_2010}, and it is recommended to wait for the
 official announcement from the software vendors.
 
-\chapter{Project Plan}
+\chapter{Progress}
 \section{Main achievements to date}
 \begin{itemize}
-  \item Completed Literature Review and Requirements and Analysis to a good quality, but not the
-  best yet
-  \item Basic implementation such as mining commit messages and matching regular expressions.
+  \item Completed Literature Review and Requirements and Analysis
   \item Licensing issue considered.
   \item Several design problems have been identified. For example, Git repositories converted from
   Subversion generally do not have `master' as their main branch name, thus extra command line
   options need to be provided.
+  \item Considered which real-world repositories to be used in the starting point
+  (\hyperref[sec:realworld]{\textbf{Section 3.7.1}}).
+  \item Very basic implementation such as mining commit messages and matching regular expressions.
 \end{itemize}
 
-\section{Plan of Action}
-\subsection*{Semester 1 and Christmas Vacation}
+\chapter{Project Plan}
+\section{Semester 1 and Christmas Vacation}
 \begin{ganttchart}[
 		hgrid=true,
 		vgrid={draw=none, dotted},
 		expand chart=\textwidth
-	]{1}{12}
-	\gantttitle{Semester 1}{12} \\
-	\gantttitlelist{1,...,12}{1} \\
-	\ganttbar{Background Reading}{1}{10} \\
-	\ganttbar{Introduction}{1}{1} \\
-	\ganttbar{Analysis}{1}{1} \\
-	\ganttbar{Literature Review}{2}{4} \\
-	\ganttbar{Requirements and Analysis}{5}{6} \\
-	\ganttbar{Proof reading and amendment}{7}{9} \\
-  \ganttbar{Design and Implement}{10}{10} \\
-  \ganttbar{Initial prototype implementation}{11}{12}
-	\ganttlink{elem2}{elem3}
-	\ganttlink{elem3}{elem4}
-	\ganttlink{elem4}{elem5}
-  \ganttlink{elem5}{elem6}
-  \ganttlink{elem6}{elem7}
+	]{1}{6}
+	\gantttitle{Semester 1 and Christmas Vacation}{6} \\
+	\gantttitlelist{11,...,16}{1} \\
+  \ganttbar{Design}{1}{1} \\
+  \ganttbar{Early implementation and testing}{2}{6}
 \end{ganttchart}
 
+\subsection{Deliverables}
 \begin{itemize}
-	\item \textbf{Week 7}: Starting from this week, discuss with the supervisor weekly about the
-	document, also it is best to start the design stage early, and show the prototype to the
-  supervisor.
-  \item \textbf{Week 11}: If the design stage is started early, then it is hoped to produce the
-  initial prototype of the tool before Christmas Vacation.
-  \item \textbf{Christmas Vacation}: Regularly work on the implementation of the tool and push the
-  commits.
+  \item \textbf{Week 11}: It is hoped that there will be some design progress being made at the end
+  of first semester. Otherwise, the progress might be delayed until the Christmas vacation.
+  \item \textbf{Christmas Vacation}: Regularly make progress on the design and implementation. If a
+  great amount of progress could be achieved in this period, then more time could be allocated to
+  testing and more iterations in the second semester.
 \end{itemize}
 
-\subsection{Semester 2}
+\section{Semester 2}
+\subsection{Iteration 1}
 \begin{ganttchart}[
 	hgrid=true,
 	vgrid={draw=none, dotted},
 	expand chart=\textwidth
-]{1}{12}
-\gantttitle{Semester 2}{12} \\
-\gantttitlelist{1,...,12}{1} \\
-\ganttbar{Design}{1}{1} \\
-\ganttbar{Implement prototype}{2}{4} \\
-\ganttbar{Testing prototype}{3}{6} \\
-\ganttbar{Write dissertation}{7}{9} \\
-\ganttbar{Submit project}{10}{10} \\
-\ganttbar{Poster session}{11}{11}
-\ganttlink{elem0}{elem1}
-\ganttlink{elem2}{elem3}
-\ganttlink{elem3}{elem4}
-\ganttlink{elem4}{elem5}
+]{1}{4}
+\gantttitle{Iteration 1}{4} \\
+\gantttitlelist{1,...,4}{1} \\
+\ganttbar{Implement prototype}{1}{2} \\
+\ganttbar{Testing prototype}{3}{4}
 \end{ganttchart}
 
-\begin{itemize}
-	\item \textbf{Week 1}: Finished the design and started implementation during holiday.
-	\item \textbf{Week 2}: The implementing and testing stage is a repetitive process. It is very
-	likely that the program will run into errors in the testing and had to spend more time fixing it.
-\end{itemize}
+\subsection{Iteration 2}
+\begin{ganttchart}[
+	hgrid=true,
+	vgrid={draw=none, dotted},
+	expand chart=\textwidth
+]{1}{5}
+\gantttitle{Iteration 2}{5} \\
+\gantttitlelist{4,...,8}{1} \\
+\ganttbar{Prototype fixes}{1}{1} \\
+\ganttbar{Develop prototype to software}{2}{3} \\
+\ganttbar{Testing software}{3}{5}
+\end{ganttchart}
 
-\chapter{Conclusions}
+\subsection{Semester 2 Overview}
+\begin{ganttchart}[
+	hgrid=true,
+	vgrid={draw=none, dotted},
+	expand chart=\textwidth
+]{1}{11}
+\gantttitle{Semester 2}{11} \\
+\gantttitlelist{1,...,11}{1} \\
+\ganttbar{Iteration 1}{1}{4} \\
+\ganttbar{Iteration 2}{5}{8} \\
+\ganttbar{Writing dissertation}{8}{10} \\
+\ganttbar{Poster session}{11}{11}
+\end{ganttchart}
+
+\subsection{Deliverables}
+\begin{itemize}
+	\item \textbf{Iteration 1}: Iteration 1 could be shorter or longer based on the amount of progress
+	made during Christmas vacation. It is aimed to produce a working prototype in this stage.
+  \item \textbf{Iteration 2}: Iteration 2 improves the prototype produced in iteration 1, and
+  develop it into a fully working software based on the feedback given. In addition, further
+  improvements or implementations could be made if the progress were ahead.
+  \item \textbf{Easter vacation}: Could start writing the dissertation as part of iteration 1 and
+  iteration 2. The Easter vacation will focus on finalising the software and dissertation.
+\end{itemize}
 
 % \chapter{Design}
 
