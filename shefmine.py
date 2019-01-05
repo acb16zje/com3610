@@ -1,77 +1,139 @@
 import argparse
 import git
+import json
 import re
 
+
 class Vulnerability:
+    vuln_list = []
+
     def __init__(self, name, regex):
         self.name = name
-        self.regex = regex
+        self.regex = re.compile(regex, re.IGNORECASE)
+        Vulnerability.vuln_list.append(self)
 
 # Injection
-injection = re.compile('(sql|http header|xxe|nosql|ldap|regex|xpath|xquery|code|queries|xml|html|(shell|os |oper.* sys|command|cmd)|e(-)?mail).*injec|(patch|fix|prevent|found|protect).*(injec| sqli | osci )|(injec|sqli |osci ).*(patch|fix|prevent|found|protect)|(sanitiz).* header(s)?|header(s)?( sanitiz)|quer.* parametriz|(parametriz).* quer')
+injection = Vulnerability(
+    'Injection',
+    '(sql|http header|xxe|nosql|ldap|regex|xpath|xquery|code|queries|xml|html|(shell|os |oper.* sys|command|cmd)|e(-)?mail).*injec|(patch|fix|prevent|found|protect).*(injec| sqli | osci )|(injec|sqli |osci ).*(patch|fix|prevent|found|protect)|(sanitiz).* header(s)?|header(s)?( sanitiz)|quer.* parametriz|(parametriz).* quer'
+)
 
 # Broken Authentication and Session Management
-auth = re.compile('brute.*force|sess.*hijack|broken auth|auth.* brok|auth.* bypass|sess.* fixation|(cred|pass|session( )?id|connect).*(plaintext|un(hash|salt|encrypt|safe))|(plaintext|un(hash|salt|encrypt|safe)).*(cred|pass|session( )?id|connect)|(weak|bad|unsafe).* pass.* verif|fix.* (url rewriting|rewriting url)|timeout.*(session|auth.* token)')
+auth = Vulnerability(
+    'Broken Authentication and Session Management',
+    'brute.*force|sess.*hijack|broken auth|auth.* brok|auth.* bypass|sess.* fixation|(cred|pass|session( )?id|connect).*(plaintext|un(hash|salt|encrypt|safe))|(plaintext|un(hash|salt|encrypt|safe)).*(cred|pass|session( )?id|connect)|(weak|bad|unsafe).* pass.* verif|fix.* (url rewriting|rewriting url)|timeout.*(session|auth.* token)'
+)
 
 # Cross-Site Scripting
-xss = re.compile('(fix|prevent|protect|found|patch).* (xss|cross.*(site|zone) script|script.* attack)|(xss|cross.*(site|zone) script|script.* attack).* (fix|prevent|protect|found|patch)|crlf injec|http resp.* split|(reflect|stored|dom).*xss|xss.*(reflect|stored|dom)|xss (vuln|attack|issue)|(validate|sanitize).* (un(trusted|safe)|malicious)')
+xss = Vulnerability(
+    'Cross-Site Scripting',
+    '(fix|prevent|protect|found|patch).* (xss|cross.*(site|zone) script|script.* attack)|(xss|cross.*(site|zone) script|script.* attack).* (fix|prevent|protect|found|patch)|crlf injec|http resp.* split|(reflect|stored|dom).*xss|xss.*(reflect|stored|dom)|xss (vuln|attack|issue)|(validate|sanitize).* (un(trusted|safe)|malicious)'
+)
 
 # Broken Access Control
-boa = re.compile('(fix|prevent|protect|patch|found).* ((impro.* (auth|access.* control))|url.* access)|((impro.* (auth|access.* control))|url.* access).* (fix|prevent|protect|patch|found)|insec.* direct obj.* ref.*|direct ref.*|auth.* bypass.* control')
+boa = Vulnerability(
+    'Broken Access Control',
+    '(fix|prevent|protect|patch|found).* ((impro.* (auth|access.* control))|url.* access)|((impro.* (auth|access.* control))|url.* access).* (fix|prevent|protect|patch|found)|insec.* direct obj.* ref.*|direct ref.*|auth.* bypass.* control'
+)
 
 # Security Misconfiguration
-smis = re.compile('(fix|prevent|protect|patch|found).* ((impro.* (auth|access.* control))|url.* access)|((impro.* (auth|access.* control))|url.* access).* (fix|prevent|protect|patch|found)|insec.* direct obj.* ref.*|direct ref.*|auth.* bypass.* control')
+smis = Vulnerability(
+    'Security Misconfiguration',
+    '(fix|prevent|protect|patch|found).* ((impro.* (auth|access.* control))|url.* access)|((impro.* (auth|access.* control))|url.* access).* (fix|prevent|protect|patch|found)|insec.* direct obj.* ref.*|direct ref.*|auth.* bypass.* control'
+)
 
 # Sensitive Data Exposure
-sde = re.compile('(fix|prevent|found|protect|patch).* (man.*in.*midle|mitm|bucket.*brig)|(un|not).*encrypt.* data|(weak|bad|unsafe).*(pass.* hash|key (gener|management))|(important|safe).* header(s)? miss|unsafe.* crypto|(change|update|add).* (https|sec.*cookie.* flag)|rem.* http|(fix|rem).* (secret.*key|hash collision)|(patch|fix|prevent|upgrade|protect).* (sha([- ])?1|md5|md2|md4|(3)?des|collision)')
+sde = Vulnerability(
+    'Sensitive Data Exposure',
+    '(fix|prevent|found|protect|patch).* (man.*in.*midle|mitm|bucket.*brig)|(un|not).*encrypt.* data|(weak|bad|unsafe).*(pass.* hash|key (gener|management))|(important|safe).* header(s)? miss|unsafe.* crypto|(change|update|add).* (https|sec.*cookie.* flag)|rem.* http|(fix|rem).* (secret.*key|hash collision)|(patch|fix|prevent|upgrade|protect).* (sha([- ])?1|md5|md2|md4|(3)?des|collision)'
+)
 
 # Insufficient Attack Protection
-iap = re.compile('(detect|block|answer|respond|prevent).* (attack|expolit)|(attack|expolit).* (detect|block|answer|respond|prevent)')
+iap = Vulnerability(
+    'Insufficient Attack Protection',
+    '(detect|block|answer|respond|prevent).* (attack|expolit)|(attack|expolit).* (detect|block|answer|respond|prevent)'
+)
 
 # Cross-Site Request Forgery
-csrf = re.compile('(fix|prevent|protect|found|patch).*(cross([- ])?site.*(req|ref).*forgery|csrf|sea.*surf|xsrf)|(cross([- ])?site.*(req|ref).*forgery|csrf|sea.*surf|xsrf).*(fix|prevent|protect|found|patch)|(one.*click|autom).*attack|sess.*riding|conf.*deput')
+csrf = Vulnerability(
+    'Cross-Site Request Forgery',
+    '(fix|prevent|protect|found|patch).*(cross([- ])?site.*(req|ref).*forgery|csrf|sea.*surf|xsrf)|(cross([- ])?site.*(req|ref).*forgery|csrf|sea.*surf|xsrf).*(fix|prevent|protect|found|patch)|(one.*click|autom).*attack|sess.*riding|conf.*deput'
+)
 
 # Using Components with Known Vulnerabilities
-component = re.compile('(vuln|(un|not )safe|malicious).* (version|dependenc|component|librar)')
+component = Vulnerability(
+    'Using Components with Known Vulnerabilities',
+    '(vuln|(un|not )safe|malicious).* (version|dependenc|component|librar)'
+)
 
 # Underprotected APIs
-upapi = re.compile('(fix|protect).* api|api.* (fix|protect)|secure.* commun')
+upapi = Vulnerability(
+    'Underprotected APIs',
+    '(fix|protect).* api|api.* (fix|protect)|secure.* commun'
+)
 
-# Path/Directory Traversal
-pathtrav = re.compile('((path|dir.*) traver.*|(dot-dot-slash|directory traversal|directory climbing|backtracking).*(attack|vuln))')
+# Path / Directory Traversal
+pathtrav = Vulnerability(
+    'Path / Directory Traversal',
+    '((path|dir.*) traver.*|(dot-dot-slash|directory traversal|directory climbing|backtracking).*(attack|vuln))'
+)
 
-# Distributed Denial-of-Service/Denial-of-Service
-dos = re.compile('( dos |((distributed)? denial.*of.*service)| ddos |deadlocks)')
+# Distributed Denial-of-Service / Denial-of-Service
+dos = Vulnerability(
+    'Distributed Denial-of-Service / Denial-of-Service',
+    '( dos |((distributed)? denial.*of.*service)| ddos |deadlocks)'
+)
 
-# sha-1 collision
-sha1 = re.compile('(sha-1|sha 1|sha1) collision')
+# SHA-1 collision
+sha1 = Vulnerability(
+    'SHA-1 Collision',
+    '(sha-1|sha 1|sha1) collision'
+)
 
 # Memory Leaks
-ml = re.compile('(fix|rem|patch|found|prevent) mem.* leak|mem.* leak (fix|rem|patch|found|prevent)')
+ml = Vulnerability(
+    'Memory Leaks',
+    '(fix|rem|patch|found|prevent) mem.* leak|mem.* leak (fix|rem|patch|found|prevent)'
+)
 
 # Context Leaks
-cl = re.compile('(fix|rem|patch|found|prevent).*context leak|context leak.*(fix|rem|patch|found|prevent)')
+cl = Vulnerability(
+    'Context Leaks',
+    '(fix|rem|patch|found|prevent).*context leak|context leak.*(fix|rem|patch|found|prevent)'
+)
 
 # Resource Leaks
-rl = re.compile('(fix|rem|patch|found|prevent).* resource.* leaks|resource.* leaks (fix|rem|patch|found|prevent)')
+rl = Vulnerability(
+    'Resource Leaks',
+    '(fix|rem|patch|found|prevent).* resource.* leaks|resource.* leaks (fix|rem|patch|found|prevent)'
+)
 
 # Overflow
-over = re.compile('(fix|rem|patch|found|prevent).* overflow|overflow.* (fix|rem|patch|found|prevent)')
+over = Vulnerability(
+    'Overflow',
+    '(fix|rem|patch|found|prevent).* overflow|overflow.* (fix|rem|patch|found|prevent)'
+)
 
 # Miscellaneous
-misc = re.compile('(fix|found|prevent|protect|patch).*sec.*(bug|vulnerab|problem|defect|warning|issue|weak|attack|flaw|fault|error)|sec.* (bug|vulnerab|problem|defect|warning|issue|weak|attack|flaw|fault|error).*(fix|found|prevent|protect|patch)|vulnerab|attack|cve-|nvd-|cwe-')
+misc = Vulnerability(
+    'Miscellaneous',
+    '(fix|found|prevent|protect|patch).*sec.*(bug|vulnerab|problem|defect|warning|issue|weak|attack|flaw|fault|error)|sec.* (bug|vulnerab|problem|defect|warning|issue|weak|attack|flaw|fault|error).*(fix|found|prevent|protect|patch)|vulnerab|attack|cve|nvd|cwe'
+)
 
 # Buffer overflow
-bufover = re.compile('buff.* overflow')
+bufover = Vulnerability('Buffer Overflow', 'buff.* overflow')
 
 # Full path disclosure
-fpd = re.compile('(full)? path discl')
+fpd = Vulnerability('Full Path Disclosure', '(full)? path discl')
 
 # Null pointers
-nullp = re.compile('null pointers')
+nullp = Vulnerability('Null Pointers', 'null pointers')
 
 # Encryption issues
-encrypt = re.compile('encrypt.* (bug|vulnerab|problem|defect|warning|issue|weak|attack|flaw|fault|error)')
+encrypt = Vulnerability(
+    'Encryption Issues',
+    'encrypt.* (bug|vulnerab|problem|defect|warning|issue|weak|attack|flaw|fault|error)'
+)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('repo', help='Path to the Git repository')
@@ -83,8 +145,10 @@ branch = repo.active_branch if args.branch is None else 'master'
 
 test_commits = list(repo.iter_commits(args.branch))
 for commit in test_commits:
-    test = misc.search(commit.message)
+    test = misc.regex.search(commit.message)
 
-    if test is not None:
-        print(commit.message)
+    # if test is not None:
+    #     print(commit)
 
+for vuln in Vulnerability.vuln_list:
+    print(vuln.name)
