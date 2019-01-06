@@ -7,10 +7,11 @@ import re
 class Vulnerability:
     vuln_list = []
 
-    def __init__(self, name, regex):
+    def __init__(self, name: str, regex: str) -> None:
         self.name = name
-        self.regex = re.compile(regex, re.IGNORECASE)
+        self.regex = re.compile(regex, re.I | re.S)
         Vulnerability.vuln_list.append(self)
+
 
 # Injection
 injection = Vulnerability(
@@ -143,12 +144,19 @@ args = parser.parse_args()
 repo = git.Repo(args.repo)
 branch = repo.active_branch if args.branch is None else 'master'
 
-test_commits = list(repo.iter_commits(args.branch))
-for commit in test_commits:
-    test = misc.regex.search(commit.message)
+output = {}
 
-    # if test is not None:
-    #     print(commit)
+# Iterate through all commits in the given branch
+for commit in repo.iter_commits(args.branch):
+    output[str(commit)] = []
 
-for vuln in Vulnerability.vuln_list:
-    print(vuln.name)
+    for vuln in Vulnerability.vuln_list:
+        if vuln.regex.search(commit.message) is not None:
+            output[str(commit)].append(vuln.name)
+
+    if not output[str(commit)]:
+        output.pop(str(commit))
+
+print(len(output))
+with open('output.json', 'w') as outfile:
+    json.dump(output, outfile, indent=4)
