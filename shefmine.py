@@ -138,25 +138,45 @@ encrypt = Vulnerability(
 
 parser = argparse.ArgumentParser()
 parser.add_argument('repo', help='Path to the Git repository')
-parser.add_argument('-b', '--branch', help="Select the branch (Default: the active branch of the repository)")
+parser.add_argument('-b', '--branch', help='Select the branch (Default: the active branch of the repository)')
 args = parser.parse_args()
 
 repo = git.Repo(args.repo)
-branch = repo.active_branch if args.branch is None else 'master'
 
 output = {}
 
-# Iterate through all commits in the given branch
+# Iterate through all commits in the given branch (default: active branch)
 for commit in repo.iter_commits(args.branch):
-    output[str(commit)] = []
-
     for vuln in Vulnerability.vuln_list:
         if vuln.regex.search(commit.message) is not None:
-            output[str(commit)].append(vuln.name)
+            if str(commit) not in output:
+                output[str(commit)] = {}
 
-    if not output[str(commit)]:
-        output.pop(str(commit))
+            # Add vulnerabilities item
+            if 'vulnerabilities' in output[str(commit)]:
+                output[str(commit)]['vulnerabilities'].append(vuln.name)
+            else:
+                output[str(commit)]['vulnerabilities'] = [vuln.name]
 
-print(len(output))
+            # for test in commit.diff().iter_change_type('A'):
+            #     print(test)
+
+    # Add files changed
+    if str(commit) in output:
+        for diff_item in commit.diff(commit.parents[0]):
+            if 'files_changed' in output[str(commit)]:
+                output[str(commit)]['files_changed'].append({
+                    'file': diff_item.a_path
+                })
+            else:
+                output[str(commit)]['files_changed'] = [{
+                    'file': diff_item.a_path
+                }]
+
+
+# for x in repo.commit('78efb337adc1105adbc2a48ec3afd9a327d914a1').diff('952881903da5df6f716c44620c38a1ae6f173f81'):
+#     print(x.a_index)
+#     print()
+
 with open('output.json', 'w') as outfile:
     json.dump(output, outfile, indent=4)
