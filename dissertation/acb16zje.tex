@@ -440,7 +440,7 @@ advantages of source code analysis tool is that it can analyse the code without 
 positives than dynamic analysis. Zitser, Lippmann, and Leek \cite{zitser_2004} have developed a
 static code analysis tool to find buffer overflow vulnerability in C programming language code.
 Their approach requires manual definitions of the overflow pattenrs in their tool, which is
-considered to be a general method in static analysis. 
+considered to be a general method in static analysis.
 
 \section{Usage of the Repository Mining Tool in Other Areas}
 While the repository mining tool developed in this project is only capable of finding security
@@ -742,99 +742,13 @@ original authors. The reason is that publishing the vulnerabilities publicly wou
 softwares highly vulnerable to attackers \cite{arora_2010}, and it is recommended to wait for the
 official announcement from the software vendors.
 
-\chapter{Progress}
-\section{Main achievements to date}
-\begin{itemize}
-  \item Completed Literature Review and Requirements and Analysis
-  \item Licensing issue considered.
-  \item Several design problems have been identified. For example, Git repositories converted from
-  Subversion generally do not have `master' as their main branch name, thus extra command line
-  options need to be provided.
-  \item Considered which real-world repositories to be used in the starting point
-  (\hyperref[sec:realworld]{\textbf{Section 3.7.1}}).
-  \item Very basic implementation such as mining commit messages and matching regular expressions.
-\end{itemize}
+\chapter{Design}
 
-\chapter{Project Plan}
-\section{Semester 1 and Christmas Vacation}
-\begin{ganttchart}[
-		hgrid=true,
-		vgrid={draw=none, dotted},
-		expand chart=\textwidth
-	]{1}{6}
-	\gantttitle{Semester 1 and Christmas Vacation}{6} \\
-	\gantttitlelist{11,...,16}{1} \\
-  \ganttbar{Design}{1}{1} \\
-  \ganttbar{Early implementation and testing}{2}{6}
-\end{ganttchart}
+\chapter{Implementation and Testing}
 
-\subsection{Deliverables}
-\begin{itemize}
-  \item \textbf{Week 11}: It is hoped that there will be some design progress being made at the end
-  of first semester. Otherwise, the progress might be delayed until the Christmas vacation.
-  \item \textbf{Christmas Vacation}: Regularly make progress on the design and implementation. If a
-  great amount of progress could be achieved in this period, then more time could be allocated to
-  testing and more iterations in the second semester.
-\end{itemize}
+\chapter{Results and Discussion}
 
-\section{Semester 2}
-\subsection{Iteration 1}
-\begin{ganttchart}[
-	hgrid=true,
-	vgrid={draw=none, dotted},
-	expand chart=\textwidth
-]{1}{4}
-\gantttitle{Iteration 1}{4} \\
-\gantttitlelist{1,...,4}{1} \\
-\ganttbar{Implement prototype}{1}{2} \\
-\ganttbar{Testing prototype}{3}{4}
-\end{ganttchart}
-
-\subsection{Iteration 2}
-\begin{ganttchart}[
-	hgrid=true,
-	vgrid={draw=none, dotted},
-	expand chart=\textwidth
-]{1}{5}
-\gantttitle{Iteration 2}{5} \\
-\gantttitlelist{4,...,8}{1} \\
-\ganttbar{Prototype fixes}{1}{1} \\
-\ganttbar{Develop prototype to software}{2}{3} \\
-\ganttbar{Testing software}{3}{5}
-\end{ganttchart}
-
-\subsection{Semester 2 Overview}
-\begin{ganttchart}[
-	hgrid=true,
-	vgrid={draw=none, dotted},
-	expand chart=\textwidth
-]{1}{11}
-\gantttitle{Semester 2}{11} \\
-\gantttitlelist{1,...,11}{1} \\
-\ganttbar{Iteration 1}{1}{4} \\
-\ganttbar{Iteration 2}{5}{8} \\
-\ganttbar{Writing dissertation}{8}{10} \\
-\ganttbar{Poster session}{11}{11}
-\end{ganttchart}
-
-\subsection{Deliverables}
-\begin{itemize}
-	\item \textbf{Iteration 1}: Iteration 1 could be shorter or longer based on the amount of progress
-	made during Christmas vacation. It is aimed to produce a working prototype in this stage.
-  \item \textbf{Iteration 2}: Iteration 2 improves the prototype produced in iteration 1, and
-  develop it into a fully working software based on the feedback given. In addition, further
-  improvements or implementations could be made if the progress were ahead.
-  \item \textbf{Easter vacation}: Could start writing the dissertation as part of iteration 1 and
-  iteration 2. The Easter vacation will focus on finalising the software and dissertation.
-\end{itemize}
-
-% \chapter{Design}
-
-% \chapter{Implementation and Testing}
-
-% \chapter{Results and Discussion}
-
-% \chapter{Conclusion}
+\chapter{Conclusion}
 
 \printbibliography[heading=bibintoc]
 

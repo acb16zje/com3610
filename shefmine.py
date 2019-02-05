@@ -145,10 +145,25 @@ repo = git.Repo(args.repo)
 
 output = {}
 
+
+def process_commit_message(message):
+    """
+    Pre-process the commit message to remove non-content strings
+
+    :param message: The commit message
+    :return: The commit message after pre-processing
+    """
+
+    return re.sub('git-svn-id.*', '', message).strip()
+
+
 # Iterate through all commits in the given branch (default: active branch)
 for commit in repo.iter_commits(args.branch):
     for vuln in Vulnerability.vuln_list:
-        if vuln.regex.search(commit.message) is not None:
+        commit_message = process_commit_message(commit.message)
+        regex_match = vuln.regex.search(commit_message)
+
+        if regex_match is not None:
             if str(commit) not in output:
                 output[str(commit)] = {}
 
@@ -156,6 +171,8 @@ for commit in repo.iter_commits(args.branch):
             if 'vulnerabilities' in output[str(commit)]:
                 output[str(commit)]['vulnerabilities'].append(vuln.name)
             else:
+                output[str(commit)]['message'] = commit_message
+                output[str(commit)]['match'] = regex_match.group()
                 output[str(commit)]['vulnerabilities'] = [vuln.name]
 
             # for test in commit.diff().iter_change_type('A'):
@@ -178,5 +195,10 @@ for commit in repo.iter_commits(args.branch):
 #     print(x.a_index)
 #     print()
 
+# diff_index = commit.diff(revision+'~1', create_patch=True, ignore_blank_lines=True,
+#                          ignore_space_at_eol=True, diff_filter='cr')
+#
+# print reduce(lambda x, y: str(x)+str(y), diff_index)
+
 with open('output.json', 'w') as outfile:
-    json.dump(output, outfile, indent=4)
+    json.dump(output, outfile, indent=2)
