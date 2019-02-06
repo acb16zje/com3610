@@ -2,7 +2,8 @@ import argparse
 import git
 import json
 import re
-
+import difflib
+import sys
 
 class Vulnerability:
     vuln_list = []
@@ -158,47 +159,55 @@ def process_commit_message(message):
 
 
 # Iterate through all commits in the given branch (default: active branch)
-for commit in repo.iter_commits(args.branch):
-    for vuln in Vulnerability.vuln_list:
-        commit_message = process_commit_message(commit.message)
-        regex_match = vuln.regex.search(commit_message)
+# for commit in repo.iter_commits(args.branch):
+commit = repo.commit('2bebb2c28cee0708a66b77c2076ef224de4c8bdc')
+for vuln in Vulnerability.vuln_list:
+    commit_message = process_commit_message(commit.message)
+    regex_match = vuln.regex.search(commit_message)
 
-        if regex_match is not None:
-            if str(commit) not in output:
-                output[str(commit)] = {}
+    if regex_match is not None:
+        if str(commit) not in output:
+            output[str(commit)] = {}
 
-            # Add vulnerabilities item
-            if 'vulnerabilities' in output[str(commit)]:
-                output[str(commit)]['vulnerabilities'].append(vuln.name)
-            else:
-                output[str(commit)]['message'] = commit_message
-                output[str(commit)]['match'] = regex_match.group()
-                output[str(commit)]['vulnerabilities'] = [vuln.name]
+        # Add vulnerabilities item
+        if 'vulnerabilities' in output[str(commit)]:
+            output[str(commit)]['vulnerabilities'].append(vuln.name)
+        else:
+            output[str(commit)]['message'] = commit_message
+            output[str(commit)]['match'] = regex_match.group()
+            output[str(commit)]['vulnerabilities'] = [vuln.name]
 
-            # for test in commit.diff().iter_change_type('A'):
-            #     print(test)
+        # for test in commit.diff().iter_change_type('A'):
+        #     print(test)
 
-    # Add files changed
-    if str(commit) in output:
-        for diff_item in commit.diff(commit.parents[0]):
-            if 'files_changed' in output[str(commit)]:
-                output[str(commit)]['files_changed'].append({
-                    'file': diff_item.a_path
-                })
-            else:
-                output[str(commit)]['files_changed'] = [{
-                    'file': diff_item.a_path
-                }]
+# Add files changed
+if str(commit) in output:
+    for diff_item in commit.diff(commit.parents[0]):
+        if 'files_changed' not in output[str(commit)]:
+            output[str(commit)]['files_changed'] = []
+
+        output[str(commit)]['files_changed'].append({
+            'file': diff_item.a_path,
+            'added': 'test'
+        })
 
 
-# for x in repo.commit('78efb337adc1105adbc2a48ec3afd9a327d914a1').diff('952881903da5df6f716c44620c38a1ae6f173f81'):
-#     print(x.a_index)
-#     print()
+x = repo.commit('64b98f9945dccbdc1fec085104aa760e37b0e6da').diff('2bebb2c28cee0708a66b77c2076ef224de4c8bdc')[-1]
+a = x.a_blob.data_stream.read().decode('utf-8').splitlines(True)
+b = x.b_blob.data_stream.read().decode('utf-8').splitlines(True)
+# print(a)
+# print()
+# print(b)
+
+
+with open('test.txt', "w") as output:
+    diff = difflib.unified_diff(a, b)
+    output.writelines(diff)
 
 # diff_index = commit.diff(revision+'~1', create_patch=True, ignore_blank_lines=True,
 #                          ignore_space_at_eol=True, diff_filter='cr')
 #
 # print reduce(lambda x, y: str(x)+str(y), diff_index)
 
-with open('output.json', 'w') as outfile:
-    json.dump(output, outfile, indent=2)
+# with open('output.json', 'w') as outfile:
+#     json.dump(output, outfile, indent=2)
