@@ -31,7 +31,7 @@ def search_repository(repo: git.Repo, branch: str) -> dict:
 
     for commit in repo.iter_commits(branch):
         # return output
-    # commit = repo.commit('2bebb2c28cee0708a66b77c2076ef224de4c8bdc')
+        # commit = repo.commit('2bebb2c28cee0708a66b77c2076ef224de4c8bdc')
         for vulnerability in vuln.vulnerability_list:
             commit_message = process_commit_message(commit.message)
             regex_match = vulnerability.regex.search(commit_message)
@@ -59,34 +59,30 @@ def search_repository(repo: git.Repo, branch: str) -> dict:
                     a = ''
                 else:
                     a_stream = diff_item.a_blob.data_stream.read()
-                    a_encoding = chardet.detect(a_stream)
+                    a_encoding = chardet.detect(a_stream)['encoding']
 
-                    if a_encoding['encoding'] is None:
-                        a = a_stream.decode('utf-8', 'replace').splitlines(True)
-                    else:
-                        a = a_stream.decode(a_encoding['encoding'], 'replace').splitlines(True)
+                    # Encoding is None for binary files
+                    a = 'binary' if a_encoding is None else a_stream.decode(a_encoding, 'replace').splitlines(True)
 
                 # b (RHS) is None for deleted file
                 if diff_item.b_blob is None:
                     b = ''
                 else:
                     b_stream = diff_item.b_blob.data_stream.read()
-                    b_encoding = chardet.detect(b_stream)
+                    b_encoding = chardet.detect(b_stream)['encoding']
 
-                    if b_encoding['encoding'] is None:
-                        b = b_stream.decode('utf-8', 'replace').splitlines(True)
-                    else:
-                        b = b_stream.decode(b_encoding['encoding'], 'replace').splitlines(True)
+                    # Encoding is None for binary files
+                    b = 'binary' if b_encoding is None else b_stream.decode(b_encoding, 'replace').splitlines(True)
 
-                diff = difflib.unified_diff(a, b)
-                # print(diff)
+                diff = a if a is 'binary' and b is 'binary' else difflib.unified_diff(a, b)
 
                 output[str(commit)]['files_changed'].append({
                     'file': diff_item.a_path,
-                    # 'diff': ''.join(diff)
+                    'diff': ''.join(diff)
                 })
 
     return output
+
 
 # forward / backward slicing
 # python ghdiff
@@ -122,10 +118,10 @@ def output_result(output: dict, path: str):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('repo', help='Path to the Git repository')
-    parser.add_argument('-r', '--revision', help='Select the starting revision '
-                                                 '(Default: the active branch of the repository)')
-    parser.add_argument('-o', '--output', help='Write the result to the specified file name and path '
-                                               '(Default: as output.json in current working directory)')
+    parser.add_argument('-r', '--revision', type=str, help='Select the starting revision '
+                                                           '(Default: the active branch of the repository)')
+    parser.add_argument('-o', '--output', type=str, help='Write the result to the specified file name and path '
+                                                         '(Default: as output.json in current working directory)')
     args = parser.parse_args()
 
     if args.output:
@@ -146,7 +142,6 @@ if __name__ == '__main__':
     try:
         output_result(search_repository(git.Repo(args.repo), args.revision), output_path)
     except git.NoSuchPathError:
-        print(f'shefmine.py: \'{args.repo}\' is not a Git repository')
+        print(f"shefmine.py: '{args.repo}' is not a Git repository")
     except git.GitCommandError:
-        print(f'shefmine.py: GitCommandError, bad revision \'{args.revision}\'')
-
+        print(f"shefmine.py: GitCommandError, bad revision '{args.revision}'")
