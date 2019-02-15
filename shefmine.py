@@ -1,9 +1,14 @@
+#!/usr/bin/python3
+
 import argparse
 import cchardet as chardet
 import difflib
+import flawfinder
 import git
+import itertools
 import json
 import os
+import pydriller
 import re
 import vulnerability as vuln
 
@@ -19,96 +24,113 @@ def process_commit_message(message: str) -> str:
     return re.sub('git-svn-id.*', '', message).strip()
 
 
-def is_comment(line: str) -> bool:
-    return line.startswith('/**') or line.startswith('*')
+def is_trivial_line(line: str) -> bool:
+    return line.startswith('/**') or line.startswith('*') or difflib.IS_CHARACTER_JUNK(line)
 
 
-def parse_diff(diff):
-    for line in diff:
-        if line.startswith('+') and not line.startswith('+++'):
-            if not is_comment(line[1:].strip()) and not difflib.IS_LINE_JUNK(line):
-                print('\x1b[33m+' + line[1:].strip())
-        elif line.startswith('-') and not line.startswith('---'):
-            if not is_comment(line[1:].strip()) and not difflib.IS_LINE_JUNK(line):
-                print('\x1b[1;31m-' + line[1:].strip())
+def parse_diff(diff: object) -> (list, list):
+    added, deleted = [], []
+
+    for line in itertools.islice(diff, 2, None):
+        if line.startswith('+'):
+            raw_code = line[1:].strip()
+
+            if not is_trivial_line(raw_code):
+                added.append(raw_code)
+        elif line.startswith('-'):
+            raw_code = line[1:].strip()
+
+            if not is_trivial_line(raw_code):
+                deleted.append(raw_code)
+
+    return added, deleted
 
 
-def search_repository(repo: git.Repo, branch: str) -> dict:
+def search_repository(repo: git.Repo, rev: str) -> dict:
     """
-    Iterate through all commits of the given repository in the given branch (default: active branch)
+    Iterate through all commits of the given repository from the given revision (default: active branch)
 
     :param repo: The Git repository
-    :param branch: The branch to search
+    :param rev: The starting revision
     """
 
     output = {}
 
-    # for commit in repo.iter_commits(branch):
-        # return output
-    commit = repo.commit('cd2b7a26c776b0754fb98426a67804fd48118708')
-    for vulnerability in vuln.vulnerability_list:
-        commit_message = process_commit_message(commit.message)
-        regex_match = vulnerability.regex.search(commit_message)
+    for commit in repo.iter_commits(rev):
+    # commit = repo.commit('cd2b7a26c776b0754fb98426a67804fd48118708')
+        for vulnerability in vuln.vulnerability_list:
+            commit_message = process_commit_message(commit.message)
+            regex_match = vulnerability.regex.search(commit_message)
 
-        if regex_match is not None:
-            if str(commit) not in output:
-                output[str(commit)] = {}
-                output[str(commit)]['message'] = commit.message
-                output[str(commit)]['vulnerabilities'] = []
+            if regex_match is not None:
+                if str(commit) not in output:
+                    output[str(commit)] = {}
+                    output[str(commit)]['message'] = commit.message
+                    output[str(commit)]['vulnerabilities'] = []
 
-            # Add vulnerabilities item
-            output[str(commit)]['vulnerabilities'].append({
-                'name': vulnerability.name,
-                'match': regex_match.group()
-            })
+                # Add vulnerabilities item
+                output[str(commit)]['vulnerabilities'].append({
+                    'name': vulnerability.name,
+                    'match': regex_match.group()
+                })
 
+        # Add files changed
+        if str(commit) in output:
+            for diff_item in commit.parents[0].diff(commit):
+                if 'files_changed' not in output[str(commit)]:
+                    output[str(commit)]['files_changed'] = []
 
-    # Add files changed
-    if str(commit) in output:
-        for diff_item in commit.parents[0].diff(commit):
-            if 'files_changed' not in output[str(commit)]:
-                output[str(commit)]['files_changed'] = []
+                # a (LHS) is None for new file
+                if diff_item.a_blob is None:
+                    a = ''
+                else:
+                    a_stream = diff_item.a_blob.data_stream.read()
+                    a_encoding = chardet.detect(a_stream)['encoding']
 
-            # a (LHS) is None for new file
-            if diff_item.a_blob is None:
-                a = ''
-            else:
-                a_stream = diff_item.a_blob.data_stream.read()
-                a_encoding = chardet.detect(a_stream)['encoding']
+                    # Encoding is None for binary files
+                    a = 'binary' if a_encoding is None else a_stream.decode(a_encoding, 'replace').splitlines(True)
 
-                # Encoding is None for binary files
-                a = 'binary' if a_encoding is None else a_stream.decode(a_encoding, 'replace').splitlines(True)
+                # b (RHS) is None for deleted file
+                if diff_item.b_blob is None:
+                    b = ''
+                else:
+                    b_stream = diff_item.b_blob.data_stream.read()
+                    b_encoding = chardet.detect(b_stream)['encoding']
 
-            # b (RHS) is None for deleted file
-            if diff_item.b_blob is None:
-                b = ''
-            else:
-                b_stream = diff_item.b_blob.data_stream.read()
-                b_encoding = chardet.detect(b_stream)['encoding']
+                    # Encoding is None for binary files
+                    b = 'binary' if b_encoding is None else b_stream.decode(b_encoding, 'replace').splitlines(True)
 
-                # Encoding is None for binary files
-                b = 'binary' if b_encoding is None else b_stream.decode(b_encoding, 'replace').splitlines(True)
+                diff_as_patch = repo.index.diff(repo.commit('HEAD~1'), create_patch=True)
+                print(diff_as_patch)
 
-            diff = a if a is 'binary' and b is 'binary' else difflib.unified_diff(a, b)
-            parse_diff(diff)
+                # diff = a if a is 'binary' and b is 'binary' else difflib.unified_diff(a, b)
+
+                # No diff information for binary files
+                # if diff is 'binary':
+                #     output[str(commit)]['files_changed'].append({
+                #         'file': diff_item.a_path
+                #     })
+                # else:
+                #     added, deleted = parse_diff(diff)
+                #
+                #     output[str(commit)]['files_changed'].append({
+                #         'file': diff_item.a_path,
+                #         'added': added,
+                #         'deleted': deleted
+                #     })
 
             # with open('test.txt', 'w') as outfile:
             #     outfile.writelines(diff)
-
-            output[str(commit)]['files_changed'].append({
-                'file': diff_item.a_path,
-                # 'diff': ''.join(diff)
-            })
-
     return output
 
 
 # forward / backward slicing
-# python ghdiff
-# python cdiff
-# python ydiff
 # try sequencematcher in difflib
 # 89fd8d0353f6dc234bf026594c7b4f00caa8dbd8 httpd: this only changes comment
+# locally detectable
+# # dangerous function
+# # # java math random() guessable
+# # # strcpy(a, b)
 
 def output_result(output: dict, path: str):
     """
