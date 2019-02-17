@@ -1,15 +1,14 @@
 #!/usr/bin/python3
 
 import argparse
-import cchardet as chardet
 import difflib
-import flawfinder
 import git
 import itertools
 import json
 import os
 import pydriller as pd
 import re
+import time
 import vulnerability as vuln
 
 
@@ -62,9 +61,41 @@ def search_repository(repo: str, rev: str) -> dict:
             regex_match = vulnerability.regex.search(commit_message)
 
             if regex_match is not None:
-                for mod in commit.modifications:
-                    for method in mod.methods:
-                        print(method.name)
+                if commit.hash not in output:
+                    output[commit.hash] = {}
+                    output[commit.hash]['message'] = commit.msg
+                    output[commit.hash]['vulnerabilities'] = []
+
+                    # Add vulnerabilities item
+                    output[commit.hash]['vulnerabilities'].append({
+                        'name': vulnerability.name,
+                        'match': regex_match.group()
+                    })
+
+        # Add files changed
+        if commit.hash in output:
+            for modification in commit.modifications:
+                # TODO: This is slow
+                function_list = [method.name for method in modification.methods]
+
+                if function_list:
+                    diff = pd.GitRepository(repo).parse_diff(modification.diff)
+
+                    if 'files_changed' not in output[commit.hash]:
+                        output[commit.hash]['files_changed'] = []
+
+                    output[commit.hash]['files_changed'].append({
+                        'file': modification.old_path,
+                        'methods': function_list,
+                        'added': diff['added'],
+                        'deleted': diff['deleted']
+                    })
+
+            # Remove the commit if no changed files are found (no useful code changes)
+            if 'files_changed' not in output[commit.hash]:
+                output.pop(commit.hash)
+
+
 
     # for commit in repo.iter_commits(rev):
     # # commit = repo.commit('cd2b7a26c776b0754fb98426a67804fd48118708')
@@ -179,6 +210,8 @@ if __name__ == '__main__':
     else:
         output_path = 'output.json'
 
+    start_time = time.time()
+
     try:
         # output_result(search_repository(git.Repo(args.repo), args.revision), output_path)
         output_result(search_repository(args.repo, args.revision), output_path)
@@ -186,3 +219,6 @@ if __name__ == '__main__':
         print(f"shefmine.py: '{args.repo}' is not a Git repository")
     except git.GitCommandError:
         print(f"shefmine.py: GitCommandError, bad revision '{args.revision}'")
+
+
+    print(time.time() - start_time)
