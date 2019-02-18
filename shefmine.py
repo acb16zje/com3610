@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import argparse
-import difflib
 import git
 import itertools
 import json
@@ -10,7 +9,6 @@ import pydriller as pd
 import re
 import time
 import vulnerability as vuln
-
 
 def process_commit_message(message: str) -> str:
     """
@@ -24,7 +22,8 @@ def process_commit_message(message: str) -> str:
 
 
 def is_trivial_line(line: str) -> bool:
-    return line.startswith('/**') or line.startswith('*') or difflib.IS_CHARACTER_JUNK(line)
+    return not line or line.startswith('//') or line.startswith('#') or line.startswith("/*") or \
+               line.startswith("'''") or line.startswith('"""') or line.startswith("*")
 
 
 def parse_diff(diff: object) -> (list, list):
@@ -45,17 +44,18 @@ def parse_diff(diff: object) -> (list, list):
     return added, deleted
 
 
-def search_repository(repo: str, rev: str) -> dict:
+def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining) -> dict:
     """
     Iterate through all commits of the given repository from the given revision (default: active branch)
 
     :param repo: The Git repository
-    :param rev: The starting revision
+    :param repo_mining: The RepositoryMining object
     """
 
     output = {}
 
-    for commit in pd.RepositoryMining(repo).traverse_commits():
+    for commit in repo_mining.traverse_commits():
+        print(commit.hash)
         for vulnerability in vuln.vulnerability_list:
             commit_message = process_commit_message(commit.msg)
             regex_match = vulnerability.regex.search(commit_message)
@@ -75,11 +75,11 @@ def search_repository(repo: str, rev: str) -> dict:
         # Add files changed
         if commit.hash in output:
             for modification in commit.modifications:
-                # TODO: This is slow
+                # SLOW: Uses lizard to analyse the function list in the file
                 function_list = [method.name for method in modification.methods]
 
                 if function_list:
-                    diff = pd.GitRepository(repo).parse_diff(modification.diff)
+                    diff = repo.parse_diff(modification.diff)
 
                     if 'files_changed' not in output[commit.hash]:
                         output[commit.hash]['files_changed'] = []
@@ -87,75 +87,13 @@ def search_repository(repo: str, rev: str) -> dict:
                     output[commit.hash]['files_changed'].append({
                         'file': modification.old_path,
                         'methods': function_list,
-                        'added': diff['added'],
-                        'deleted': diff['deleted']
+                        # 'added': [(num, line.strip()) for (num, line) in diff['added'] if line],
+                        # 'deleted': [(num, line.strip()) for (num, line) in diff['deleted'] if line]
                     })
 
             # Remove the commit if no changed files are found (no useful code changes)
             if 'files_changed' not in output[commit.hash]:
                 output.pop(commit.hash)
-
-
-
-    # for commit in repo.iter_commits(rev):
-    # # commit = repo.commit('cd2b7a26c776b0754fb98426a67804fd48118708')
-    #     for vulnerability in vuln.vulnerability_list:
-    #         commit_message = process_commit_message(commit.message)
-    #         regex_match = vulnerability.regex.search(commit_message)
-    #
-    #         if regex_match is not None:
-    #             if str(commit) not in output:
-    #                 output[str(commit)] = {}
-    #                 output[str(commit)]['message'] = commit.message
-    #                 output[str(commit)]['vulnerabilities'] = []
-    #
-    #             # Add vulnerabilities item
-    #             output[str(commit)]['vulnerabilities'].append({
-    #                 'name': vulnerability.name,
-    #                 'match': regex_match.group()
-    #             })
-    #
-    #     # Add files changed
-    #     if str(commit) in output:
-    #         for diff_item in commit.parents[0].diff(commit):
-    #             if 'files_changed' not in output[str(commit)]:
-    #                 output[str(commit)]['files_changed'] = []
-    #
-    #             # a (LHS) is None for new file
-    #             if diff_item.a_blob is None:
-    #                 a = ''
-    #             else:
-    #                 a_stream = diff_item.a_blob.data_stream.read()
-    #                 a_encoding = chardet.detect(a_stream)['encoding']
-    #
-    #                 # Encoding is None for binary files
-    #                 a = 'binary' if a_encoding is None else a_stream.decode(a_encoding, 'replace').splitlines(True)
-    #
-    #             # b (RHS) is None for deleted file
-    #             if diff_item.b_blob is None:
-    #                 b = ''
-    #             else:
-    #                 b_stream = diff_item.b_blob.data_stream.read()
-    #                 b_encoding = chardet.detect(b_stream)['encoding']
-    #
-    #                 # Encoding is None for binary files
-    #                 b = 'binary' if b_encoding is None else b_stream.decode(b_encoding, 'replace').splitlines(True)
-    #
-    #             diff = a if a is 'binary' and b is 'binary' else difflib.unified_diff(a, b)
-    #
-    #             # No diff information for binary files
-    #             if diff is 'binary':
-    #                 output[str(commit)]['files_changed'].append({
-    #                     'file': diff_item.a_path
-    #                 })
-    #             else:
-    #                 added, deleted = parse_diff(diff)
-    #
-    #                 output[str(commit)]['files_changed'].append({
-    #                     'file': diff_item.a_path,
-    #                     'added': added,
-    #                     'deleted': deleted
-    #                 })
     return output
 
 
@@ -188,11 +126,13 @@ def output_result(output: dict, path: str):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('repo', help='Path to the Git repository')
-    parser.add_argument('-r', '--revision', type=str, help='Select the starting revision '
-                                                           '(Default: the active branch of the repository)')
+    parser.add_argument('repo', help='Path or URL of the Git repository')
+    parser.add_argument('-b', '--branch', type=str, help='Only analyse the commits in this branch')
+    parser.add_argument('-s', '--single', metavar='HASH', type=str, help='Only analyse the provided commit')
     parser.add_argument('-o', '--output', type=str, help='Write the result to the specified file name and path '
                                                          '(Default: as output.json in current working directory)')
+    parser.add_argument('--no-merge', action='store_true', help='Do not include merge commits')
+    parser.add_argument('--reverse', action='store_false', help='Analyse the commits from oldest to newest')
     args = parser.parse_args()
 
     if args.output:
@@ -213,12 +153,15 @@ if __name__ == '__main__':
     start_time = time.time()
 
     try:
-        # output_result(search_repository(git.Repo(args.repo), args.revision), output_path)
-        output_result(search_repository(args.repo, args.revision), output_path)
+        repo = pd.GitRepository(args.repo)
+        repo_mining = pd.RepositoryMining(args.repo,
+                                          single=args.single,
+                                          only_no_merge=args.no_merge,
+                                          reversed_order=args.reverse)
+        output_result(search_repository(repo, repo_mining), output_path)
     except git.NoSuchPathError:
         print(f"shefmine.py: '{args.repo}' is not a Git repository")
     except git.GitCommandError:
         print(f"shefmine.py: GitCommandError, bad revision '{args.revision}'")
-
 
     print(time.time() - start_time)
