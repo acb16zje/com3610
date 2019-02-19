@@ -10,6 +10,7 @@ import re
 import time
 import vulnerability as vuln
 
+
 def process_commit_message(message: str) -> str:
     """
     Pre-process the commit message to remove non-content strings
@@ -21,12 +22,7 @@ def process_commit_message(message: str) -> str:
     return re.sub('git-svn-id.*', '', message).strip()
 
 
-def is_trivial_line(line: str) -> bool:
-    return not line or line.startswith('//') or line.startswith('#') or line.startswith("/*") or \
-               line.startswith("'''") or line.startswith('"""') or line.startswith("*")
-
-
-def parse_diff(diff: object) -> (list, list):
+def process_diff(diff: object) -> (list, list):
     added, deleted = [], []
 
     for line in itertools.islice(diff, 2, None):
@@ -75,21 +71,18 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining) 
         # Add files changed
         if commit.hash in output:
             for modification in commit.modifications:
-                # SLOW: Uses lizard to analyse the function list in the file
-                function_list = [method.name for method in modification.methods]
+                diff = process_diff(repo.parse_diff(modification.diff))
+                file = modification.old_path
+                _, file_extension = os.path.splitext(file)
 
-                if function_list:
-                    diff = repo.parse_diff(modification.diff)
+                if 'files_changed' not in output[commit.hash]:
+                    output[commit.hash]['files_changed'] = []
 
-                    if 'files_changed' not in output[commit.hash]:
-                        output[commit.hash]['files_changed'] = []
-
-                    output[commit.hash]['files_changed'].append({
-                        'file': modification.old_path,
-                        'methods': function_list,
-                        # 'added': [(num, line.strip()) for (num, line) in diff['added'] if line],
-                        # 'deleted': [(num, line.strip()) for (num, line) in diff['deleted'] if line]
-                    })
+                output[commit.hash]['files_changed'].append({
+                    'file': file,
+                    # 'added': [(num, line.strip()) for (num, line) in diff['added'] if line],
+                    # 'deleted': [(num, line.strip()) for (num, line) in diff['deleted'] if line]
+                })
 
             # Remove the commit if no changed files are found (no useful code changes)
             if 'files_changed' not in output[commit.hash]:
@@ -135,33 +128,34 @@ if __name__ == '__main__':
     parser.add_argument('--reverse', action='store_false', help='Analyse the commits from oldest to newest')
     args = parser.parse_args()
 
-    if args.output:
-        output_name, output_extension = os.path.splitext(args.output)
-
-        if output_extension:
-            if output_extension == '.json':
-                output_path = args.output
-            else:
-                print('shefmine.py: Output file extension has been automatically changed to .json')
-                output_path = os.path.realpath(output_name + '.json')
-        else:
-            output_path = os.path.realpath(os.path.join(output_name, 'output.json'))
-
-    else:
-        output_path = 'output.json'
-
-    start_time = time.time()
-
     try:
         repo = pd.GitRepository(args.repo)
         repo_mining = pd.RepositoryMining(args.repo,
                                           single=args.single,
+                                          only_in_branch=args.branch,
                                           only_no_merge=args.no_merge,
                                           reversed_order=args.reverse)
+
+        if args.output:
+            output_name, output_extension = os.path.splitext(args.output)
+
+            if output_extension:
+                if output_extension == '.json':
+                    output_path = args.output
+                else:
+                    print('shefmine.py: Output file extension has been automatically changed to .json')
+                    output_path = os.path.realpath(output_name + '.json')
+            else:
+                output_path = os.path.realpath(os.path.join(output_name, 'output.json'))
+        else:
+            output_path = 'output.json'
+
+        start_time = time.time()
+
         output_result(search_repository(repo, repo_mining), output_path)
+
+        print(time.time() - start_time)
     except git.NoSuchPathError:
         print(f"shefmine.py: '{args.repo}' is not a Git repository")
     except git.GitCommandError:
-        print(f"shefmine.py: GitCommandError, bad revision '{args.revision}'")
-
-    print(time.time() - start_time)
+        print(f"shefmine.py: GitCommandError, bad revision '{args.branch}'")

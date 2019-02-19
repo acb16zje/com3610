@@ -1670,7 +1670,7 @@ def process_file_args(files, patch_infos):
         if (not allowlink) and os.path.islink(f):
             if not quiet:
                 print_warning("Skipping symbolic link " + h(f))
-            num_links_skipped = num_links_skipped + 1
+            num_links_skipped += 1
         elif os.path.isfile(f) or f == "-":
             # If on the command line, FORCE processing of it.
             # Currently, we only process C/C++.
