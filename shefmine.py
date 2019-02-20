@@ -1,9 +1,12 @@
 #!/usr/bin/python3
+"""
+ShefMine main
+"""
 
 import argparse
 import git
-import itertools
 import json
+import languages.language as lang
 import os
 import pydriller as pd
 import re
@@ -22,25 +25,30 @@ def process_commit_message(message: str) -> str:
     return re.sub('git-svn-id.*', '', message).strip()
 
 
-def process_diff(diff: object) -> (list, list):
-    added, deleted = [], []
+def process_diff(diff: dict, file_extension: str) -> (list, list):
+    """
+    Given the diff of a file, remove the comment changes from the diff if the
+    file extension is supported
 
-    for line in itertools.islice(diff, 2, None):
-        if line.startswith('+'):
-            raw_code = line[1:].strip()
+    :param diff: The diff dictionary containing added and deleted lines of the file
+    :param file_extension: The file extension of the file
+    :return:
+    """
 
-            if not is_trivial_line(raw_code):
-                added.append(raw_code)
-        elif line.startswith('-'):
-            raw_code = line[1:].strip()
+    added = [(num, line.strip()) for (num, line) in diff['added'] if line]
+    deleted = [(num, line.strip()) for (num, line) in diff['deleted'] if line]
 
-            if not is_trivial_line(raw_code):
-                deleted.append(raw_code)
+    for language in lang.language_list:
+        if file_extension in language.extensions:
+            added = [(num, line.strip()) for (num, line) in added
+                     if line and not language.is_comment(line)]
 
+            deleted = [(num, line.strip()) for (num, line) in deleted
+                       if line and not language.is_comment(line)]
     return added, deleted
 
 
-def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining) -> dict:
+def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
     """
     Iterate through all commits of the given repository from the given revision (default: active branch)
 
@@ -51,47 +59,51 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining) 
     output = {}
 
     for commit in repo_mining.traverse_commits():
-        print(commit.hash)
         for vulnerability in vuln.vulnerability_list:
             commit_message = process_commit_message(commit.msg)
             regex_match = vulnerability.regex.search(commit_message)
 
-            if regex_match is not None:
-                if commit.hash not in output:
-                    output[commit.hash] = {}
-                    output[commit.hash]['message'] = commit.msg
-                    output[commit.hash]['vulnerabilities'] = []
+            if regex_match is not None and commit.hash not in output:
+                output[commit.hash] = {}
+                output[commit.hash]['message'] = commit.msg
+                output[commit.hash]['vulnerabilities'] = []
 
-                    # Add vulnerabilities item
-                    output[commit.hash]['vulnerabilities'].append({
-                        'name': vulnerability.name,
-                        'match': regex_match.group()
-                    })
+                # Add vulnerabilities item
+                output[commit.hash]['vulnerabilities'].append({
+                    'name': vulnerability.name,
+                    'match': regex_match.group()
+                })
 
         # Add files changed
         if commit.hash in output:
             for modification in commit.modifications:
-                diff = process_diff(repo.parse_diff(modification.diff))
-                file = modification.old_path
+                file = modification.old_path if modification.change_type.name is 'DELETE' else modification.new_path
+
                 _, file_extension = os.path.splitext(file)
+                added, deleted = process_diff(repo.parse_diff(modification.diff), file_extension)
 
-                if 'files_changed' not in output[commit.hash]:
-                    output[commit.hash]['files_changed'] = []
+                # TODO: Diff of deleted file is big, improve performance by not saving it
+                # TODO: change added to added_vulnerability and deleted to deleted_vulnerability, maybe?
 
-                output[commit.hash]['files_changed'].append({
-                    'file': file,
-                    # 'added': [(num, line.strip()) for (num, line) in diff['added'] if line],
-                    # 'deleted': [(num, line.strip()) for (num, line) in diff['deleted'] if line]
-                })
+                # Only add the file if it has useful code changes (comments already removed)
+                if added or deleted:
+                    if 'files_changed' not in output[commit.hash]:
+                        output[commit.hash]['files_changed'] = []
+
+                    output[commit.hash]['files_changed'].append({
+                        'file': file,
+                        'added': added,
+                        'deleted': deleted
+                    })
 
             # Remove the commit if no changed files are found (no useful code changes)
             if 'files_changed' not in output[commit.hash]:
                 output.pop(commit.hash)
+
     return output
 
 
 # forward / backward slicing
-# try sequencematcher in difflib
 # 89fd8d0353f6dc234bf026594c7b4f00caa8dbd8 httpd: this only changes comment
 # locally detectable
 # # dangerous function
@@ -106,7 +118,7 @@ def output_result(output: dict, path: str):
     :param path: Path (file name) of the output file
     """
 
-    print(len(output))
+    print(f'{"Issues found":<16}: {len(output)}')
 
     if os.path.isdir(path):
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -114,7 +126,7 @@ def output_result(output: dict, path: str):
     with open(path, 'w') as outfile:
         json.dump(output, outfile, indent=2)
 
-    print(f'Output result saved to {os.path.realpath(path)}')
+    print(f'{"Output location":<16}: {os.path.realpath(path)}')
 
 
 if __name__ == '__main__':
@@ -151,10 +163,9 @@ if __name__ == '__main__':
             output_path = 'output.json'
 
         start_time = time.time()
-
         output_result(search_repository(repo, repo_mining), output_path)
 
-        print(time.time() - start_time)
+        print(f'{"Time taken":<16}: {(time.time() - start_time):.2f} seconds')
     except git.NoSuchPathError:
         print(f"shefmine.py: '{args.repo}' is not a Git repository")
     except git.GitCommandError:

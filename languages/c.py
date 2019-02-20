@@ -505,4 +505,4 @@ c_extensions = ['.c', '.cc', '.cpp', '.cxx', '.c++', '.mm', '.h', '.hh', '.hpp',
 
 c_comments = re.compile(r'^(/\*|\*|\*/|//)', re.S)
 
-c_language = Language()
+c_language = Language({}, c_extensions, c_comments)
