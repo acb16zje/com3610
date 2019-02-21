@@ -25,27 +25,58 @@ def process_commit_message(message: str) -> str:
     return re.sub('git-svn-id.*', '', message).strip()
 
 
-def process_diff(diff: dict, file_extension: str) -> (list, list):
+def process_diff(diff: dict, filename: str) -> dict:
     """
     Given the diff of a file, remove the comment changes from the diff if the
     file extension is supported
 
     :param diff: The diff dictionary containing added and deleted lines of the file
-    :param file_extension: The file extension of the file
-    :return:
+    :param filename: The filename of the file
+    :return: A partial output containing the vulnerable lines of code added or deleted
     """
 
-    added = [(num, line.strip()) for (num, line) in diff['added'] if line]
-    deleted = [(num, line.strip()) for (num, line) in diff['deleted'] if line]
+    output = {}
+    _, file_extension = os.path.splitext(filename)
 
     for language in lang.language_list:
         if file_extension in language.extensions:
-            added = [(num, line.strip()) for (num, line) in added
-                     if line and not language.is_comment(line)]
+            added = [(num, line) for (num, line) in diff['added'] if line and language.is_not_comment(line)]
+            deleted = [(num, line) for (num, line) in diff['deleted'] if line and language.is_not_comment(line)]
 
-            deleted = [(num, line.strip()) for (num, line) in deleted
-                       if line and not language.is_comment(line)]
-    return added, deleted
+            for num, line in added:
+                vulnerability = []
+
+                for rule in language.rule_set.keys():
+                    if rule in line:
+                        vulnerability.append(rule)
+
+                if vulnerability:
+                    if 'added' not in output:
+                        output['added'] = []
+                    else:
+                        output['added'].append({
+                            'line_num': num,
+                            'line': line.strip(),
+                            'vulnerability': vulnerability
+                        })
+
+            for num, line in deleted:
+                vulnerability = []
+
+                for rule in language.rule_set.keys():
+                    if rule in line:
+                        vulnerability.append(rule)
+
+                if vulnerability:
+                    if 'deleted' not in output:
+                        output['deleted'] = []
+                    else:
+                        output['deleted'].append({
+                            'line_num': num,
+                            'line': line.strip(),
+                            'vulnerability': vulnerability
+                        })
+    return output
 
 
 def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
@@ -78,23 +109,17 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
         if commit.hash in output:
             for modification in commit.modifications:
                 file = modification.old_path if modification.change_type.name is 'DELETE' else modification.new_path
-
-                _, file_extension = os.path.splitext(file)
-                added, deleted = process_diff(repo.parse_diff(modification.diff), file_extension)
+                partial_output = process_diff(repo.parse_diff(modification.diff), file)
 
                 # TODO: Diff of deleted file is big, improve performance by not saving it
                 # TODO: change added to added_vulnerability and deleted to deleted_vulnerability, maybe?
 
                 # Only add the file if it has useful code changes (comments already removed)
-                if added or deleted:
+                if partial_output:
                     if 'files_changed' not in output[commit.hash]:
                         output[commit.hash]['files_changed'] = []
 
-                    output[commit.hash]['files_changed'].append({
-                        'file': file,
-                        'added': added,
-                        'deleted': deleted
-                    })
+                    output[commit.hash]['files_changed'].append({'file': file, **partial_output})
 
             # Remove the commit if no changed files are found (no useful code changes)
             if 'files_changed' not in output[commit.hash]:

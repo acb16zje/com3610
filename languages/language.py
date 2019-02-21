@@ -40,15 +40,15 @@ class Language(object):
         self.comments = comments
         language_list.append(self)
 
-    def is_comment(self, line: str) -> bool:
+    def is_not_comment(self, line: str) -> bool:
         """
-        Returns True if a line is a comment
+        Returns True if a line is not a comment
 
         :param line: The line of code
-        :return: True if the line of code is a comment
+        :return: True if the line of code is not a comment
         """
 
-        return self.comments.match(line)
+        return not self.comments.match(line.strip())
 
 
 language_list = []
