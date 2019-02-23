@@ -1448,6 +1448,8 @@ max_lookahead = 500  # Lookahead limit for c_static_array.
 def process_c_file(f, patch_infos):
     global filename, linenumber, ignoreline, sumlines, num_links_skipped
     global sloc
+    print('AWOFIWAEFOBAERIGBAERFUSANDKCNBKJSDABFBSADBKDBSD')
+    print(patch_infos)
     filename = f
     linenumber = 1
     ignoreline = -1

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """
-ShefMine main
+Shefmine main
 """
 
 import argparse
@@ -10,73 +10,10 @@ import languages.language as lang
 import os
 import pydriller as pd
 import re
+import tempfile
 import time
 import vulnerability as vuln
-
-
-def process_commit_message(message: str) -> str:
-    """
-    Pre-process the commit message to remove non-content strings
-
-    :param message: The commit message
-    :return: The commit message after pre-processing
-    """
-
-    return re.sub('git-svn-id.*', '', message).strip()
-
-
-def process_diff(diff: dict, filename: str) -> dict:
-    """
-    Given the diff of a file, remove the comment changes from the diff if the
-    file extension is supported
-
-    :param diff: The diff dictionary containing added and deleted lines of the file
-    :param filename: The filename of the file
-    :return: A partial output containing the vulnerable lines of code added or deleted
-    """
-
-    output = {}
-    _, file_extension = os.path.splitext(filename)
-
-    for language in lang.language_list:
-        if file_extension in language.extensions:
-            added = [(num, line) for (num, line) in diff['added'] if line and language.is_not_comment(line)]
-            deleted = [(num, line) for (num, line) in diff['deleted'] if line and language.is_not_comment(line)]
-
-            for num, line in added:
-                vulnerability = []
-
-                for rule in language.rule_set.keys():
-                    if rule in line:
-                        vulnerability.append(rule)
-
-                if vulnerability:
-                    if 'added' not in output:
-                        output['added'] = []
-                    else:
-                        output['added'].append({
-                            'line_num': num,
-                            'line': line.strip(),
-                            'vulnerability': vulnerability
-                        })
-
-            for num, line in deleted:
-                vulnerability = []
-
-                for rule in language.rule_set.keys():
-                    if rule in line:
-                        vulnerability.append(rule)
-
-                if vulnerability:
-                    if 'deleted' not in output:
-                        output['deleted'] = []
-                    else:
-                        output['deleted'].append({
-                            'line_num': num,
-                            'line': line.strip(),
-                            'vulnerability': vulnerability
-                        })
-    return output
+import flawfinder
 
 
 def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
@@ -111,9 +48,6 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
                 file = modification.old_path if modification.change_type.name is 'DELETE' else modification.new_path
                 partial_output = process_diff(repo.parse_diff(modification.diff), file)
 
-                # TODO: Diff of deleted file is big, improve performance by not saving it
-                # TODO: change added to added_vulnerability and deleted to deleted_vulnerability, maybe?
-
                 # Only add the file if it has useful code changes (comments already removed)
                 if partial_output:
                     if 'files_changed' not in output[commit.hash]:
@@ -128,12 +62,82 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
     return output
 
 
-# forward / backward slicing
-# 89fd8d0353f6dc234bf026594c7b4f00caa8dbd8 httpd: this only changes comment
-# locally detectable
-# # dangerous function
-# # # java math random() guessable
-# # # strcpy(a, b)
+def process_commit_message(message: str) -> str:
+    """
+    Pre-process the commit message to remove non-content strings
+
+    :param message: The commit message
+    :return: The commit message after pre-processing
+    """
+
+    return re.sub('git-svn-id.*', '', message).strip()
+
+
+def process_diff(diff: dict, filename: str) -> dict:
+    """
+    Given the diff of a file, check if any vulnerable lines of code are added or deleted
+
+    :param diff: The diff dictionary containing added and deleted lines of the file
+    :param filename: The filename of the file
+    :return: A partial output containing the vulnerable lines of code added or deleted
+    """
+
+    output = {}
+    _, file_extension = os.path.splitext(filename)
+
+    test_added = [(num, line.strip()) for (num, line) in diff['added']]
+
+    with tempfile.NamedTemporaryFile(mode='w+t') as fp:
+        for num, line in test_added:
+            fp.writelines(line + '\n')
+
+        fp.seek(0)
+        flawfinder.process_c_file(fp.name, None)
+        print(flawfinder.hitlist)
+
+    for language in lang.language_list:
+        # Only analyse files that are supported
+        if file_extension in language.extensions:
+            added = [(num, line.strip()) for (num, line) in diff['added'] if line and language.is_not_comment(line)]
+            deleted = [(num, line.strip()) for (num, line) in diff['deleted'] if line and language.is_not_comment(line)]
+
+            # Check if any vulnerable lines of code are added
+            for num, line in added:
+                vulnerability = []
+
+                for rule in language.rule_set.keys():
+                    if re.compile(fr'\b{rule}\b').match(line):
+                        vulnerability.append(rule)
+
+                if vulnerability:
+                    if 'added' not in output:
+                        output['added'] = []
+                    else:
+                        output['added'].append({
+                            'line_num': num,
+                            'line': line.strip(),
+                            'vulnerability': vulnerability
+                        })
+
+            # Check if any vulnerable lines of code are deleted
+            for num, line in deleted:
+                vulnerability = []
+
+                for rule in language.rule_set.keys():
+                    if re.compile(fr'\b{rule}\b').match(line):
+                        vulnerability.append(rule)
+
+                if vulnerability:
+                    if 'deleted' not in output:
+                        output['deleted'] = []
+                    else:
+                        output['deleted'].append({
+                            'line_num': num,
+                            'line': line.strip(),
+                            'vulnerability': vulnerability
+                        })
+    return output
+
 
 def output_result(output: dict, path: str):
     """

@@ -1,5 +1,5 @@
 """
-Programming languages class for ShefMine
+Programming languages class for Shefmine
 """
 
 import re
