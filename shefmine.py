@@ -1,11 +1,14 @@
-#!/usr/bin/python3
+#!/bin/python3
 """
 Shefmine main
 """
 
 import argparse
+import cchardet as chardet
+import flawfinder
 import git
 import json
+import languages.c as c_lang
 import languages.language as lang
 import os
 import pydriller as pd
@@ -13,7 +16,6 @@ import re
 import tempfile
 import time
 import vulnerability as vuln
-import flawfinder
 
 
 def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
@@ -44,9 +46,20 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
 
         # Add files changed
         if commit.hash in output:
+            # Each modification is a file changed
             for modification in commit.modifications:
                 file = modification.old_path if modification.change_type.name is 'DELETE' else modification.new_path
-                partial_output = process_diff(repo.parse_diff(modification.diff), file)
+                _, file_extension = os.path.splitext(file)
+
+                # Run Flawfinder for C/C++ files, or 'grep'-like analysis for other languages files
+                if file_extension.lower() in c_lang.c_extensions:
+                    # Flawfinder requires full source code of file to prevent errors
+                    a_source = get_old_source_code_of_file_in_commit(commit.project_path, commit.hash, file)
+                    b_source = modification.source_code
+
+                    partial_output = run_flawfinder(repo.parse_diff(modification.diff), a_source, b_source)
+                else:
+                    partial_output = process_diff(repo.parse_diff(modification.diff), file_extension)
 
                 # Only add the file if it has useful code changes (comments already removed)
                 if partial_output:
@@ -56,10 +69,39 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
                     output[commit.hash]['files_changed'].append({'file': file, **partial_output})
 
             # Remove the commit if no changed files are found (no useful code changes)
-            if 'files_changed' not in output[commit.hash]:
-                output.pop(commit.hash)
+            # if 'files_changed' not in output[commit.hash]:
+            #     output.pop(commit.hash)
 
     return output
+
+
+def get_old_source_code_of_file_in_commit(project_path: str, commit_hash: str, file: str) -> str:
+    """
+    Get the old source code (previous commit) of the file in a given commit
+
+    :param project_path: The path of the Git repository
+    :param commit_hash: The commit hash
+    :param file: The file
+    :return: The old source code of the file
+    """
+
+    # To prevent Error: File ended in string/comment of flawfinder, use GitPython
+    gitpython_commit = git.Repo(project_path).commit(commit_hash)
+
+    for diff_item in gitpython_commit.parents[0].diff(gitpython_commit):
+        # new_path is used above, so b_path is used here (experimental)
+        if diff_item.b_path == file:
+            print(commit_hash + '     ' + file)
+
+            # a_blob is None if the file is new
+            if diff_item.a_blob is None:
+                a_source = ''
+            else:
+                a_stream = diff_item.a_blob.data_stream.read()
+                a_encoding = chardet.detect(a_stream)['encoding']
+                a_source = diff_item.a_blob.data_stream.read().decode(a_encoding, 'replace')
+
+            return a_source
 
 
 def process_commit_message(message: str) -> str:
@@ -70,73 +112,94 @@ def process_commit_message(message: str) -> str:
     :return: The commit message after pre-processing
     """
 
+    # refer to https://github.com/vmware/photon for more patterm to replace
     return re.sub('git-svn-id.*', '', message).strip()
 
 
-def process_diff(diff: dict, filename: str) -> dict:
+def process_diff(diff: dict, file_extension: str) -> dict:
     """
     Given the diff of a file, check if any vulnerable lines of code are added or deleted
 
     :param diff: The diff dictionary containing added and deleted lines of the file
-    :param filename: The filename of the file
+    :param file_extension: The file extension of the file
     :return: A partial output containing the vulnerable lines of code added or deleted
     """
 
-    output = {}
-    _, file_extension = os.path.splitext(filename)
+    partial_output = {}
 
-    test_added = [(num, line.strip()) for (num, line) in diff['added']]
-
-    with tempfile.NamedTemporaryFile(mode='w+t') as fp:
-        for num, line in test_added:
-            fp.writelines(line + '\n')
-
-        fp.seek(0)
-        flawfinder.process_c_file(fp.name, None)
-        print(flawfinder.hitlist)
-
+    # 'grep'-like analysis for other languages
     for language in lang.language_list:
         # Only analyse files that are supported
-        if file_extension in language.extensions:
-            added = [(num, line.strip()) for (num, line) in diff['added'] if line and language.is_not_comment(line)]
-            deleted = [(num, line.strip()) for (num, line) in diff['deleted'] if line and language.is_not_comment(line)]
+        if file_extension.lower() in language.extensions:
+            diff = {k: ((num, line.strip()) for (num, line) in v if line and language.is_not_comment(line))
+                    for k, v in diff.items()}
 
-            # Check if any vulnerable lines of code are added
-            for num, line in added:
-                vulnerability = []
+            # Check if any vulnerable lines of code are added or deleted
+            for key, value in diff.items():
+                for num, line in value:
+                    vulnerability = []
 
-                for rule in language.rule_set.keys():
-                    if re.compile(fr'\b{rule}\b').match(line):
-                        vulnerability.append(rule)
+                    for rule in language.rule_set.keys():
+                        if re.compile(fr'\b{rule}\b').search(line):
+                            vulnerability.append(rule)
 
-                if vulnerability:
-                    if 'added' not in output:
-                        output['added'] = []
-                    else:
-                        output['added'].append({
+                    if vulnerability:
+                        if key not in partial_output:
+                            partial_output[key] = []
+
+                        partial_output[key].append({
                             'line_num': num,
                             'line': line.strip(),
                             'vulnerability': vulnerability
                         })
+    return partial_output
 
-            # Check if any vulnerable lines of code are deleted
-            for num, line in deleted:
-                vulnerability = []
 
-                for rule in language.rule_set.keys():
-                    if re.compile(fr'\b{rule}\b').match(line):
-                        vulnerability.append(rule)
+def run_flawfinder(diff: dict, a_source, b_source) -> dict:
+    """
+    Given the diff of a file in C/C++ extension, check if any vulnerable lines of code
+    are added or delete using flawfinder (https://github.com/david-a-wheeler/flawfinder/)
 
-                if vulnerability:
-                    if 'deleted' not in output:
-                        output['deleted'] = []
-                    else:
-                        output['deleted'].append({
-                            'line_num': num,
-                            'line': line.strip(),
-                            'vulnerability': vulnerability
-                        })
-    return output
+    :param diff: The diff dictionary containing added and deleted lines of the file
+    :param a_source: The old source code of the file in last commit
+    :param b_source: The current source code of the file in current commit
+    :return: A partial output containing the vulnerable lines of code added or deleted
+    """
+
+    partial_output = {}
+
+    for key, value in diff.items():
+        with tempfile.NamedTemporaryFile(mode='w+t') as fp:
+            # Reset hitlist as it is saved as global variable
+            flawfinder.hitlist = []
+
+            for num, line in value:
+                # Only remove blank lines, if comments are removed here, file might be recognised as ended in comment
+                if line:
+                    fp.write(line.strip() + '\n')
+
+            # Run flawfinder
+            fp.seek(0)
+            flawfinder.initialize_ruleset()
+            flawfinder.process_c_file(fp.name, None)
+
+            # Remove hits that have warning level 0, and is a comment
+            filtered_hitlist = (hit for hit in flawfinder.hitlist
+                                if hit.level > 0 and not c_lang.c_comments.match(hit.context_text))
+
+            # Add to output
+            if filtered_hitlist:
+                for hit in filtered_hitlist:
+                    if key not in partial_output:
+                        partial_output[key] = []
+
+                    partial_output[key].append({
+                        'line_num': [num for num, line in value if line.strip() == hit.context_text][0],
+                        'line': hit.context_text,
+                        'vulnerability': hit.name
+                    })
+
+    return partial_output
 
 
 def output_result(output: dict, path: str):
@@ -192,6 +255,7 @@ if __name__ == '__main__':
             output_path = 'output.json'
 
         start_time = time.time()
+
         output_result(search_repository(repo, repo_mining), output_path)
 
         print(f'{"Time taken":<16}: {(time.time() - start_time):.2f} seconds')

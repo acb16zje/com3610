@@ -81,8 +81,8 @@ patch_file = ""  # File containing (unified) diff output.
 loadhitlist = None
 savehitlist = None
 diffhitlist_filename = None
-quiet = 0
-showheading = 1  # --dataonly turns this off
+quiet = 1
+showheading = 0  # --dataonly turns this off
 output_format = 0  # 0 = normal, 1 = html.
 single_line = 0  # 1 = singleline (can 't be 0 if html)
 csv_output = 0  # 1 = Generate CSV
@@ -1448,8 +1448,6 @@ max_lookahead = 500  # Lookahead limit for c_static_array.
 def process_c_file(f, patch_infos):
     global filename, linenumber, ignoreline, sumlines, num_links_skipped
     global sloc
-    print('AWOFIWAEFOBAERIGBAERFUSANDKCNBKJSDABFBSADBKDBSD')
-    print(patch_infos)
     filename = f
     linenumber = 1
     ignoreline = -1
