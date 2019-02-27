@@ -4,7 +4,6 @@ Shefmine main
 """
 
 import argparse
-import cchardet as chardet
 import flawfinder
 import git
 import json
@@ -53,11 +52,7 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
 
                 # Run Flawfinder for C/C++ files, or 'grep'-like analysis for other languages files
                 if file_extension.lower() in c_lang.c_extensions:
-                    # Flawfinder requires full source code of file to prevent errors
-                    a_source = get_old_source_code_of_file_in_commit(commit.project_path, commit.hash, file)
-                    b_source = modification.source_code
-
-                    partial_output = run_flawfinder(repo.parse_diff(modification.diff), a_source, b_source)
+                    partial_output = run_flawfinder(repo.parse_diff(modification.diff), commit.hash, modification.filename)
                 else:
                     partial_output = process_diff(repo.parse_diff(modification.diff), file_extension)
 
@@ -75,35 +70,6 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
     return output
 
 
-def get_old_source_code_of_file_in_commit(project_path: str, commit_hash: str, file: str) -> str:
-    """
-    Get the old source code (previous commit) of the file in a given commit
-
-    :param project_path: The path of the Git repository
-    :param commit_hash: The commit hash
-    :param file: The file
-    :return: The old source code of the file
-    """
-
-    # To prevent Error: File ended in string/comment of flawfinder, use GitPython
-    gitpython_commit = git.Repo(project_path).commit(commit_hash)
-
-    for diff_item in gitpython_commit.parents[0].diff(gitpython_commit):
-        # new_path is used above, so b_path is used here (experimental)
-        if diff_item.b_path == file:
-            print(commit_hash + '     ' + file)
-
-            # a_blob is None if the file is new
-            if diff_item.a_blob is None:
-                a_source = ''
-            else:
-                a_stream = diff_item.a_blob.data_stream.read()
-                a_encoding = chardet.detect(a_stream)['encoding']
-                a_source = diff_item.a_blob.data_stream.read().decode(a_encoding, 'replace')
-
-            return a_source
-
-
 def process_commit_message(message: str) -> str:
     """
     Pre-process the commit message to remove non-content strings
@@ -113,7 +79,8 @@ def process_commit_message(message: str) -> str:
     """
 
     # refer to https://github.com/vmware/photon for more patterm to replace
-    return re.sub('git-svn-id.*', '', message).strip()
+    return re.sub(r'git-svn-id.*|(acked|cc|reported|reviewed|signed([\s\-_]off)?|submitted|tested)[\s\-_]*(by|on)?:.*',
+                  '', message, flags=re.I).strip()
 
 
 def process_diff(diff: dict, file_extension: str) -> dict:
@@ -139,9 +106,10 @@ def process_diff(diff: dict, file_extension: str) -> dict:
                 for num, line in value:
                     vulnerability = []
 
-                    for rule in language.rule_set.keys():
-                        if re.compile(fr'\b{rule}\b').search(line):
-                            vulnerability.append(rule)
+                    for type, rule_set in language.rule_set.items():
+                        for rule in rule_set:
+                            if re.compile(fr'\b{rule}\b', re.S).search(line):
+                                vulnerability.append(rule)
 
                     if vulnerability:
                         if key not in partial_output:
@@ -155,7 +123,7 @@ def process_diff(diff: dict, file_extension: str) -> dict:
     return partial_output
 
 
-def run_flawfinder(diff: dict, a_source, b_source) -> dict:
+def run_flawfinder(diff: dict, commit_hash, file) -> dict:
     """
     Given the diff of a file in C/C++ extension, check if any vulnerable lines of code
     are added or delete using flawfinder (https://github.com/david-a-wheeler/flawfinder/)
@@ -168,19 +136,21 @@ def run_flawfinder(diff: dict, a_source, b_source) -> dict:
 
     partial_output = {}
 
+    # diff: {'added': [], 'deleted': []}
     for key, value in diff.items():
-        with tempfile.NamedTemporaryFile(mode='w+t') as fp:
+        with tempfile.NamedTemporaryFile(mode='w+t', prefix=f'{commit_hash}_{file}') as fp:
             # Reset hitlist as it is saved as global variable
             flawfinder.hitlist = []
 
-            for num, line in value:
-                # Only remove blank lines, if comments are removed here, file might be recognised as ended in comment
-                if line:
-                    fp.write(line.strip() + '\n')
+            # Remove blank lines, comment lines, and inline comments
+            linelist = [(num, c_lang.remove_comment(line.strip())) for num, line in value
+                        if line and not c_lang.c_comments.match(line.strip())]
+
+            for num, line in linelist:
+                fp.write(line + '\n')
 
             # Run flawfinder
             fp.seek(0)
-            flawfinder.initialize_ruleset()
             flawfinder.process_c_file(fp.name, None)
 
             # Remove hits that have warning level 0, and is a comment
@@ -188,16 +158,17 @@ def run_flawfinder(diff: dict, a_source, b_source) -> dict:
                                 if hit.level > 0 and not c_lang.c_comments.match(hit.context_text))
 
             # Add to output
-            if filtered_hitlist:
-                for hit in filtered_hitlist:
-                    if key not in partial_output:
-                        partial_output[key] = []
+            for hit in filtered_hitlist:
+                if key not in partial_output:
+                    partial_output[key] = []
 
-                    partial_output[key].append({
-                        'line_num': [num for num, line in value if line.strip() == hit.context_text][0],
-                        'line': hit.context_text,
-                        'vulnerability': hit.name
-                    })
+                line_num = (num for num, line in linelist if line == hit.context_text).__next__()
+
+                partial_output[key].append({
+                    'line_num': line_num,
+                    'line': (line.strip() for num, line in value if line_num == num).__next__(),
+                    'vulnerability': hit.name
+                })
 
     return partial_output
 
@@ -225,7 +196,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('repo', help='Path or URL of the Git repository')
     parser.add_argument('-b', '--branch', type=str, help='Only analyse the commits in this branch')
-    parser.add_argument('-s', '--single', metavar='HASH', type=str, help='Only analyse the provided commit')
+    parser.add_argument('-s', '--single', metavar='HASH', type=str, help='Only analyse the provided commit (full hash)')
     parser.add_argument('-o', '--output', type=str, help='Write the result to the specified file name and path '
                                                          '(Default: as output.json in current working directory)')
     parser.add_argument('--no-merge', action='store_true', help='Do not include merge commits')

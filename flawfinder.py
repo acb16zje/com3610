@@ -83,6 +83,7 @@ savehitlist = None
 diffhitlist_filename = None
 quiet = 1
 showheading = 0  # --dataonly turns this off
+ruleset_initialised = False
 output_format = 0  # 0 = normal, 1 = html.
 single_line = 0  # 1 = singleline (can 't be 0 if html)
 csv_output = 0  # 1 = Generate CSV
@@ -1611,9 +1612,9 @@ def process_c_file(f, patch_infos):
     if codeinline:
         sloc = sloc + 1
     if incomment:
-        error("File ended while in comment.")
+        error("File ended while in comment." + f)
     if instring:
-        error("File ended while in string.")
+        error("File ended while in string." + f)
 
 
 def expand_ruleset(ruleset):
@@ -2225,3 +2226,7 @@ if __name__ == '__main__':
         sys.exit(flawfind())
     except KeyboardInterrupt:
         print("*** Flawfinder interrupted")
+
+if not ruleset_initialised:
+    initialize_ruleset()
+    ruleset_initialised = True
