@@ -4,6 +4,7 @@ Shefmine main
 """
 
 import argparse
+import cchardet
 import flawfinder
 import git
 import json
@@ -50,9 +51,24 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
                 file = modification.old_path if modification.change_type.name is 'DELETE' else modification.new_path
                 _, file_extension = os.path.splitext(file)
 
-                # Run Flawfinder for C/C++ files, or 'grep'-like analysis for other languages files
+                # Run Flawfinder for C/C++ files, and 'grep'-like analysis for other languages files
                 if file_extension.lower() in c_lang.c_extensions:
-                    partial_output = run_flawfinder(repo.parse_diff(modification.diff), commit.hash, modification.filename)
+                    gitpython_commit = git.Repo(commit.project_path).commit(commit.hash)
+                    diff_item = (diff_item for diff_item in gitpython_commit.parents[0].diff(gitpython_commit)
+                                 if diff_item.b_path == file).__next__()
+
+                    # a (LHS) is None for new file
+                    if diff_item.a_blob is None:
+                        a_source = ''
+                    else:
+                        a_stream = diff_item.a_blob.data_stream.read()
+                        a_encoding = cchardet.detect(a_stream)['encoding']
+                        a_source = a_stream.decode(a_encoding)
+
+                    b_source = modification.source_code
+                    source_code_dict = {'new': b_source, 'old': a_source}
+
+                    partial_output = run_flawfinder(repo.parse_diff(modification.diff), source_code_dict)
                 else:
                     partial_output = process_diff(repo.parse_diff(modification.diff), file_extension)
 
@@ -123,53 +139,63 @@ def process_diff(diff: dict, file_extension: str) -> dict:
     return partial_output
 
 
-def run_flawfinder(diff: dict, commit_hash, file) -> dict:
+def run_flawfinder(diff: dict, source_code_dict: dict) -> dict:
     """
     Given the diff of a file in C/C++ extension, check if any vulnerable lines of code
     are added or delete using flawfinder (https://github.com/david-a-wheeler/flawfinder/)
 
     :param diff: The diff dictionary containing added and deleted lines of the file
-    :param a_source: The old source code of the file in last commit
-    :param b_source: The current source code of the file in current commit
+    :param source_code_dict: The dictionary containing old and new source code
     :return: A partial output containing the vulnerable lines of code added or deleted
     """
 
-    partial_output = {}
+    partial_output, a_hitlist, b_hitlist = {}, {}, {}
 
-    # diff: {'added': [], 'deleted': []}
-    for key, value in diff.items():
-        with tempfile.NamedTemporaryFile(mode='w+t', prefix=f'{commit_hash}_{file}') as fp:
+    for key, source in source_code_dict.items():
+        with tempfile.NamedTemporaryFile(mode='w+t') as tmp:
             # Reset hitlist as it is saved as global variable
             flawfinder.hitlist = []
 
-            # Remove blank lines, comment lines, and inline comments
-            linelist = [(num, c_lang.remove_comment(line.strip())) for num, line in value
-                        if line and not c_lang.c_comments.match(line.strip())]
-
-            for num, line in linelist:
-                fp.write(line + '\n')
-
             # Run flawfinder
-            fp.seek(0)
-            flawfinder.process_c_file(fp.name, None)
+            tmp.write(source)
+            tmp.seek(0)
+            flawfinder.process_c_file(tmp.name, None)
 
-            # Remove hits that have warning level 0, and is a comment
-            filtered_hitlist = (hit for hit in flawfinder.hitlist
-                                if hit.level > 0 and not c_lang.c_comments.match(hit.context_text))
+            # Remove hits that have warning level 0
+            filtered_hitlist = {(hit.line, hit.context_text) for hit in flawfinder.hitlist if hit.level > 0}
 
-            # Add to output
-            for hit in filtered_hitlist:
-                if key not in partial_output:
-                    partial_output[key] = []
+            if key == 'new':
+                # b_hitlist contains added hits
+                b_hitlist = filtered_hitlist
 
-                line_num = (num for num, line in linelist if line == hit.context_text).__next__()
+                for line_num, line in (b_hitlist & set(diff['added'])):
+                    if 'added' not in partial_output:
+                        partial_output['added'] = []
 
-                partial_output[key].append({
-                    'line_num': line_num,
-                    'line': (line.strip() for num, line in value if line_num == num).__next__(),
-                    'vulnerability': hit.name
-                })
+                    partial_output['added'].append({
+                        'line_num': line_num,
+                        'line': line.strip(),
+                        'vulnerability': (hit.name for hit in flawfinder.hitlist if hit.line == line_num).__next__()
+                    })
+            else:
+                # a_hitlist contains deleted hits and possible hidden hits
+                a_hitlist = filtered_hitlist
 
+                hits_dict = {
+                    'deleted': a_hitlist & set(diff['deleted']),
+                    'hidden': a_hitlist - (a_hitlist & set(diff['deleted']))
+                }
+
+                for category, hits in hits_dict.items():
+                    for line_num, line in hits:
+                        if category not in partial_output:
+                            partial_output[category] = []
+
+                        partial_output[category].append({
+                            'line_num': line_num,
+                            'line': line.strip(),
+                            'vulnerability': (hit.name for hit in flawfinder.hitlist if hit.line == line_num).__next__()
+                        })
     return partial_output
 
 
