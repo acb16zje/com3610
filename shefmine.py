@@ -4,18 +4,21 @@ Shefmine main
 """
 
 import argparse
+import bandit
 import cchardet
 import flawfinder
 import git
 import json
 import languages.c as c_lang
+import languages.python as py_lang
 import languages.language as lang
 import os
 import pydriller as pd
 import re
 import tempfile
-import time
 import vulnerability as vuln
+
+from tqdm import tqdm
 
 
 def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
@@ -27,16 +30,21 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
     """
 
     output = {}
+    gitpython_repo = git.Repo(repo.path)
+    commit_count = 1 if repo_mining._single else gitpython_repo.commit().count()
 
-    for commit in repo_mining.traverse_commits():
+    for commit in tqdm(repo_mining.traverse_commits(), total=commit_count):
+        output[commit.hash] = {}
+        output[commit.hash]['message'] = commit.msg
+
+        # Find matching vulnerabilities
         for vulnerability in vuln.vulnerability_list:
             commit_message = process_commit_message(commit.msg)
             regex_match = vulnerability.regex.search(commit_message)
 
-            if regex_match is not None and commit.hash not in output:
-                output[commit.hash] = {}
-                output[commit.hash]['message'] = commit.msg
-                output[commit.hash]['vulnerabilities'] = []
+            if regex_match is not None:
+                if 'vulnerabilities' not in output[commit.hash]:
+                    output[commit.hash]['vulnerabilities'] = []
 
                 # Add vulnerabilities item
                 output[commit.hash]['vulnerabilities'].append({
@@ -44,44 +52,30 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
                     'match': regex_match.group()
                 })
 
-        # Add files changed
-        if commit.hash in output:
-            # Each modification is a file changed
-            for modification in commit.modifications:
-                file = modification.old_path if modification.change_type.name is 'DELETE' else modification.new_path
-                _, file_extension = os.path.splitext(file)
+        # Add files changed, each modification is a file changed
+        for modification in commit.modifications:
+            file = modification.old_path if modification.change_type.name is 'DELETE' else modification.new_path
+            file_extension = os.path.splitext(file)[1]
 
-                # Run Flawfinder for C/C++ files, and 'grep'-like analysis for other languages files
-                if file_extension.lower() in c_lang.c_extensions:
-                    gitpython_commit = git.Repo(commit.project_path).commit(commit.hash)
-                    diff_item = (diff_item for diff_item in gitpython_commit.parents[0].diff(gitpython_commit)
-                                 if diff_item.b_path == file).__next__()
+            # Run Flawfinder for C/C++ files, and 'grep'-like analysis for other languages files
+            if file_extension.lower() in c_lang.c_extensions:
+                source_code_dict = get_source_code_dict(gitpython_repo, commit.hash, file, modification.source_code)
+                partial_output = run_flawfinder(repo.parse_diff(modification.diff), source_code_dict)
+            elif file_extension.lower() in py_lang.py_extensions:
+                partial_output = run_bandit(repo.parse_diff(modification.diff))
+            else:
+                partial_output = process_diff(repo.parse_diff(modification.diff), file_extension)
 
-                    # a (LHS) is None for new file
-                    if diff_item.a_blob is None:
-                        a_source = ''
-                    else:
-                        a_stream = diff_item.a_blob.data_stream.read()
-                        a_encoding = cchardet.detect(a_stream)['encoding']
-                        a_source = a_stream.decode(a_encoding)
+            # Only add the file if it has useful code changes (comments already removed)
+            if partial_output:
+                if 'files_changed' not in output[commit.hash]:
+                    output[commit.hash]['files_changed'] = []
 
-                    b_source = modification.source_code
-                    source_code_dict = {'new': b_source, 'old': a_source}
+                output[commit.hash]['files_changed'].append({'file': file, **partial_output})
 
-                    partial_output = run_flawfinder(repo.parse_diff(modification.diff), source_code_dict)
-                else:
-                    partial_output = process_diff(repo.parse_diff(modification.diff), file_extension)
-
-                # Only add the file if it has useful code changes (comments already removed)
-                if partial_output:
-                    if 'files_changed' not in output[commit.hash]:
-                        output[commit.hash]['files_changed'] = []
-
-                    output[commit.hash]['files_changed'].append({'file': file, **partial_output})
-
-            # Remove the commit if no changed files are found (no useful code changes)
-            # if 'files_changed' not in output[commit.hash]:
-            #     output.pop(commit.hash)
+        # Remove the commit if regex doesnt match or no vulnerable lines of code are detected
+        if 'vulnerabilities' not in output[commit.hash] and 'files_changed' not in output[commit.hash]:
+            output.pop(commit.hash)
 
     return output
 
@@ -97,6 +91,32 @@ def process_commit_message(message: str) -> str:
     # refer to https://github.com/vmware/photon for more patterm to replace
     return re.sub(r'git-svn-id.*|(acked|cc|reported|reviewed|signed([\s\-_]off)?|submitted|tested)[\s\-_]*(by|on)?:.*',
                   '', message, flags=re.I).strip()
+
+
+def get_source_code_dict(gitpython_repo: git.Repo, commit_hash: str, file: str, b_source: str) -> dict:
+    """
+
+    :return: A dictionary containing the old and new source code of a given commit
+    """
+
+    gitpython_commit = gitpython_repo.commit(commit_hash)
+    diff_item = (diff_item for diff_item in gitpython_commit.parents[0].diff(gitpython_commit)
+                 if diff_item.b_path == file).__next__()
+
+    # a (LHS) is None for new file
+    if diff_item.a_blob is None:
+        a_source = ''
+    else:
+        a_stream = diff_item.a_blob.data_stream.read()
+
+        # a (LHS) is empty bytes stream if the file has no changes (rare)
+        if a_stream == b'':
+            a_source = ''
+        else:
+            a_encoding = cchardet.detect(a_stream)['encoding']
+            a_source = a_stream.decode(a_encoding)
+
+    return {'new': b_source, 'old': a_source}
 
 
 def process_diff(diff: dict, file_extension: str) -> dict:
@@ -136,7 +156,8 @@ def process_diff(diff: dict, file_extension: str) -> dict:
                             'line': line.strip(),
                             'vulnerability': vulnerability
                         })
-    return partial_output
+
+            return partial_output
 
 
 def run_flawfinder(diff: dict, source_code_dict: dict) -> dict:
@@ -186,6 +207,7 @@ def run_flawfinder(diff: dict, source_code_dict: dict) -> dict:
                     'hidden': a_hitlist - (a_hitlist & set(diff['deleted']))
                 }
 
+                # Deleted and hidden
                 for category, hits in hits_dict.items():
                     for line_num, line in hits:
                         if category not in partial_output:
@@ -196,6 +218,25 @@ def run_flawfinder(diff: dict, source_code_dict: dict) -> dict:
                             'line': line.strip(),
                             'vulnerability': (hit.name for hit in flawfinder.hitlist if hit.line == line_num).__next__()
                         })
+    return partial_output
+
+
+def run_bandit(diff: dict, source_code_dict: dict):
+    """
+    Given the diff of a file in Python extension, check if any vulnerable lines of code
+    are added or delete using bandit (https://github.com/PyCQA/bandit)
+
+    :param diff: The diff dictionary containing added and deleted lines of the file
+    :param source_code_dict: The dictionary containing old and new source code
+    :return: A partial output containing the vulnerable lines of code added or deleted
+    """
+
+    partial_output, a_hitlist, b_hitlist = {}, {}, {}
+
+    b_conf = bandit.config.BanditConfig()
+    b_mgr = bandit.manager.BanditManager(config=b_conf, agg_type=None)
+    b_mgr.run_tests()
+
     return partial_output
 
 
@@ -251,11 +292,7 @@ if __name__ == '__main__':
         else:
             output_path = 'output.json'
 
-        start_time = time.time()
-
         output_result(search_repository(repo, repo_mining), output_path)
-
-        print(f'{"Time taken":<16}: {(time.time() - start_time):.2f} seconds')
     except git.NoSuchPathError:
         print(f"shefmine.py: '{args.repo}' is not a Git repository")
     except git.GitCommandError:

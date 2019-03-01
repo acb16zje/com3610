@@ -5,22 +5,6 @@ Programming languages class for Shefmine
 import re
 
 
-class RuleOverlapError(Exception):
-    """Raised when the same rule occurred more than once in the rule set"""
-
-    def __init__(self, rule: str, newrule: str) -> None:
-        """
-        Storing the string of 'rule' and 'newrule' for
-        debugging purpose
-
-        :param rule: An existing rule in the rule set
-        :param newrule: A new rule after being expanded
-        """
-
-        self.rule = rule
-        self.newrule = newrule
-
-
 class Language(object):
     """
     A class for programming languages
