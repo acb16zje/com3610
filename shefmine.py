@@ -19,6 +19,7 @@ import tempfile
 import vulnerability as vuln
 
 from tqdm import tqdm
+from typing import Union
 
 
 def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
@@ -61,8 +62,11 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
             if file_extension.lower() in c_lang.c_extensions:
                 source_code_dict = get_source_code_dict(gitpython_repo, commit.hash, file, modification.source_code)
                 partial_output = run_flawfinder(repo.parse_diff(modification.diff), source_code_dict)
+
             elif file_extension.lower() in py_lang.py_extensions:
-                partial_output = run_bandit(repo.parse_diff(modification.diff))
+                source_code_dict = get_source_code_dict(gitpython_repo, commit.hash, file, modification.source_code)
+                partial_output = run_bandit(repo.parse_diff(modification.diff), source_code_dict)
+
             else:
                 partial_output = process_diff(repo.parse_diff(modification.diff), file_extension)
 
@@ -95,13 +99,23 @@ def process_commit_message(message: str) -> str:
 
 def get_source_code_dict(gitpython_repo: git.Repo, commit_hash: str, file: str, b_source: str) -> dict:
     """
+    Get the old and new source code of a file in a given commit
 
+    :param gitpython_repo: The GitPython repository object
+    :param commit_hash: The full commit hash
+    :param file: The file
+    :param b_source: The new source code of the file of the given commit
     :return: A dictionary containing the old and new source code of a given commit
     """
 
     gitpython_commit = gitpython_repo.commit(commit_hash)
-    diff_item = (diff_item for diff_item in gitpython_commit.parents[0].diff(gitpython_commit)
-                 if diff_item.b_path == file).__next__()
+
+    # First commit does not have parent commit
+    if not gitpython_commit.parents:
+        return {'new': b_source, 'old': ''}
+
+    diff_item = next(diff_item for diff_item in gitpython_commit.parents[0].diff(gitpython_commit)
+                     if diff_item.b_path == file)
 
     # a (LHS) is None for new file
     if diff_item.a_blob is None:
@@ -113,8 +127,12 @@ def get_source_code_dict(gitpython_repo: git.Repo, commit_hash: str, file: str, 
         if a_stream == b'':
             a_source = ''
         else:
-            a_encoding = cchardet.detect(a_stream)['encoding']
-            a_source = a_stream.decode(a_encoding)
+            # Improve performance by trying UTF-8 codec first
+            try:
+                a_source = a_stream.decode('utf-8')
+            except UnicodeDecodeError:
+                a_encoding = cchardet.detect(a_stream)['encoding']
+                a_source = a_stream.decode(a_encoding)
 
     return {'new': b_source, 'old': a_source}
 
@@ -148,14 +166,7 @@ def process_diff(diff: dict, file_extension: str) -> dict:
                                 vulnerability.append(rule)
 
                     if vulnerability:
-                        if key not in partial_output:
-                            partial_output[key] = []
-
-                        partial_output[key].append({
-                            'line_num': num,
-                            'line': line.strip(),
-                            'vulnerability': vulnerability
-                        })
+                        partial_output = append_vulnerability(partial_output, key, num, line, vulnerability)
 
             return partial_output
 
@@ -172,14 +183,14 @@ def run_flawfinder(diff: dict, source_code_dict: dict) -> dict:
 
     partial_output, a_hitlist, b_hitlist = {}, {}, {}
 
+    # source_code_dict: {'new': str, 'old': str}
     for key, source in source_code_dict.items():
         with tempfile.NamedTemporaryFile(mode='w+t') as tmp:
-            # Reset hitlist as it is saved as global variable
-            flawfinder.hitlist = []
-
-            # Run flawfinder
             tmp.write(source)
             tmp.seek(0)
+
+            # Reset hitlist for each file, then run flawfinder,
+            flawfinder.hitlist = []
             flawfinder.process_c_file(tmp.name, None)
 
             # Remove hits that have warning level 0
@@ -190,14 +201,13 @@ def run_flawfinder(diff: dict, source_code_dict: dict) -> dict:
                 b_hitlist = filtered_hitlist
 
                 for line_num, line in (b_hitlist & set(diff['added'])):
-                    if 'added' not in partial_output:
-                        partial_output['added'] = []
-
-                    partial_output['added'].append({
-                        'line_num': line_num,
-                        'line': line.strip(),
-                        'vulnerability': (hit.name for hit in flawfinder.hitlist if hit.line == line_num).__next__()
-                    })
+                    partial_output = append_vulnerability(
+                        partial_output,
+                        'added',
+                        line_num,
+                        line,
+                        next(hit.name for hit in flawfinder.hitlist if hit.line == line_num)
+                    )
             else:
                 # a_hitlist contains deleted hits and possible hidden hits
                 a_hitlist = filtered_hitlist
@@ -210,14 +220,13 @@ def run_flawfinder(diff: dict, source_code_dict: dict) -> dict:
                 # Deleted and hidden
                 for category, hits in hits_dict.items():
                     for line_num, line in hits:
-                        if category not in partial_output:
-                            partial_output[category] = []
-
-                        partial_output[category].append({
-                            'line_num': line_num,
-                            'line': line.strip(),
-                            'vulnerability': (hit.name for hit in flawfinder.hitlist if hit.line == line_num).__next__()
-                        })
+                        partial_output = append_vulnerability(
+                            partial_output,
+                            category,
+                            line_num,
+                            line,
+                            next(hit.name for hit in flawfinder.hitlist if hit.line == line_num)
+                        )
     return partial_output
 
 
@@ -235,7 +244,72 @@ def run_bandit(diff: dict, source_code_dict: dict):
 
     b_conf = bandit.config.BanditConfig()
     b_mgr = bandit.manager.BanditManager(config=b_conf, agg_type=None)
-    b_mgr.run_tests()
+
+    # source_code_dict: {'new': str, 'old': str}
+    for key, source in source_code_dict.items():
+        with tempfile.NamedTemporaryFile(mode='w+t') as tmp:
+            tmp.write(source)
+            tmp.seek(0)
+
+            # Reset results for each file, then run bandit
+            b_mgr.results = []
+            b_mgr.discover_files([tmp.name])
+            b_mgr.run_tests()
+            issues = b_mgr.get_issue_list()
+
+            if key == 'new':
+                for issue in issues:
+                    # Skip the loop if the line is not in the added list
+                    try:
+                        added_vulnerable_line = next(line for num, line in diff['added'] if num == issue.lineno)
+
+                        if added_vulnerable_line:
+                            partial_output = append_vulnerability(
+                                partial_output, 'added', issue.lineno, added_vulnerable_line, issue.text)
+                    except StopIteration:
+                        continue
+            else:
+                for issue in issues:
+                    # Skip the loop if the line is not in the deleted list
+                    try:
+                        delete_vulnerable_line = next(line for num, line in diff['deleted'] if num == issue.lineno)
+
+                        # If the issue if not in diff['deleted'], then it's an hidden issue
+                        if delete_vulnerable_line:
+                            partial_output = append_vulnerability(
+                                partial_output, 'deleted', issue.lineno, delete_vulnerable_line, issue.text)
+                        else:
+                            hidden_vulnerable_line = source.splitlines()[issue.lineno - 1]
+
+                            partial_output = append_vulnerability(
+                                partial_output, 'hidden', issue.lineno, hidden_vulnerable_line, issue.text)
+                    except StopIteration:
+                        continue
+
+    return partial_output
+
+
+def append_vulnerability(partial_output: dict, key: str, line_num: int,
+                         line: str, vulnerability: Union[str, list]) -> dict:
+    """
+    Appended the vulnerability found to the partial output
+
+    :param partial_output: The partial output dictionary
+    :param key: The key (added, deleted, or hidden)
+    :param line_num: The line number of the vulnerability
+    :param line: The actual code of the vulnerability
+    :param vulnerability: The vulnerability description
+    :return: The partial output with the vulnerability appended
+    """
+
+    if key not in partial_output:
+        partial_output[key] = []
+
+    partial_output[key].append({
+        'line_num': line_num,
+        'line': line.strip(),
+        'vulnerability': vulnerability
+    })
 
     return partial_output
 
