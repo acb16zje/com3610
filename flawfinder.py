@@ -185,9 +185,9 @@ diff_line_del = re.compile(r'^-[^-].*')
 # Also, "newfile" can have " (comment)" postpended.  Find and eliminate this.
 # Note that the expression below is Y10K (and Y100K) ready. :-).
 diff_findjunk = re.compile(
-    r'^(?P<filename>.*)(' +
-    r'(\s\d\d\d\d+-\d\d-\d\d\s+\d\d:\d[0-9:.]+Z?(\s+[\-\+0-9A-Z]+)?)|' +
-    r'(\s[A-Za-z][a-z]+\s[A-za-z][a-z]+\s\d+\s\d+:\d[0-9:.]+Z?' +
+    r'^(?P<filename>.*)('
+    r'(\s\d\d\d\d+-\d\d-\d\d\s+\d\d:\d[0-9:.]+Z?(\s+[\-\+0-9A-Z]+)?)|'
+    r'(\s[A-Za-z][a-z]+\s[A-za-z][a-z]+\s\d+\s\d+:\d[0-9:.]+Z?'
     r'(\s[\-\+0-9]*)?\s\d\d\d\d+)|'
     r'(\s\(.*\)))\s*$'
 )
@@ -274,7 +274,7 @@ def load_patch_info(input_patch_file):
             if hunk_match:
                 if patched_filename == "":
                     error(
-                        "wrong type of patch file : " +
+                        "wrong type of patch file : "
                         "we have a line number without having seen a filename"
                     )
                     sys.exit(13)
@@ -331,7 +331,7 @@ def print_multi_line(text):
             position = starting_position
         print(' ', end='')
         print(w, end='')
-        position = position + len(w) + 1
+        position += len(w) + 1
 
 
 # This matches references to CWE identifiers, so we can HTMLize them.
@@ -449,8 +449,8 @@ class Hit(object):
             print(' ' + h(self.note), end='')
         else:
             if self.suggestion:
-                main_text = main_text + h(self.suggestion) + ". "
-            main_text = main_text + h(self.note)
+                main_text += h(self.suggestion) + ". "
+            main_text += h(self.note)
             print()
             print_multi_line(main_text)
         if output_format:
@@ -478,7 +478,7 @@ def add_warning(hit):
                            None):
         return
     if linenumber == ignoreline:
-        num_ignored_hits = num_ignored_hits + 1
+        num_ignored_hits += 1
     else:
         hitlist.append(hit)
         if show_immediately:
@@ -501,12 +501,12 @@ def extract_c_parameters(text, pos=0):
         if text[i] == '(':
             break
         elif text[i] in string.whitespace:
-            i = i + 1
+            i += 1
         else:
             return []
     else:  # Never found a reasonable ending.
         return []
-    i = i + 1
+    i += 1
     parameters = [""]  # Insert 0th entry, so 1st parameter is parameter[1].
     currentstart = i
     parenlevel = 1
@@ -526,11 +526,11 @@ def extract_c_parameters(text, pos=0):
                 # parse that deeply, we just need to know we'll stay
                 # in string mode:
             elif c == '\\':
-                i = i + 1
+                i += 1
         elif incomment:
             if c == '*' and text[i:i + 2] == '*/':
                 incomment = 0
-                i = i + 1
+                i += 1
         else:
             if c == '"':
                 instring = 1
@@ -538,20 +538,20 @@ def extract_c_parameters(text, pos=0):
                 instring = 2
             elif c == '/' and text[i:i + 2] == '/*':
                 incomment = 1
-                i = i + 1
+                i += 1
             elif c == '/' and text[i:i + 2] == '//':
                 while i < len(text) and text[i] != "\n":
-                    i = i + 1
+                    i += 1
             elif c == '\\' and text[i:i + 2] == '\\"':
-                i = i + 1  # Handle exposed '\"'
+                i += 1  # Handle exposed '\"'
             elif c == '(':
-                parenlevel = parenlevel + 1
+                parenlevel += 1
             elif c == ',' and (parenlevel == 1):
                 parameters.append(
                     p_trailingbackslashes.sub('', text[currentstart:i]).strip())
                 currentstart = i + 1
             elif c == ')':
-                parenlevel = parenlevel - 1
+                parenlevel -= 1
                 if parenlevel <= 0:
                     parameters.append(
                         p_trailingbackslashes.sub(
@@ -565,7 +565,7 @@ def extract_c_parameters(text, pos=0):
                     "Parsing failed to find end of parameter list; "
                     "semicolon terminated it in %s" % text[pos:pos + 200])
                 return parameters
-        i = i + 1
+        i += 1
     internal_warn("Parsing failed to find end of parameter list in %s" %
                   text[pos:pos + 200])
     return []  # Treat unterminated list as an empty list
@@ -578,8 +578,8 @@ def extract_c_parameters(text, pos=0):
 # In practice, this doesn't seem to be a problem; gettext() is usually
 # wrapped around the entire parameter.
 # The ?s makes it posible to match multi-line strings.
-gettext_pattern = re.compile(r'(?s)^\s*' + 'gettext' + r'\s*\((.*)\)\s*$')
-undersc_pattern = re.compile(r'(?s)^\s*' + '_(T(EXT)?)?' + r'\s*\((.*)\)\s*$')
+gettext_pattern = re.compile(r'(?s)^\s*' 'gettext' r'\s*\((.*)\)\s*$')
+undersc_pattern = re.compile(r'(?s)^\s*' '_(T(EXT)?)?' r'\s*\((.*)\)\s*$')
 
 
 def strip_i18n(text):
@@ -643,7 +643,7 @@ def c_buffer(hit):
     add_warning(hit)
 
 
-p_dangerous_strncat = re.compile(r'^\s*sizeof\s*(\(\s*)?[A-Za-z_$0-9]+' +
+p_dangerous_strncat = re.compile(r'^\s*sizeof\s*(\(\s*)?[A-Za-z_$0-9]+'
                                  r'\s*(\)\s*)?(-\s*1\s*)?$')
 # This is a heuristic: constants in C are usually given in all
 # upper case letters.  Yes, this need not be true, but it's true often
@@ -681,7 +681,7 @@ def c_strncat(hit):
             hit.level = 5
             hit.note = (
                 "Risk is high; the length parameter appears to be a constant, "
-                + "instead of computing the number of characters left.")
+                "instead of computing the number of characters left.")
             add_warning(hit)
             return
     c_buffer(hit)
@@ -759,9 +759,9 @@ def c_scanf(hit):
             elif p_low_risk_scanf_format.search(source):
                 # This is often okay, but sometimes extremely serious.
                 hit.level = 1
-                hit.warning = ("It's unclear if the %s limit in the " +
+                hit.warning = ("It's unclear if the %s limit in the "
                                "format string is small enough (CWE-120)")
-                hit.suggestion = ("Check that the limit is sufficiently " +
+                hit.suggestion = ("Check that the limit is sufficiently "
                                   "small, or use a different input function")
             else:
                 # No risky scanf request.
@@ -771,16 +771,16 @@ def c_scanf(hit):
                 hit.note = "No risky scanf format detected."
         else:
             # Format isn't a constant.
-            hit.note = ("If the scanf format is influenceable " +
+            hit.note = ("If the scanf format is influenceable "
                         "by an attacker, it's exploitable.")
     add_warning(hit)
 
 
-p_dangerous_multi_byte = re.compile(r'^\s*sizeof\s*(\(\s*)?[A-Za-z_$0-9]+' +
+p_dangerous_multi_byte = re.compile(r'^\s*sizeof\s*(\(\s*)?[A-Za-z_$0-9]+'
                                     r'\s*(\)\s*)?(-\s*1\s*)?$')
 p_safe_multi_byte = re.compile(
-    r'^\s*sizeof\s*(\(\s*)?[A-Za-z_$0-9]+\s*(\)\s*)?' +
-    r'/\s*sizeof\s*\(\s*?[A-Za-z_$0-9]+\s*' + r'\[\s*0\s*\]\)\s*(-\s*1\s*)?$')
+    r'^\s*sizeof\s*(\(\s*)?[A-Za-z_$0-9]+\s*(\)\s*)?'
+    r'/\s*sizeof\s*\(\s*?[A-Za-z_$0-9]+\s*\[\s*0\s*\]\)\s*(-\s*1\s*)?$')
 
 
 def c_multi_byte_to_wide_char(hit):
@@ -793,7 +793,7 @@ def c_multi_byte_to_wide_char(hit):
             hit.level = 5
             hit.note = (
                 "Risk is high, it appears that the size is given as bytes, but the "
-                + "function requires size as characters.")
+                "function requires size as characters.")
         elif p_safe_multi_byte.search(num_chars_to_copy):
             # This isn't really risk-free, since it might not be the destination,
             # or the destination might be a character array (if it's a char pointer,
@@ -898,7 +898,7 @@ c_ruleset = {
      1,  # Low risk level, because this is often used correctly when FIXING security
      # problems, and raising it to a higher risk level would cause many false
      # positives.
-     "Easily used incorrectly; doesn't always \\0-terminate or " +
+     "Easily used incorrectly; doesn't always \\0-terminate or "
      "check for invalid pointers [MS-banned] (CWE-120)",
      "",
      "buffer", "", {}),
@@ -907,7 +907,7 @@ c_ruleset = {
      1,  # Low risk level, because this is often used correctly when FIXING security
      # problems, and raising it to a higher risk levle would cause many false
      # positives.
-     "Easily used incorrectly; doesn't always \\0-terminate or " +
+     "Easily used incorrectly; doesn't always \\0-terminate or "
      "check for invalid pointers [MS-banned] (CWE-120)",
      "",
      "buffer", "", {}),
@@ -934,9 +934,9 @@ c_ruleset = {
      "buffer", "", {}),
     "char|TCHAR|wchar_t":  # This isn't really a function call, but it works.
     (c_static_array, 2,
-     "Statically-sized arrays can be improperly restricted, " +
+     "Statically-sized arrays can be improperly restricted, "
      "leading to potential overflows or other issues (CWE-119!/CWE-120)",
-     "Perform bounds checking, use functions that limit length, " +
+     "Perform bounds checking, use functions that limit length, "
      "or ensure that the size is larger than the maximum possible length",
      "buffer", "", {'extract_lookahead': 1}),
 
@@ -966,21 +966,21 @@ c_ruleset = {
     # The "syslog" hook will raise "format" issues.
     "syslog":
     (c_printf, 4,
-     "If syslog's format strings can be influenced by an attacker, " +
+     "If syslog's format strings can be influenced by an attacker, "
      "they can be exploited (CWE-134)",
      "Use a constant format string for syslog",
      "format", "", {'format_position': 2}),
 
     "snprintf|vsnprintf|_snprintf|_sntprintf|_vsntprintf":
     (c_printf, 4,
-     "If format strings can be influenced by an attacker, they can be " +
+     "If format strings can be influenced by an attacker, they can be "
      "exploited, and note that sprintf variations do not always \\0-terminate (CWE-134)",
      "Use a constant for the format specification",
      "format", "", {'format_position': 3}),
 
     "scanf|vscanf|wscanf|_tscanf|vwscanf":
     (c_scanf, 4,
-     "The scanf() family's %s operation, without a limit specification, " +
+     "The scanf() family's %s operation, without a limit specification, "
      "permits buffer overflows (CWE-120, CWE-20)",
      "Specify a limit to %s, or use a different input function",
      "buffer", "", {'input': 1}),
@@ -997,8 +997,8 @@ c_ruleset = {
      # Often this isn't really a risk, and even when it is, at worst it
      # often causes a program crash (and nothing worse).
      1,
-     "Does not handle strings that are not \\0-terminated; " +
-     "if given one it may perform an over-read (it could cause a crash " +
+     "Does not handle strings that are not \\0-terminated; "
+     "if given one it may perform an over-read (it could cause a crash "
      "if unprotected) (CWE-126)",
      "",
      "buffer", "", {}),
@@ -1024,10 +1024,10 @@ c_ruleset = {
 
     "realpath":
     (normal, 3,
-     "This function does not protect against buffer overflows, " +
+     "This function does not protect against buffer overflows, "
      "and some implementations can overflow internally (CWE-120/CWE-785!)",
-     "Ensure that the destination buffer is at least of size MAXPATHLEN, and" +
-     "to protect against implementation problems, the input argument " +
+     "Ensure that the destination buffer is at least of size MAXPATHLEN, and"
+     "to protect against implementation problems, the input argument "
      "should also be checked to ensure it is no larger than MAXPATHLEN",
      "buffer", "dangers-c", {}),
 
@@ -1053,43 +1053,43 @@ c_ruleset = {
 
     "access":        # ???: TODO: analyze TOCTOU more carefully.
     (normal, 4,
-     "This usually indicates a security flaw.  If an " +
-     "attacker can change anything along the path between the " +
-     "call to access() and the file's actual use (e.g., by moving " +
+     "This usually indicates a security flaw.  If an "
+     "attacker can change anything along the path between the "
+     "call to access() and the file's actual use (e.g., by moving "
      "files), the attacker can exploit the race condition (CWE-362/CWE-367!)",
-     "Set up the correct permissions (e.g., using setuid()) and " +
+     "Set up the correct permissions (e.g., using setuid()) and "
      "try to open the file directly",
      "race",
      "avoid-race#atomic-filesystem", {}),
     "chown":
     (normal, 5,
-     "This accepts filename arguments; if an attacker " +
+     "This accepts filename arguments; if an attacker "
      "can move those files, a race condition results. (CWE-362)",
      "Use fchown( ) instead",
      "race", "", {}),
     "chgrp":
     (normal, 5,
-     "This accepts filename arguments; if an attacker " +
+     "This accepts filename arguments; if an attacker "
      "can move those files, a race condition results. (CWE-362)",
      "Use fchgrp( ) instead",
      "race", "", {}),
     "chmod":
     (normal, 5,
-     "This accepts filename arguments; if an attacker " +
+     "This accepts filename arguments; if an attacker "
      "can move those files, a race condition results. (CWE-362)",
      "Use fchmod( ) instead",
      "race", "", {}),
     "vfork":
     (normal, 2,
-     "On some old systems, vfork() permits race conditions, and it's " +
+     "On some old systems, vfork() permits race conditions, and it's "
      "very difficult to use correctly (CWE-362)",
      "Use fork() instead",
      "race", "", {}),
     "readlink":
     (normal, 5,
-     "This accepts filename arguments; if an attacker " +
-     "can move those files or change the link content, " +
-     "a race condition results.  " +
+     "This accepts filename arguments; if an attacker "
+     "can move those files or change the link content, "
+     "a race condition results.  "
      "Also, it does not terminate with ASCII NUL. (CWE-362, CWE-20)",
      # This is often just a bad idea, and it's hard to suggest a
      # simple alternative:
@@ -1135,7 +1135,7 @@ c_ruleset = {
     # Windows.  TODO: Detect correct usage approaches and ignore it.
     "GetTempFileName":
     (normal, 3,
-     "Temporary file race condition in certain cases " +
+     "Temporary file race condition in certain cases "
      "(e.g., if run as SYSTEM in many versions of Windows) (CWE-377)",
      "",
      "tmpfile", "avoid-race", {}),
@@ -1144,7 +1144,7 @@ c_ruleset = {
     "execl|execlp|execle|execv|execvp|system|popen|WinExec|ShellExecute":
     (normal, 4,
      "This causes a new program to execute and is difficult to use safely (CWE-78)",
-     "try using a library call that implements the same functionality " +
+     "try using a library call that implements the same functionality "
      "if available",
      "shell", "", {}),
 
@@ -1161,16 +1161,16 @@ c_ruleset = {
     "CreateProcess":
     (c_hit_if_null, 3,
      "This causes a new process to execute and is difficult to use safely (CWE-78)",
-     "Specify the application path in the first argument, NOT as part of the second, " +
+     "Specify the application path in the first argument, NOT as part of the second, "
      "or embedded spaces could allow an attacker to force a different program to run",
      "shell", "", {'check_for_null': 1}),
 
     "atoi|atol|_wtoi|_wtoi64":
     (normal, 2,
-     "Unless checked, the resulting number can exceed the expected range " +
+     "Unless checked, the resulting number can exceed the expected range "
      "(CWE-190)",
-     "If source untrusted, check both minimum and maximum, even if the" +
-     " input had no minus sign (large numbers can roll over into negative" +
+     "If source untrusted, check both minimum and maximum, even if the"
+     " input had no minus sign (large numbers can roll over into negative"
      " number; consider saving to an unsigned value if that is intended)",
      "integer", "dangers-c", {}),
 
@@ -1183,11 +1183,11 @@ c_ruleset = {
 
     "crypt|crypt_r":
     (normal, 4,
-     "The crypt functions use a poor one-way hashing algorithm; " +
-     "since they only accept passwords of 8 characters or fewer " +
-     "and only a two-byte salt, they are excessively vulnerable to " +
+     "The crypt functions use a poor one-way hashing algorithm; "
+     "since they only accept passwords of 8 characters or fewer "
+     "and only a two-byte salt, they are excessively vulnerable to "
      "dictionary attacks given today's faster computing equipment (CWE-327)",
-     "Use a different algorithm, such as SHA-256, with a larger, " +
+     "Use a different algorithm, such as SHA-256, with a larger, "
      "non-repeating salt",
      "crypto", "", {}),
 
@@ -1195,7 +1195,7 @@ c_ruleset = {
     "EVP_des_ecb|EVP_des_cbc|EVP_des_cfb|EVP_des_ofb|EVP_desx_cbc":
     (normal, 4,
      "DES only supports a 56-bit keysize, which is too small given today's computers (CWE-327)",
-     "Use a different patent-free encryption algorithm with a larger keysize, " +
+     "Use a different patent-free encryption algorithm with a larger keysize, "
      "such as 3DES or AES",
      "crypto", "", {}),
 
@@ -1203,38 +1203,37 @@ c_ruleset = {
     "EVP_rc4_40|EVP_rc2_40_cbc|EVP_rc2_64_cbc":
     (normal, 4,
      "These keysizes are too small given today's computers (CWE-327)",
-     "Use a different patent-free encryption algorithm with a larger keysize, " +
+     "Use a different patent-free encryption algorithm with a larger keysize, "
      "such as 3DES or AES",
      "crypto", "", {}),
 
     "chroot":
     (normal, 3,
      "chroot can be very helpful, but is hard to use correctly (CWE-250, CWE-22)",
-     "Make sure the program immediately chdir(\"/\")," +
-     " closes file descriptors," +
-     " and drops root privileges, and that all necessary files" +
+     "Make sure the program immediately chdir(\"/\"), closes file descriptors,"
+     " and drops root privileges, and that all necessary files"
      " (and no more!) are in the new root",
      "misc", "", {}),
 
     "getenv|curl_getenv":
-    (normal, 3, "Environment variables are untrustable input if they can be" +
-     " set by an attacker.  They can have any content and" +
+    (normal, 3, "Environment variables are untrustable input if they can be"
+     " set by an attacker.  They can have any content and"
      " length, and the same variable can be set more than once (CWE-807, CWE-20)",
      "Check environment variables carefully before using them",
      "buffer", "", {'input': 1}),
 
     "g_get_home_dir":
-    (normal, 3, "This function is synonymous with 'getenv(\"HOME\")';" +
-     "it returns untrustable input if the environment can be" +
-     "set by an attacker.  It can have any content and length, " +
+    (normal, 3, "This function is synonymous with 'getenv(\"HOME\")';"
+     "it returns untrustable input if the environment can be"
+     "set by an attacker.  It can have any content and length, "
      "and the same variable can be set more than once (CWE-807, CWE-20)",
      "Check environment variables carefully before using them",
      "buffer", "", {'input': 1}),
 
     "g_get_tmp_dir":
-    (normal, 3, "This function is synonymous with 'getenv(\"TMP\")';" +
-     "it returns untrustable input if the environment can be" +
-     "set by an attacker.  It can have any content and length, " +
+    (normal, 3, "This function is synonymous with 'getenv(\"TMP\")';"
+     "it returns untrustable input if the environment can be"
+     "set by an attacker.  It can have any content and length, "
      "and the same variable can be set more than once (CWE-807, CWE-20)",
      "Check environment variables carefully before using them",
      "buffer", "", {'input': 1}),
@@ -1243,8 +1242,8 @@ c_ruleset = {
     # These are Windows-unique:
 
     # TODO: Should have lower risk if the program checks return value.
-    "RpcImpersonateClient|ImpersonateLoggedOnUser|CoImpersonateClient|" +
-    "ImpersonateNamedPipeClient|ImpersonateDdeClientWindow|ImpersonateSecurityContext|" +
+    "RpcImpersonateClient|ImpersonateLoggedOnUser|CoImpersonateClient|"
+    "ImpersonateNamedPipeClient|ImpersonateDdeClientWindow|ImpersonateSecurityContext|"
     "SetThreadToken":
     (normal, 4, "If this call fails, the program could fail to drop heightened privileges (CWE-250)",
      "Make sure the return value is checked, and do not continue if a failure is reported",
@@ -1267,7 +1266,7 @@ c_ruleset = {
 
     "SetSecurityDescriptorDacl":
     (c_hit_if_null, 5,
-     "Never create NULL ACLs; an attacker can set it to Everyone (Deny All Access), " +
+     "Never create NULL ACLs; an attacker can set it to Everyone (Deny All Access), "
      "which would even forbid administrator access (CWE-732)",
      "",
      "misc", "", {'check_for_null': 3}),
@@ -1382,7 +1381,7 @@ def c_valid_match(text, position):
         if c == '(':
             return 1
         elif c in string.whitespace:
-            i = i + 1
+            i += 1
         else:
             if falsepositive:
                 return 0  # No following "(", presume invalid.
@@ -1422,7 +1421,7 @@ def process_directive():
         if hitlist[i].filename == filename and hitlist[i].line == linenumber:
             del hitlist[i]  # DESTROY - this is a DESTRUCTIVE iterator.
             hitfound = 1  # Don't break, because there may be more than one.
-            num_ignored_hits = num_ignored_hits + 1
+            num_ignored_hits += 1
     if not hitfound:
         ignoreline = linenumber + 1  # Nothing found - ignore next line.
 
@@ -1474,7 +1473,7 @@ def process_c_file(f, patch_infos):
         # Symlinks should never get here, but just in case...
         if (not allowlink) and os.path.islink(f):
             print("BUG! Somehow got a symlink in process_c_file!")
-            num_links_skipped = num_links_skipped + 1
+            num_links_skipped += 1
             return
         try:
             my_input = open(f, "r")
@@ -1527,26 +1526,26 @@ def process_c_file(f, patch_infos):
                 i = m.end(0)
                 continue
         if c == "\n":
-            linenumber = linenumber + 1
-            sumlines = sumlines + 1
+            linenumber += 1
+            sumlines += 1
             linebegin = 1
             if codeinline:
-                sloc = sloc + 1
+                sloc += 1
             codeinline = 0
-            i = i + 1
+            i += 1
             continue
-        i = i + 1  # From here on, text[i] points to next character.
+        i += 1  # From here on, text[i] points to next character.
         if i < len(text):
             nextc = text[i]
         else:
             nextc = ''
         if incomment:
             if c == '*' and nextc == '/':
-                i = i + 1
+                i += 1
                 incomment = 0
         elif instring:
             if c == '\\' and (nextc != "\n"):
-                i = i + 1
+                i += 1
             elif c == '"' and instring == 1:
                 instring = 0
             elif c == "'" and instring == 2:
@@ -1557,7 +1556,7 @@ def process_c_file(f, patch_infos):
                                       i + 1)  # Is there a directive here?
                 if m:
                     process_directive()
-                i = i + 1
+                i += 1
                 incomment = 1
             elif c == '/' and nextc == '/':  # "//" comments - skip to EOL.
                 m = p_directive.match(text,
@@ -1565,7 +1564,7 @@ def process_c_file(f, patch_infos):
                 if m:
                     process_directive()
                 while i < len(text) and text[i] != "\n":
-                    i = i + 1
+                    i += 1
             elif c == '"':
                 instring = 1
                 codeinline = 1
@@ -1606,15 +1605,15 @@ def process_c_file(f, patch_infos):
                 elif p_digits.match(c):
                     while i < len(text) and p_digits.match(
                             text[i]):  # Process a number.
-                        i = i + 1
+                        i += 1
                 # else some other character, which we ignore.
                 # End of loop through text. Wrap up.
     if codeinline:
-        sloc = sloc + 1
+        sloc += 1
     if incomment:
-        error("File ended while in comment." + f)
+        error("File ended while in comment.")
     if instring:
-        error("File ended while in string." + f)
+        error("File ended while in string.")
 
 
 def expand_ruleset(ruleset):
@@ -1673,7 +1672,7 @@ def display_header():
         if output_format:
             print(
                 '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" '
-                + '"http://www.w3.org/TR/html4/loose.dtd">')
+                '"http://www.w3.org/TR/html4/loose.dtd">')
             print("<html>")
             print("<head>")
             print('<meta http-equiv="Content-type" content="text/html; charset=utf8">')
@@ -1721,14 +1720,14 @@ def maybe_process_file(f, patch_infos):
         if (not allowlink) and os.path.islink(f):
             if not quiet:
                 print_warning("Skipping symbolic link directory " + h(f))
-            num_links_skipped = num_links_skipped + 1
+            num_links_skipped += 1
             return
         base_filename = os.path.basename(f)
         if (skipdotdir and len(base_filename) > 1
                 and (base_filename[0] == ".")):
             if not quiet:
                 print_warning("Skipping directory with initial dot " + h(f))
-            num_dotdirs_skipped = num_dotdirs_skipped + 1
+            num_dotdirs_skipped += 1
             return
         for dir_entry in os.listdir(f):
             maybe_process_file(os.path.join(f, dir_entry), patch_infos)
@@ -1744,7 +1743,7 @@ def maybe_process_file(f, patch_infos):
             if (not allowlink) and os.path.islink(f):
                 if not quiet:
                     print_warning("Skipping symbolic link file " + h(f))
-                num_links_skipped = num_links_skipped + 1
+                num_links_skipped += 1
             elif not os.path.isfile(f):
                 # Skip anything not a normal file.  This is so that
                 # device files, etc. won't cause trouble.
@@ -1774,7 +1773,7 @@ def process_file_args(files, patch_infos):
         if (not allowlink) and os.path.islink(f):
             if not quiet:
                 print_warning("Skipping symbolic link " + h(f))
-            num_links_skipped = num_links_skipped + 1
+            num_links_skipped += 1
         elif os.path.isfile(f) or f == "-":
             # If on the command line, FORCE processing of it.
             # Currently, we only process C/C++.
@@ -1805,9 +1804,9 @@ def process_file_args(files, patch_infos):
                 # exist - if someone asks to process a file with this crazy
                 # name, and it exists, we'll process it without complaint.
                 if (h(f).startswith("\xe2\x80\x93") or
-                    h(f).startswith("\xe2\x80\x94") or
-                    h(f).startswith("\u2013") or
-                    h(f).startswith("\u2014")):
+                        h(f).startswith("\xe2\x80\x94") or
+                        h(f).startswith("\u2013") or
+                        h(f).startswith("\u2014")):
                     print_warning(
                         "Skipping non-existent filename starting with em dash or en dash "
                         + h(f))
@@ -2096,7 +2095,7 @@ def show_final_results():
             count_per_level[hit.level] = count_per_level[hit.level] + 1
             if hit.level >= minimum_level:
                 hit.show()
-                count = count + 1
+                count += 1
             if hit.level >= error_level:
                 error_level_exceeded = True
     if output_format:

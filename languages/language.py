@@ -34,5 +34,4 @@ class Language(object):
 
         return not self.comments.match(line.strip())
 
-
 language_list = []

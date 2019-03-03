@@ -1,6 +1,6 @@
 #!/bin/python3
 """
-Shefmine main
+Shefmine: A tool for finding vulnerabilities in Git repositories
 """
 
 import argparse
@@ -322,7 +322,7 @@ def output_result(output: dict, path: str):
     :param path: Path (file name) of the output file
     """
 
-    print(f'{"Issues found":<16}: {len(output)}')
+    print(f'{"Total commits found":<16}: {len(output)}')
 
     if os.path.isdir(path):
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -335,7 +335,7 @@ def output_result(output: dict, path: str):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('repo', help='Path or URL of the Git repository')
+    parser.add_argument('repo', type=str, help='Path or URL of the Git repository')
     parser.add_argument('-b', '--branch', type=str, help='Only analyse the commits in this branch')
     parser.add_argument('-s', '--single', metavar='HASH', type=str, help='Only analyse the provided commit (full hash)')
     parser.add_argument('-o', '--output', type=str, help='Write the result to the specified file name and path '
