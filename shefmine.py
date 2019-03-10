@@ -32,15 +32,21 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
 
     output = {}
     gitpython_repo = git.Repo(repo.path)
-    commit_count = 1 if repo_mining._single else gitpython_repo.commit().count()
+
+    if repo_mining._single:
+        commit_count = 1
+    elif repo_mining._only_in_branch:
+        commit_count = gitpython_repo.commit(repo_mining._only_in_branch).count()
+    else:
+        commit_count = gitpython_repo.commit().count()
 
     for commit in tqdm(repo_mining.traverse_commits(), total=commit_count):
+        commit_message = process_commit_message(commit.msg)
         output[commit.hash] = {}
-        output[commit.hash]['message'] = commit.msg
+        output[commit.hash]['message'] = commit_message
 
         # Find matching vulnerabilities
         for vulnerability in vuln.vulnerability_list:
-            commit_message = process_commit_message(commit.msg)
             regex_match = vulnerability.regex.search(commit_message)
 
             if regex_match is not None:
@@ -93,7 +99,7 @@ def process_commit_message(message: str) -> str:
     """
 
     # refer to https://github.com/vmware/photon for more patterm to replace
-    return re.sub(r'git-svn-id.*|(acked|cc|reported|reviewed|signed([\s\-_]off)?|submitted|tested)[\s\-_]*(by|on)?:.*',
+    return re.sub(r'(git-svn-id|change-id).*|(acked|cc|reported|reviewed|signed([\s\-_]off)?|submitted|tested)[\s\-_]*(by|on)?:?.*',
                   '', message, flags=re.I).strip()
 
 
@@ -209,15 +215,15 @@ def run_flawfinder(diff: dict, source_code_dict: dict) -> dict:
                         next(hit.name for hit in flawfinder.hitlist if hit.line == line_num)
                     )
             else:
-                # a_hitlist contains deleted hits and possible hidden hits
+                # a_hitlist contains deleted hits and possible unchanged hits
                 a_hitlist = filtered_hitlist
 
                 hits_dict = {
                     'deleted': a_hitlist & set(diff['deleted']),
-                    'hidden': a_hitlist - (a_hitlist & set(diff['deleted']))
+                    'unchanged': a_hitlist - (a_hitlist & set(diff['deleted']))
                 }
 
-                # Deleted and hidden
+                # Deleted and unchanged
                 for category, hits in hits_dict.items():
                     for line_num, line in hits:
                         partial_output = append_vulnerability(
@@ -272,17 +278,17 @@ def run_bandit(diff: dict, source_code_dict: dict):
                 for issue in issues:
                     # Skip the loop if the line is not in the deleted list
                     try:
-                        delete_vulnerable_line = next(line for num, line in diff['deleted'] if num == issue.lineno)
+                        deleted_vulnerable_line = next(line for num, line in diff['deleted'] if num == issue.lineno)
 
-                        # If the issue if not in diff['deleted'], then it's an hidden issue
-                        if delete_vulnerable_line:
+                        # If the issue if not in diff['deleted'], then it's an unchanged issue
+                        if deleted_vulnerable_line:
                             partial_output = append_vulnerability(
-                                partial_output, 'deleted', issue.lineno, delete_vulnerable_line, issue.text)
+                                partial_output, 'deleted', issue.lineno, deleted_vulnerable_line, issue.text)
                         else:
-                            hidden_vulnerable_line = source.splitlines()[issue.lineno - 1]
+                            unchanged_vulnerable_line = source.splitlines()[issue.lineno - 1]
 
                             partial_output = append_vulnerability(
-                                partial_output, 'hidden', issue.lineno, hidden_vulnerable_line, issue.text)
+                                partial_output, 'unchanged', issue.lineno, unchanged_vulnerable_line, issue.text)
                     except StopIteration:
                         continue
 
@@ -295,7 +301,7 @@ def append_vulnerability(partial_output: dict, key: str, line_num: int,
     Appended the vulnerability found to the partial output
 
     :param partial_output: The partial output dictionary
-    :param key: The key (added, deleted, or hidden)
+    :param key: The key (added, deleted, or unchanged)
     :param line_num: The line number of the vulnerability
     :param line: The actual code of the vulnerability
     :param vulnerability: The vulnerability description
@@ -322,7 +328,7 @@ def output_result(output: dict, path: str):
     :param path: Path (file name) of the output file
     """
 
-    print(f'{"Total commits found":<16}: {len(output)}')
+    print(f'{"Total commits found":<20}: {len(output)}')
 
     if os.path.isdir(path):
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -330,7 +336,7 @@ def output_result(output: dict, path: str):
     with open(path, 'w') as outfile:
         json.dump(output, outfile, indent=2)
 
-    print(f'{"Output location":<16}: {os.path.realpath(path)}')
+    print(f'{"Output location":<20}: {os.path.realpath(path)}')
 
 
 if __name__ == '__main__':
@@ -371,3 +377,5 @@ if __name__ == '__main__':
         print(f"shefmine.py: '{args.repo}' is not a Git repository")
     except git.GitCommandError:
         print(f"shefmine.py: GitCommandError, bad revision '{args.branch}'")
+    except git.InvalidGitRepositoryError:
+        print(f"shefmine.py: InvalidGitRepositoryError, '{os.path.realpath(args.repo)}'")

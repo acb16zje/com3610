@@ -29,14 +29,70 @@ def analyse_result(result: dict) -> None:
                      if 'vulnerabilities' not in result[commit_hash]
                      and 'files_changed' in result[commit_hash])
 
-    both = sum(1 for commit_hash in result
-                     if 'vulnerabilities' in result[commit_hash]
-                     and 'files_changed' in result[commit_hash])
+    lines_add_only = sum(1 for commit_hash in result
+                         if 'vulnerabilities' not in result[commit_hash]
+                         and 'files_changed' in result[commit_hash]
+                         and all('added' in f
+                                 and 'deleted' not in f
+                                 and 'unchanged' not in f
+                                 for f in result[commit_hash]['files_changed']))
 
-    print(f'{"Total commits found":<54}: {total_commits}')
-    print(f'{"Commits with vulnerability RegExp match ONLY":<54}: {regexp_only}')
-    print(f'{"Commits with vulnerable lines changed ONLY":<54}: {lines_only}')
-    print(f'{"Commits with RegExp match and vulnerable lines changed":<54}: {both}')
+    lines_delete_only = sum(1 for commit_hash in result
+                            if 'vulnerabilities' not in result[commit_hash]
+                            and 'files_changed' in result[commit_hash]
+                            and all('added' not in f
+                                    and 'deleted' in f
+                                    and 'unchanged' not in f
+                                    for f in result[commit_hash]['files_changed']))
+
+    lines_unchange_only = sum(1 for commit_hash in result
+                              if 'vulnerabilities' not in result[commit_hash]
+                              and 'files_changed' in result[commit_hash]
+                              and all('added' not in f
+                                      and 'deleted' not in f
+                                      and 'unchanged' in f
+                                      for f in result[commit_hash]['files_changed']))
+
+    # RegExp match and vulnerable lines changed
+    both = sum(1 for commit_hash in result
+               if 'vulnerabilities' in result[commit_hash]
+               and 'files_changed' in result[commit_hash])
+
+    both_add_only = sum(1 for commit_hash in result
+                        if 'vulnerabilities' in result[commit_hash]
+                        and 'files_changed' in result[commit_hash]
+                        and all('added' in f
+                                and 'deleted' not in f
+                                and 'unchanged' not in f
+                                for f in result[commit_hash]['files_changed']))
+
+    both_delete_only = sum(1 for commit_hash in result
+                           if 'vulnerabilities' in result[commit_hash]
+                           and 'files_changed' in result[commit_hash]
+                           and all('added' not in f
+                                   and 'deleted' in f
+                                   and 'unchanged' not in f
+                                   for f in result[commit_hash]['files_changed']))
+
+    both_unchange_only = sum(1 for commit_hash in result
+                             if 'vulnerabilities' in result[commit_hash]
+                             and 'files_changed' in result[commit_hash]
+                             and all('added' not in f
+                                     and 'deleted' not in f
+                                     and 'unchanged' in f
+                                     for f in result[commit_hash]['files_changed']))
+
+    print(f'{"Total commits found":<53}: {total_commits}')
+    print(f'{"":>2}{"├── ONLY Vulnerability RegExp match":<51}: {regexp_only}')
+    print(f'{"":>2}{"├── ONLY Vulnerable lines changed":<51}: {lines_only}')
+    print(f'{"":>2}│{"":>5}{"├── ONLY Added lines":<50}: {lines_add_only}')
+    print(f'{"":>2}│{"":>5}{"├── ONLY Deleted lines":<50}: {lines_delete_only}')
+    print(f'{"":>2}│{"":>5}{"└── ONLY Unchanged lines":<50}: {lines_unchange_only}')
+    print(f'{"":>2}{"└── BOTH RegExp match and vulnerable lines changed":<51}: {both}')
+    print(f'{"":>8}{"├── ONLY Added lines":<50}: {both_add_only}')
+    print(f'{"":>8}{"├── ONLY Deleted lines":<50}: {both_delete_only}')
+    print(f'{"":>8}{"└── ONLY Unchanged lines":<50}: {both_unchange_only}')
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
