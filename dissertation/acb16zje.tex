@@ -9,6 +9,8 @@
 \usepackage{float}
 \usepackage{graphicx}
 \usepackage[hidelinks]{hyperref}
+\usepackage[toc, acronym]{glossaries}
+\usepackage{longtable}
 \usepackage{microtype}
 \usepackage{parskip}
 \usepackage{pgfgantt}
@@ -21,6 +23,18 @@
 \fancyhf{}
 \fancyhead[C]{\leftmark}
 \fancyfoot[C]{\thepage}
+
+\makeglossaries
+\renewcommand*{\glstextformat}[1]{\textbf{#1}}
+\newacronym{apis}{APIs}{application processing interfaces}
+\newacronym{cve}{CVE}{Common Vulnerabilities and Exposures}
+\newacronym{cwe}{CWE}{Common Weakness Enumeration}
+\newacronym{floss}{FLOSS}{Free/Libre and Open Source Software}
+\newacronym{json}{JSON}{JavaScript Object Notation}
+\newacronym{msr}{MSR}{Mining Software Repositories}
+\newacronym{nvd}{NVD}{National Vulnerability Database}
+\newacronym{owasp}{OWASP}{Open Web Application Security Project}
+\newacronym{xml}{XML}{Extensible Markup Language}
 
 \addbibresource{references.bib}
 
@@ -100,37 +114,37 @@ future.
 
 \chapter{Introduction}
 \section{Background}
-Free/Libre and Open Source Software (\textbf{FLOSS}) is a type of software whose license allows the
-users to inspect, use, modify and redistribute the software's source code \cite{crowston_2012}.
-Since the introduction of the version control system, many repository hosting sites such as
-SourceForge \cite{sourceforge}, Google Code \cite{google_code}, and GitHub \cite{github} have been
-launched. As a result, the participation of global communities into FLOSS projects have started to
-grow and different contributions were made to improve the softwares quality, which included fixing
-software vulnerabilities \cite{dabbish_2012}.
+\acrfull{floss} is a type of software whose license allows the users to inspect, use, modify and
+redistribute the software's source code \cite{crowston_2012}. Since the introduction of the version
+control system, many repository hosting sites such as SourceForge \cite{sourceforge}, Google Code
+\cite{google_code}, and GitHub \cite{github} have been launched. As a result, the participation of
+global communities into \acrshort{floss} projects have started to grow and different contributions
+were made to improve the software quality, which included fixing software vulnerabilities
+\cite{dabbish_2012}.
 
-Building a secure software is expensive, difficult, and time-consuming. It is necessary to know when
+Building secure software is expensive, difficult, and time-consuming. It is necessary to know when
 and how a security vulnerability is fixed throughout the software lifecycle. Software components
-such as plugins and application processing interfaces (\textbf{APIs}) are usually developed by
-third-party developers and widely reused in both open source and closed source softwares
-\cite{khan_2001}. An important factor of the software security is determined by the information
-provided by the vendor of the software components for deciding whether to perform the security
-update. Hence, the users of software components are advised to check the National Vulnerability
-Database (\textbf{NVD}) \cite{nvd} regularly for detailed information of the vulnerabilities
+such as plugins and \acrfull{apis} are usually developed by third-party developers and widely reused
+in both open source and closed source software \cite{khan_2001}. An important factor of software
+security is determined by the information provided by the vendor of the software components for
+deciding whether to perform the security update. Hence, the users of software components are advised
+to check the \acrfull{nvd} \cite{nvd} regularly for detailed information of the vulnerabilities
 identified in the software components used. Furthermore, it would be more helpful if the developers
 of the software components clearly record the list of changes or provide informative Git commit
 messages for every version update of their component.
 
 To perform a risk assessment of a potentially vulnerable component, it is required to have a deep
-understanding of the vulnerability entry points. However, not all projects follow the CVE format or
-publish CVEs, and CVE reports are usually lack of technical details that attribute the specific
-entry points of the vulnerability, which is an important aspect in part of the risk assessment. By
-identifying the vulnerability-fixing commits, the vulnerable lines of code can be located, which
-allows the users to check if a vulnerable component is being used or not. However, some developers
-believe that public disclosure of security vulnerabilities patch is dangerous, thus
-vulnerability-fixing commits are not commonly identified and recorded specifically in some open
-source software repositories to prevent malicious exploits \cite{arora_2005}. As a result, there is
-a practical difficulty in applying this analysis approach to find the security relevant commits that
-are not documented using CVE or a similar format, which are known as the silent patches.
+understanding of the vulnerability entry points. However, not all projects follow the \acrfull{cve}
+format or publish \acrshort{cve}, and \acrshort{cve} reports are usually lack of technical details
+that attribute the specific entry points of the vulnerability, which is an important aspect in part
+of the risk assessment. By identifying the vulnerability-fixing commits, the vulnerable lines of
+code can be located, which allows the users to check if a vulnerable component is being used or not.
+However, some developers believe that public disclosure of security vulnerabilities patch is
+dangerous, thus vulnerability-fixing commits are not commonly identified and recorded specifically
+in some open source software repositories to prevent malicious exploits \cite{arora_2005}. As a
+result, there is a practical difficulty in applying this analysis approach to find the security
+relevant commits that are not documented using \acrshort{cve} or a similar format, which are known
+as the silent patches.
 
 To address these issues, a repository mining tool that investigates commit messages and identifies
 vulnerable software components can be developed to reduce the time and cost required to mitigate the
@@ -142,13 +156,15 @@ version control system are also supported after they have been migrated to Git.
 
 \section{Objectives} \label{sec:objectives}
 \begin{itemize}
-	\item Identify the security patterns of the most popular security issues in OWASP Top Ten Project.
+	\item Identify the security patterns of the most popular security issues in \acrfull{owasp} Top
+	Ten Project.
 	\item Develop a repository mining tool to search through the commit history of a repository and
-	find a list of commit messages that match the patterns. The list should be produced in a suitable
-	file format such as JSON, XML, or CSV.
+	find a list of commit messages that match the patterns. The list should be produced in
+	\acrfull{json} file format.
 	\item Extend the mining tool which checks the code difference in the commits found to obtain the
-	actual commits fixing the security vulnerabilities. This extension should separate from the mining
-	process to make the mining results easier to verify and debug.
+  actual commits fixing the security vulnerabilities.
+  \item Create a statistical tool that reads the output file and reports a detailed analysis of the
+  results.
 \end{itemize}
 
 \section{Challenges} \label{sec:challenges}
@@ -167,7 +183,7 @@ more thorough analysis of the problems and constraints is carried out in
 	its message, the evaluation process might not correctly locate the lines of code that addressed
 	the security vulnerability. It might be required to perform a manual evaluation to correctly
 	identify some of the results.
-	\item \textbf{Time}: Large repository such as Linux which has more than 780,000 commits in total
+	\item \textbf{Time}: Large repository such as Linux which has more than 820,000 commits in total
 	\cite{linux_repo} could be extremely time-consuming for the repository mining tool to complete the
 	search and evaluation process.
 \end{itemize}
@@ -234,34 +250,34 @@ issues in open source repositories, it is necessary to discuss the industry-endo
 software vulnerabilities categorisation.
 
 \subsection{Common Weakness Enumeration}
-The Common Weakness Enumeration (\textbf{CWE}) is a project launched by the Mitre Corporation and
-sponsored by the National Cyber Security Division of the United States Department of Homeland
-Security \cite{cwe}. The CWE project organises the software weaknesses into a list of different
-categories, known as the CWE list. Software weaknesses are defined as errors that can lead to
-software vulnerabilities, which includes buffer overflows, authentication errors, code injection,
-etc. \cite{cwe_faq}. The CWE is now a formal standard for representing software weaknesses. Each
-entry in the CWE list contains detailed information about the specific weakness and is identified by
-a unique ID number.
+The \acrfull{cwe} is a project launched by the Mitre Corporation and sponsored by the National Cyber
+Security Division of the United States Department of Homeland Security \cite{cwe}. The
+\acrshort{cwe} project organises the software weaknesses into a list of different categories, known
+as the \acrshort{cwe} list. Software weaknesses are defined as errors that can lead to software
+vulnerabilities, which includes buffer overflows, authentication errors, code injection, etc.
+\cite{cwe_faq}. The \acrshort{cwe} is now a formal standard for representing software weaknesses.
+Each entry in the \acrshort{cwe} list contains detailed information about the specific weakness and
+is identified by a unique ID number.
 
 \subsection{Common Vulnerabilities and Exposures}
-The Common Vulnerabilities and Exposures (\textbf{CVE}) is another security project launched by the
-Mitre Corporation \cite{cve} to provide the community with a complete list of publicly known
-security vulnerabilities, known as the CVE entries. Each CVE entry is defined by an ID number, and
-includes a description followed by any relevant resources about the vulnerability. It is now the
-standardised solution and industry-recognised standard for identifying vulnerabilities and
-exposures. However, developers and vendors are not required to publish security vulnerabilities of
-their projects in CVE format. They are allowed to use their own naming scheme for the
-vulnerabilities, even if the same vulnerability has already been recorded in the CVE list.
+The \acrfull{cve} is another security project launched by the Mitre Corporation \cite{cve} to
+provide the community with a complete list of publicly known security vulnerabilities, known as the
+\acrshort{cve} entries. Each \acrshort{cve} entry is defined by an ID number, and includes a
+description followed by any relevant resources about the vulnerability. It is now the standardised
+solution and industry-recognised standard for identifying vulnerabilities and exposures. However,
+developers and vendors are not required to publish security vulnerabilities of their projects
+\acrshort{cve} format. They are allowed to use their own naming scheme for the vulnerabilities, even
+if the same vulnerability has already been recorded in the \acrshort{cve} list.
 
 \section{Security Issues in Open Source Softwares}
-The Open Web Application Security Project (\textbf{OWASP}) is a worldwide non-profit organization
-committed to improve and raise the awareness of software security \cite{owasp_home}. The project
-members of OWASP have worked together to produce a list of the most critical web application
-security risks based on the community feedback and comprehensive data contributed by different
-organizations. The list consists of ten categories of security attacks which are considered to be
-the most dangerous and popular in recent years. In OWASP Top Ten 2017 \cite{owasp_top10}, one of the
-vulnerabilities that is closely related to this project is \textit{Using Components with Known
-Vulnerabilities}, which will be extensively discussed.
+The \acrfull{owasp} is a worldwide non-profit organization committed to improve and raise the
+awareness of software security \cite{owasp_home}. The project members of \acrshort{owasp} have
+worked together to produce a list of the most critical web application security risks based on the
+community feedback and comprehensive data contributed by different organizations. The list consists
+of ten categories of security attacks which are considered to be the most dangerous and popular in
+recent years. In \acrshort{owasp} Top Ten 2017 \cite{owasp_top10}, one of the vulnerabilities that
+is closely related to this project is \textit{Using Components with Known Vulnerabilities}, which
+will be extensively discussed.
 
 \subsection{Using Components with Known Vulnerabilities} \label{subsec:components}
 It has been indicated that a small software component could create a large error in a software
@@ -283,15 +299,15 @@ Vulnerable components can be found using methods ranging from dependency checkin
 learning. While this project is related to the former approach, the latter approach concentrates on
 finding the relationship between software errors and vulnerabilities to identify or predict
 high-risk components. Dependency checking is an approach of detecting dependencies (plugins,
-libraries, etc.) with known vulnerabilities in a software. Several open source tools including OWASP
-Dependency Check \cite{owasp_dependency}, Retire.js \cite{retirejs}, and Safety \cite{safety} are
-applications that identifies vulnerable dependencies in a software project. Cadariu et al.
-\cite{cadariu_2015} have used the OWASP Dependency Check tool to find all known vulnerabilities that
-have a unique CVE identifier in proprietary softwares written in Java. According to their study, the
-OWASP Dependency Check tool has low precision due to the high false positives rate in the large data
-sets. However, Cadariu et al. justified that the tool is still usable by taking into account that
-the checking process is automated and any security issue found is considered a valuable information
-for the users.
+libraries, etc.) with known vulnerabilities in a software. Several open source tools including
+\acrshort{owasp} Dependency Check \cite{owasp_dependency}, Retire.js \cite{retirejs}, and Safety
+\cite{safety} are applications that identifies vulnerable dependencies in a software project.
+Cadariu et al. \cite{cadariu_2015} have used the \acrshort{owasp} Dependency Check tool to find all
+known vulnerabilities that have a unique \acrshort{cve} identifier in proprietary softwares written
+in Java. According to their study, the \acrshort{owasp} Dependency Check tool has low precision due
+to the high false positives rate in the large data sets. However, Cadariu et al. \cite{cadariu_2015}
+justified that the tool is still usable by taking into account that the checking process is
+automated and any security issue found is considered a valuable information for the users.
 
 Machine learning-based approaches are also applicable to find vulnerable components in a software
 system. Briand, Basili and Hetmanski \cite{briand_1993} have developed a model with Optimised Set
@@ -315,25 +331,26 @@ errors. In future work, machine learning could be incorporated into the tool dev
 project to improve its overall effectiveness.
 
 \section{Mining Software Repositories}
-Mining Software Repositories (\textbf{MSR}) is a process of collecting and analysing data from
-repositories, which includes version control repositories, mailing list repositories, and bug
-tracking repositories. MSR applies to a wide range of fields such as business, research, and
-security \cite{poncin_2011}. The purpose of MSR is to extract practical information from rich
+\acrfull{msr} is a process of collecting and analysing data from repositories, which includes
+version control repositories, mailing list repositories, and bug tracking repositories.
+\acrshort{msr} applies to a wide range of fields such as business, research, and security
+\cite{poncin_2011}. The purpose of \acrshort{msr} is to extract practical information from rich
 metadata and discover hidden trends about a specific evolutionary characteristic \cite{kagdi_2007}.
 The information collected could be used in various development process. For example, some developers
 could gain insight by mining repositories, which may help them to enhance their software quality
-based on previous implementation evidence of other developers \cite{hassan_2008}. While MSR have
-various usages in different areas, the primary objective of this project will be focusing on finding
-the security issues in open source software repositories through MSR.
+based on previous implementation evidence of other developers \cite{hassan_2008}. While
+\acrshort{msr} have various usages in different areas, the primary objective of this project will be
+focusing on finding the security issues in open source software repositories through \acrshort{msr}.
 
 In order to identify both hidden and publicly disclosed patches, it is required to make effective
-use of MSR technique. A MSR process is normally carried out using tools or scripts made by the
-researchers themselves. Although there are many types of research in the MSR field in recent years,
-the majority of the tools or scrips used are not published publicly \cite{robles_2010}. As a result,
-it is not possible to fully replicate the previous research methods and make improvements based on
-that. Despite the undisclosed information of research methods in many papers, Shang
-\cite{shang_2009} suggested that the MSR process should be split into several stages, with each
-stage focusing on a specific topic of the problem to achieve the optimal efficiency.
+use of \acrshort{msr} technique. A \acrshort{msr} process is normally carried out using tools or
+scripts made by the researchers themselves. Although there are many types of research in the
+\acrshort{msr} field in recent years, the majority of the tools or scrips used are not published
+publicly \cite{robles_2010}. As a result, it is not possible to fully replicate the previous
+research methods and make improvements based on that. Despite the undisclosed information of
+research methods in many papers, Shang \cite{shang_2009} suggested that the \acrshort{msr} process
+should be split into several stages, with each stage focusing on a specific topic of the problem to
+achieve the optimal efficiency.
 
 \subsection{Keywords Search}
 For many complex approaches, the keywords searching process is considered to be the fundamental
@@ -408,12 +425,12 @@ static tools are not effective as they differ in the techniques used in finding 
 obtain the best result, and the result may vary across different data sets. This project differs
 from previous researches by aiming to find the security vulnerabilities through Git commit messages
 first, and then analyse the code changes in the commits. Researches have shown that
-vulnerability-fixing commits could be retrieved by extracting commit hashes from CVE references and
-gathering all commits that refer to a CVE number in its commit message \cite{jimenez_2016}, or by
-performing syntactic and semantic analysis on the commit messages \cite{sliwerski_2005}. To verify
-the validity of the commits retrieved, a screening test \cite{dashevskyi_2018} can be performed to
-investigate the code changes in a commit against several criteria and identify the correct
-vulnerability-fixing commits.
+vulnerability-fixing commits could be retrieved by extracting commit hashes from \acrshort{cve}
+references and gathering all commits that refer to a \acrshort{cve} number in its commit message
+\cite{jimenez_2016}, or by performing syntactic and semantic analysis on the commit messages
+\cite{sliwerski_2005}. To verify the validity of the commits retrieved, a screening test
+\cite{dashevskyi_2018} can be performed to investigate the code changes in a commit against several
+criteria and identify the correct vulnerability-fixing commits.
 
 This project extends prior work on Reis and Abreu's Secbench Mining Tool \cite{secbench}. The tool
 aims to find vulnerabilities patch in GitHub repositories by using specific regular expressions for
@@ -449,9 +466,9 @@ Some examples are briefly discussed in the subsections below.
 
 \subsection{Bugs Finding Model}
 Both Williams and Hollingsworth \cite{williams_2005} and Ostrand and Weyuker \cite{ostrand_2004}
-utilised MSR technique in their bugs finding model. Williams and Hollingsworth mined the code
-changes in each commit to find possible bugs, while Ostrand and Weyuker mined the most frequently
-modified files between version releases to predict the bugs-prone files.
+utilised \acrshort{msr} technique in their bugs finding model. Williams and Hollingsworth mined the
+code changes in each commit to find possible bugs, while Ostrand and Weyuker mined the most
+frequently modified files between version releases to predict the bugs-prone files.
 
 \subsection{Machine Learning Model for Automated Vulnerability Prediction}
 In comparison to the static approach used in the mining tool, machine learning technique could be
@@ -483,8 +500,8 @@ feasibility of this project.
 	\item \textbf{Mining the commits}: This task involves creating a repository mining tool that makes
 	extensive use of the pre-defined regular expressions to search for the relevant commits. It is
 	necessary to consider how closely a commit needs to match with the patterns for it to be included
-	in the result. The file format for storing the results is JSON, and reasons are justified in
-	\hyperref[subsec:file_format]{\textbf{Section 3.3.3}}.
+	in the result. The file format for storing the results is \acrshort{json}, and reasons are
+	justified in \hyperref[subsec:file_format]{\textbf{Section 3.3.3}}.
 	\item \textbf{Evaluating the mined commits}: The mining tool can be extended to include a separate
 	function that evaluates the commits mined to find the actual code commit addressing the security
 	vulnerabilities. This project will consider to automate the evaluation process to some extent
@@ -493,27 +510,27 @@ feasibility of this project.
 
 \section{Software Requirements and Scope}
 \subsection{Functional Requirements}
-\begin{table}[H]
-	\begin{center}
-		\begin{tabular}{|p{10.3cm}|c|}
-			\hline
-			\rowcolor[HTML]{D8D8D8}
-			\multicolumn{1}{|c|}{Criteria} & Importance \\ \hline
-			\textbf{Compatibility}: The mining tool should be able to run on all machines that meet the
-			system requirements. & Essential \\ \hline
-			\textbf{Completeness}: The mining tool should be able to find all relevant commits of security
-			vulnerabilities based on the regular expressions. & Essential \\ \hline
-			\textbf{Repeatable}: The results should be repeatable and reproducible. & Essential \\ \hline
-			\textbf{Scalability}: The mining tool should be able to work on different project sizes,
-			provided that the repository contains a certain amount of information. & Essential \\ \hline
-			\textbf{Automated Evaluation}: The process of classifying and evaluating the commits into
-      different vulnerabilities patch should be automated to a certain extent. & Desirable \\
-			\textbf{Robustness}: The mining tool should be able to handle all possible errors without
-			terminating the mining process. & Desirable \\ \hline
-    \end{tabular}
-    \caption{Functional requirements of the mining tool} \label{table:func_req}
-	\end{center}
-\end{table}
+\begin{longtable}{|p{10.3cm}|c|}
+  \hline \endfirsthead
+  \rowcolor[HTML]{D8D8D8}
+  \multicolumn{1}{|c|}{Criteria} & Importance \\ \hline
+  \textbf{Compatibility}: The mining tool should be able to run on all machines that meet the
+  system requirements. & Essential \\ \hline
+  \textbf{Completeness}: The mining tool should be able to find all relevant commits of security
+  vulnerabilities based on the regular expressions. & Essential \\ \hline
+  \textbf{Informative}: The statistical tool should return a complete analysis of the results. &
+  Essential \\ \hline
+  \textbf{Repeatable}: The results should be repeatable and reproducible. & Essential \\ \hline
+  \textbf{Scalability}: The mining tool should be able to work on different project sizes, provided
+  that the repository contains a certain amount of information. & Essential \\ \hline
+  \textbf{Automated Evaluation}: The process of classifying and evaluating the commits into
+  different vulnerabilities patch should be automated to a certain extent. & Desirable \\ \hline
+  \textbf{Extensibility}: New vulnerability patterns and programming languages should be easily
+  added into the tool. & Desirable \\ \hline
+  \textbf{Robustness}: The mining tool should be able to handle all possible errors without
+  terminating the mining process. & Desirable \\ \hline
+\caption{Functional requirements of the mining tool} \label{table:func_req}
+\end{longtable}
 
 \subsection{Non-functional Requirements}
 \begin{table}[H]
@@ -527,10 +544,9 @@ feasibility of this project.
       \textbf{Documentation}: Installation and user manual should be provided. & Essential \\ \hline
       \textbf{Lightweight}: The mining tool should have minimal dependencies. & Essential \\ \hline
       \textbf{Open source}: As the mining tool is built for researching open source repositories, it
-      should be open source to suit the use cases. & Essential \\
+      should be open source to suit the use cases. & Essential \\ \hline
       \textbf{Performance}: The performance of the mining tool should be optmised for different
-      project sizes. & Desirable \\
-      \hline
+      project sizes. & Desirable \\ \hline
 			\end{tabular}
 		\caption{Non-functional requirements of the mining tool} \label{table:nonfunc_req}
 	\end{center}
@@ -545,13 +561,16 @@ to define the scope of the mining tool.
 	\item \textbf{Language in Commit Messages}: The mining tool will only search for commit messages
 	that are written in English.
 	\item \textbf{Programming Language}: The source code analysis function in the mining tool will
-	only support Python 3.
-	\item \textbf{Repository type}: The mining tool will only support Git repositories. Hence, other
-	version control systems such will have to convert to Git first before using the mining tool.
+	only support C, C++, Python 3, and other programming languages that have their rule set defined
+	using the .
+	\item \textbf{Repository type}: The mining tool will only support Git repositories. Hence,
+	repositories using other version control systems such will have to convert to Git first before
+	using the mining tool.
 	\item \textbf{Vulnerability type}: It is aimed that the mining tool should be able to detect
-	CVE-identified vulnerabilities that have been fixed and recorded in the commit message
+	\acrshort{cve}-identified vulnerabilities that have been fixed and recorded in the commit message
 	\hyperref[figure:cve_vuln]{\textbf{Figure 3.1 (a)}}, and vulnerabilities that are not identified
-	in CVE but recorded in the commit messages \hyperref[figure:common_vuln]{\textbf{Figure 3.1 (b)}}.
+	in \acrshort{cve} but recorded in the commit messages \hyperref[figure:common_vuln]{\textbf{Figure
+	3.1 (b)}}.
 \end{itemize}
 
 \begin{figure}[H]
@@ -559,17 +578,18 @@ to define the scope of the mining tool.
   \begin{subfigure}{.5\textwidth}
     \centering
     \includegraphics[width=.85\linewidth]{images/cve_vuln.png}
-    \subcaption{CVE-identified vulnerability fix {\cite{cve_vuln}} \label{figure:cve_vuln}}
+    \subcaption{\acrshort{cve}-identified vulnerability fix {\cite{cve_vuln}}
+    \label{figure:cve_vuln}}
   \end{subfigure}%
   \begin{subfigure}{.5\textwidth}
     \centering
     \includegraphics[width=.85\linewidth]{images/common_vuln.png}
     \subcaption{Common vulnerability fix {\cite{common_vuln}} \label{figure:common_vuln}}
   \end{subfigure}
-  \caption[Comparison of a CVE-identified and common vulnerability-fixing commit]%
+  \caption[Comparison of a \acrshort{cve}-identified and common vulnerability-fixing commit]%
   %
-  {An example of \hyperref[figure:cve_vuln]{\textbf{(a)}} a CVE-identified vulnerability fix and
-  \hyperref[figure:common_vuln]{\textbf{(b)}} a common vulnerability fix.}
+  {An example of \hyperref[figure:cve_vuln]{\textbf{(a)}} a \acrshort{cve}-identified vulnerability
+  fix and \hyperref[figure:common_vuln]{\textbf{(b)}} a common vulnerability fix.}
   \label{figure:fig_scope}
 \end{figure}
 
@@ -589,20 +609,24 @@ be produced using Python 3.
 Since the mining tool is decided to be programmed in Python 3, a wide range of libraries could be
 integrated to enhance its functionality.
 \begin{itemize}
-	\item PyGithub is a Python library build to access the GitHub API \cite{pygithub}.
-	\item GitPython is a Python library build to interact with Git repositories using a combination of
-	python and git command implementation \cite{gitpython}.
+	\item GitPython is a Python library built to interact with Git repositories using a combination of
+  python and git command implementation \cite{gitpython}.
+  \item PyDriller is a Python library built using GitPython, \cite{pydriller_repo,
+  spadini_2018}.
+  \item Flawfinder \cite{flawfinder}.
+  \item Bandit \cite{bandit}.
+  \item graudit \cite{graudit}.
 \end{itemize}
 
 \subsection{File Format of Result} \label{subsec:file_format}
-The JavaScript Object Notation (\textbf{JSON}) \cite{json} has been chosen as the file format for
-storing the results in this project. This is because JSON is supported in Python and it does not
-require complicated operations in Python to access the data. While various alternative data
-interchange formats such as the Extensible Markup Language (\textbf{XML}) \cite{xml} has its unique
-advantages, it is important to choose a data interchange format that consumes less resource and have
-lower processing time for a large amount of data. Since it has been proved that JSON has better
-performance than XML in terms of processing time and resource utilisation \cite{nurseitov_2009}, it
-is considered that JSON would be the best option for this project.
+The \acrfull{json} \cite{json} has been chosen as the file format for storing the results in this
+project. This is because \acrshort{json} is supported in Python and it does not require complicated
+operations in Python to access the data. While various alternative data interchange formats such as
+the \acrfull{xml} \cite{xml} has its unique advantages, it is important to choose a data interchange
+format that consumes less resource and have lower processing time for a large amount of data. Since
+it has been proved that \acrshort{json} has better performance than \acrshort{xml} in terms of
+processing time and resource utilisation \cite{nurseitov_2009}, it is considered that
+\acrshort{json} would be the best option for this project.
 
 \section{Proposed Method}
 This project strongly emphasises the need for finding security issues in open source repositories by
@@ -611,9 +635,9 @@ repository through a single search, the problem could be solved using divide and
 concept of this project is to build a command-line interface program that is able to run two
 separate processes: the \textbf{mining} process and the \textbf{evaluation} process. The
 \textbf{mining} process takes a Git repository as input, searches through the commit log, and stores
-the list of commits that might potentially contain a patch in a JSON file. The \textbf{evaluation}
-process takes a JSON file as input, and check the code difference of every commit in the log file to
-identify the real patches.
+the list of commits that might potentially contain a patch in a \acrshort{json} file. The
+\textbf{evaluation} process takes a \acrshort{json} file as input, and check the code difference of
+every commit in the log file to identify the real patches.
 
 \section{Problems and Constraints} \label{sec:problems_and_constraints}
 As mentioned in \hyperref[sec:challenges]{\textbf{Section 1.3}}, the main challenges of this project
@@ -731,6 +755,8 @@ defining and measuring the quality metrics listed below:
 \begin{itemize}
 	\item \textbf{Relevance}: The measurement of the number of relevant commits retrieved when given a
   regular expression that represent the commit message pattern of a vulnerability.
+  \item \textbf{False positive}:
+  \item \textbf{False negative}
   \item \textbf{Efficiency}: The total time taken required for the tool to complete the seaching
   process.
 \end{itemize}
@@ -743,13 +769,34 @@ softwares highly vulnerable to attackers \cite{arora_2010}, and it is recommende
 official announcement from the software vendors.
 
 \chapter{Design}
+\begin{itemize}
+  \item Locally detectable
+  \item Control flow
+\end{itemize}
+
+\section{Supported Programming Languages}
+\subsection{C/C++}
+\subsection{Python}
+\subsection{Other Programming Languages}
 
 \chapter{Implementation and Testing}
+httpd repo
+---------
+89fd8d0353f6dc234bf026594c7b4f00caa8dbd8: only comment changes
+cd2b7a26c776b0754fb98426a67804fd48118708: CVE in message, comment and code changes
+
+\section{Testing}
+- self-created repo
+- not supported programming languages
+- supported programming languages
+-
 
 \chapter{Results and Discussion}
 
 \chapter{Conclusion}
 
+\printglossary
+\printglossary[type=\acronymtype]
 \printbibliography[heading=bibintoc]
 
 \end{document}

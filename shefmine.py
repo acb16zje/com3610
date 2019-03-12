@@ -330,9 +330,6 @@ def output_result(output: dict, path: str):
 
     print(f'{"Total commits found":<20}: {len(output)}')
 
-    if os.path.isdir(path):
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-
     with open(path, 'w') as outfile:
         json.dump(output, outfile, indent=2)
 
@@ -366,9 +363,9 @@ if __name__ == '__main__':
                     output_path = args.output
                 else:
                     print('shefmine.py: Output file extension has been automatically changed to .json')
-                    output_path = os.path.realpath(output_name + '.json')
+                    output_path = output_name + '.json'
             else:
-                output_path = os.path.realpath(os.path.join(output_name, 'output.json'))
+                output_path = output_name + '.json'
         else:
             output_path = 'output.json'
 

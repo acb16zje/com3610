@@ -4,6 +4,7 @@ Shefstat: A tool for analysing the results produced by Shefmine
 """
 
 import argparse
+import collections
 import json
 
 
@@ -21,77 +22,125 @@ def analyse_result(result: dict) -> None:
 
     total_commits = len(result)
 
+    vulnerabilities_list = (vuln['name']
+                            for commit_hash in result
+                            if 'vulnerabilities' in result[commit_hash]
+                            for vuln in result[commit_hash]['vulnerabilities'])
+    # print(collections.Counter(vulnerabilities_list))
+
+    for k, v in collections.Counter(vulnerabilities_list).items():
+        print(k)
+
     regexp_only = sum(1 for commit_hash in result
                       if 'vulnerabilities' in result[commit_hash]
                       and 'files_changed' not in result[commit_hash])
 
-    lines_only = sum(1 for commit_hash in result
-                     if 'vulnerabilities' not in result[commit_hash]
-                     and 'files_changed' in result[commit_hash])
+    # Vulnerable lines changed only
+    lines_only_dict = {commit_hash: v for commit_hash, v in result.items()
+                       if 'vulnerabilities' not in result[commit_hash]
+                       and 'files_changed' in result[commit_hash]}
 
-    lines_add_only = sum(1 for commit_hash in result
-                         if 'vulnerabilities' not in result[commit_hash]
-                         and 'files_changed' in result[commit_hash]
-                         and all('added' in f
-                                 and 'deleted' not in f
-                                 and 'unchanged' not in f
-                                 for f in result[commit_hash]['files_changed']))
+    lines_only = len(lines_only_dict)
 
-    lines_delete_only = sum(1 for commit_hash in result
-                            if 'vulnerabilities' not in result[commit_hash]
-                            and 'files_changed' in result[commit_hash]
-                            and all('added' not in f
-                                    and 'deleted' in f
-                                    and 'unchanged' not in f
-                                    for f in result[commit_hash]['files_changed']))
-
-    lines_unchange_only = sum(1 for commit_hash in result
-                              if 'vulnerabilities' not in result[commit_hash]
-                              and 'files_changed' in result[commit_hash]
-                              and all('added' not in f
-                                      and 'deleted' not in f
-                                      and 'unchanged' in f
-                                      for f in result[commit_hash]['files_changed']))
-
-    # RegExp match and vulnerable lines changed
-    both = sum(1 for commit_hash in result
-               if 'vulnerabilities' in result[commit_hash]
-               and 'files_changed' in result[commit_hash])
-
-    both_add_only = sum(1 for commit_hash in result
-                        if 'vulnerabilities' in result[commit_hash]
-                        and 'files_changed' in result[commit_hash]
-                        and all('added' in f
+    lines_add_only = sum(1 for commit_hash in lines_only_dict
+                         if all('added' in f
                                 and 'deleted' not in f
                                 and 'unchanged' not in f
-                                for f in result[commit_hash]['files_changed']))
+                                for f in lines_only_dict[commit_hash]['files_changed']))
 
-    both_delete_only = sum(1 for commit_hash in result
-                           if 'vulnerabilities' in result[commit_hash]
-                           and 'files_changed' in result[commit_hash]
-                           and all('added' not in f
+    lines_delete_only = sum(1 for commit_hash in lines_only_dict
+                            if all('added' not in f
                                    and 'deleted' in f
                                    and 'unchanged' not in f
-                                   for f in result[commit_hash]['files_changed']))
+                                   for f in lines_only_dict[commit_hash]['files_changed']))
 
-    both_unchange_only = sum(1 for commit_hash in result
-                             if 'vulnerabilities' in result[commit_hash]
-                             and 'files_changed' in result[commit_hash]
-                             and all('added' not in f
+    lines_unchange_only = sum(1 for commit_hash in lines_only_dict
+                              if all('added' not in f
                                      and 'deleted' not in f
                                      and 'unchanged' in f
-                                     for f in result[commit_hash]['files_changed']))
+                                     for f in lines_only_dict[commit_hash]['files_changed']))
+
+    lines_add_and_delete = sum(1 for commit_hash in lines_only_dict
+                               if all('added' in f
+                                      and 'deleted' in f
+                                      and 'unchanged' not in f
+                                      for f in lines_only_dict[commit_hash]['files_changed']))
+
+    lines_add_and_unchange = sum(1 for commit_hash in lines_only_dict
+                                 if all('added' in f
+                                        and 'deleted' not in f
+                                        and 'unchanged' in f
+                                        for f in lines_only_dict[commit_hash]['files_changed']))
+
+    lines_delete_and_unchange = sum(1 for commit_hash in lines_only_dict
+                                    if all('added' not in f
+                                           and 'deleted' in f
+                                           and 'unchanged' in f
+                                           for f in lines_only_dict[commit_hash]['files_changed']))
+
+    # RegExp match and vulnerable lines changed
+    both_dict = {commit_hash: v for commit_hash, v in result.items()
+                 if 'vulnerabilities' in result[commit_hash]
+                 and 'files_changed' in result[commit_hash]}
+
+    both = len(both_dict)
+
+    both_add_only = sum(1 for commit_hash in both_dict
+                        if all('added' in f
+                               and 'deleted' not in f
+                               and 'unchanged' not in f
+                               for f in both_dict[commit_hash]['files_changed']))
+
+    both_delete_only = sum(1 for commit_hash in both_dict
+                           if all('added' not in f
+                                  and 'deleted' in f
+                                  and 'unchanged' not in f
+                                  for f in both_dict[commit_hash]['files_changed']))
+
+    both_unchange_only = sum(1 for commit_hash in both_dict
+                             if all('added' not in f
+                                    and 'deleted' not in f
+                                    and 'unchanged' in f
+                                    for f in both_dict[commit_hash]['files_changed']))
+
+    both_add_and_delete = sum(1 for commit_hash in both_dict
+                              if all('added' in f
+                                     and 'deleted' in f
+                                     and 'unchanged' not in f
+                                     for f in both_dict[commit_hash]['files_changed']))
+
+    both_add_and_unchange = sum(1 for commit_hash in both_dict
+                                if all('added' in f
+                                       and 'deleted' not in f
+                                       and 'unchanged' in f
+                                       for f in both_dict[commit_hash]['files_changed']))
+
+    both_delete_and_unchange = sum(1 for commit_hash in both_dict
+                                   if all('added' not in f
+                                          and 'deleted' in f
+                                          and 'unchanged' in f
+                                          for f in both_dict[commit_hash]['files_changed']))
 
     print(f'{"Total commits found":<53}: {total_commits}')
     print(f'{"":>2}{"├── ONLY Vulnerability RegExp match":<51}: {regexp_only}')
+    print(f'{"":>2}│')
     print(f'{"":>2}{"├── ONLY Vulnerable lines changed":<51}: {lines_only}')
     print(f'{"":>2}│{"":>5}{"├── ONLY Added lines":<50}: {lines_add_only}')
     print(f'{"":>2}│{"":>5}{"├── ONLY Deleted lines":<50}: {lines_delete_only}')
-    print(f'{"":>2}│{"":>5}{"└── ONLY Unchanged lines":<50}: {lines_unchange_only}')
+    print(f'{"":>2}│{"":>5}{"├── ONLY Unchanged lines":<50}: {lines_unchange_only}')
+    print(f'{"":>2}│{"":>5}│')
+    print(f'{"":>2}│{"":>5}{"├── ONLY Added AND Delete lines":<50}: {lines_add_and_delete}')
+    print(f'{"":>2}│{"":>5}{"├── ONLY Added AND Unchanged lines":<50}: {lines_add_and_unchange}')
+    print(f'{"":>2}│{"":>5}{"└── ONLY Delete AND Unchanged lines":<50}: {lines_delete_and_unchange}')
+    print(f'{"":>2}│')
     print(f'{"":>2}{"└── BOTH RegExp match and vulnerable lines changed":<51}: {both}')
     print(f'{"":>8}{"├── ONLY Added lines":<50}: {both_add_only}')
     print(f'{"":>8}{"├── ONLY Deleted lines":<50}: {both_delete_only}')
-    print(f'{"":>8}{"└── ONLY Unchanged lines":<50}: {both_unchange_only}')
+    print(f'{"":>8}{"├── ONLY Unchanged lines":<50}: {both_unchange_only}')
+    print(f'{"":>8}│')
+    print(f'{"":>8}{"├── ONLY Added AND Delete lines":<50}: {both_add_and_delete}')
+    print(f'{"":>8}{"├── ONLY Added AND Unchanged lines":<50}: {both_add_and_unchange}')
+    print(f'{"":>8}{"└── ONLY Delete AND Unchanged lines":<50}: {both_delete_and_unchange}')
 
 
 if __name__ == '__main__':
