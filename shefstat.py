@@ -22,15 +22,6 @@ def analyse_result(result: dict) -> None:
 
     total_commits = len(result)
 
-    vulnerabilities_list = (vuln['name']
-                            for commit_hash in result
-                            if 'vulnerabilities' in result[commit_hash]
-                            for vuln in result[commit_hash]['vulnerabilities'])
-    # print(collections.Counter(vulnerabilities_list))
-
-    for k, v in collections.Counter(vulnerabilities_list).items():
-        print(k)
-
     regexp_only = sum(1 for commit_hash in result
                       if 'vulnerabilities' in result[commit_hash]
                       and 'files_changed' not in result[commit_hash])
@@ -122,6 +113,15 @@ def analyse_result(result: dict) -> None:
                                           for f in both_dict[commit_hash]['files_changed']))
 
     print(f'{"Total commits found":<53}: {total_commits}')
+
+    vulnerabilities_list = (vuln['name'] for commit_hash in result
+                            if 'vulnerabilities' in result[commit_hash]
+                            for vuln in result[commit_hash]['vulnerabilities'])
+
+    for k, v in collections.Counter(vulnerabilities_list).most_common():
+        print(f'{"":>2}├── {k:<51}: {v}')
+
+    print(f'{"":>2}│')
     print(f'{"":>2}{"├── ONLY Vulnerability RegExp match":<51}: {regexp_only}')
     print(f'{"":>2}│')
     print(f'{"":>2}{"├── ONLY Vulnerable lines changed":<51}: {lines_only}')
