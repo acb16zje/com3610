@@ -99,8 +99,9 @@ def process_commit_message(message: str) -> str:
     """
 
     # refer to https://github.com/vmware/photon for more patterm to replace
-    return re.sub(r'(git-svn-id|change-id).*|(acked|cc|reported|reviewed|signed([\s\-_]off)?|submitted|tested)[\s\-_]*(by|on)?:?.*',
-                  '', message, flags=re.I).strip()
+    return re.sub(
+        r'(git-svn-id|change-id).*|(acked|cc|reported|reviewed|signed([\s\-_]off)?|submitted|tested)[\s\-_]*(by|on)?:?.*',
+        '', message, flags=re.I).strip()
 
 
 def get_source_code_dict(gitpython_repo: git.Repo, commit_hash: str, file: str, b_source: str) -> dict:
@@ -164,12 +165,13 @@ def process_diff(diff: dict, file_extension: str) -> dict:
             # Check if any vulnerable lines of code are added or deleted
             for key, value in diff.items():
                 for num, line in value:
-                    vulnerability = []
+                    vulnerability = {}
 
-                    for type, rule_set in language.rule_set.items():
-                        for rule in rule_set:
-                            if re.compile(fr'\b{rule}\b', re.S).search(line):
-                                vulnerability.append(rule)
+                    # Use the regular expressions of the ruleset
+                    for rule in language.rule_set:
+                        if re.compile(fr'\b{rule}\b', re.S).search(line) and \
+                                (rule.startswith('import') or not line.strip().startswith('import')):
+                            vulnerability[rule] = language.rule_set[rule]
 
                     if vulnerability:
                         partial_output = append_vulnerability(partial_output, key, num, line, vulnerability)
@@ -207,13 +209,8 @@ def run_flawfinder(diff: dict, source_code_dict: dict) -> dict:
                 b_hitlist = filtered_hitlist
 
                 for line_num, line in (b_hitlist & set(diff['added'])):
-                    partial_output = append_vulnerability(
-                        partial_output,
-                        'added',
-                        line_num,
-                        line,
-                        next(hit.name for hit in flawfinder.hitlist if hit.line == line_num)
-                    )
+                    name, level = next((hit.name, hit.level) for hit in flawfinder.hitlist if hit.line == line_num)
+                    partial_output = append_vulnerability(partial_output, 'added', line_num, line, name, level)
             else:
                 # a_hitlist contains deleted hits and possible unchanged hits
                 a_hitlist = filtered_hitlist
@@ -226,13 +223,9 @@ def run_flawfinder(diff: dict, source_code_dict: dict) -> dict:
                 # Deleted and unchanged
                 for category, hits in hits_dict.items():
                     for line_num, line in hits:
-                        partial_output = append_vulnerability(
-                            partial_output,
-                            category,
-                            line_num,
-                            line,
-                            next(hit.name for hit in flawfinder.hitlist if hit.line == line_num)
-                        )
+                        name, level = next((hit.name, hit.level) for hit in flawfinder.hitlist if hit.line == line_num)
+                        partial_output = append_vulnerability(partial_output, 'added', line_num, line, name, level)
+
     return partial_output
 
 
@@ -271,7 +264,9 @@ def run_bandit(diff: dict, source_code_dict: dict):
 
                         if added_vulnerable_line:
                             partial_output = append_vulnerability(
-                                partial_output, 'added', issue.lineno, added_vulnerable_line, issue.text)
+                                partial_output, 'added', issue.lineno, added_vulnerable_line, issue.text,
+                                issue.severity, issue.confidence
+                            )
                     except StopIteration:
                         continue
             else:
@@ -279,16 +274,19 @@ def run_bandit(diff: dict, source_code_dict: dict):
                     # Skip the loop if the line is not in the deleted list
                     try:
                         deleted_vulnerable_line = next(line for num, line in diff['deleted'] if num == issue.lineno)
-
                         # If the issue if not in diff['deleted'], then it's an unchanged issue
                         if deleted_vulnerable_line:
                             partial_output = append_vulnerability(
-                                partial_output, 'deleted', issue.lineno, deleted_vulnerable_line, issue.text)
+                                partial_output, 'deleted', issue.lineno, deleted_vulnerable_line, issue.text,
+                                issue.severity, issue.confidence
+                            )
                         else:
                             unchanged_vulnerable_line = source.splitlines()[issue.lineno - 1]
 
                             partial_output = append_vulnerability(
-                                partial_output, 'unchanged', issue.lineno, unchanged_vulnerable_line, issue.text)
+                                partial_output, 'unchanged', issue.lineno, unchanged_vulnerable_line, issue.text,
+                                issue.severity, issue.confidence
+                            )
                     except StopIteration:
                         continue
 
@@ -296,7 +294,8 @@ def run_bandit(diff: dict, source_code_dict: dict):
 
 
 def append_vulnerability(partial_output: dict, key: str, line_num: int,
-                         line: str, vulnerability: Union[str, list]) -> dict:
+                         line: str, vulnerability: Union[str, dict],
+                         severity='None', confidence='None') -> dict:
     """
     Appended the vulnerability found to the partial output
 
@@ -305,17 +304,29 @@ def append_vulnerability(partial_output: dict, key: str, line_num: int,
     :param line_num: The line number of the vulnerability
     :param line: The actual code of the vulnerability
     :param vulnerability: The vulnerability description
+    :param severity: The severity of the vulnerability
+    :param confidence: The confidence level for the vulnerability
     :return: The partial output with the vulnerability appended
     """
 
     if key not in partial_output:
         partial_output[key] = []
 
-    partial_output[key].append({
-        'line_num': line_num,
-        'line': line.strip(),
-        'vulnerability': vulnerability
-    })
+    # Severity and Confidence is None for Java language (might contains multiple vulnerabilities in one line)
+    if severity == 'None' and confidence == 'None':
+        partial_output[key].append({
+            'line_num': line_num,
+            'line': line.strip(),
+            'vulnerability': vulnerability
+        })
+    else:
+        partial_output[key].append({
+            'line_num': line_num,
+            'line': line.strip(),
+            'vulnerability': vulnerability,
+            'severity': severity,
+            'confidence': confidence,
+        })
 
     return partial_output
 

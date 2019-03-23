@@ -4,7 +4,6 @@ Shefstat: A tool for analysing the results produced by Shefmine
 """
 
 import argparse
-import collections
 import json
 
 
@@ -111,6 +110,17 @@ def analyse_result(result: dict) -> None:
                                           and 'deleted' in f
                                           and 'unchanged' in f
                                           for f in both_dict[commit_hash]['files_changed']))
+
+    # import random
+    # r = random.Random(3243)
+    # test = [commit_hash for commit_hash in lines_only_dict
+    #                      if all('added' in f
+    #                             and 'deleted' not in f
+    #                             and 'unchanged' not in f
+    #                             for f in lines_only_dict[commit_hash]['files_changed'])]
+
+    # for x in r.sample(test, 4):
+    #     print(x)
 
     print(f'{"Total commits found":<53}: {total_commits}')
 
