@@ -6,6 +6,7 @@ Shefmine: A tool for finding vulnerabilities in Git repositories
 import argparse
 import bandit
 import cchardet
+import enum
 import flawfinder
 import git
 import json
@@ -14,6 +15,7 @@ import languages.python as py_lang
 import languages.language as lang
 import os
 import pydriller as pd
+import pyt
 import re
 import tempfile
 import vulnerability as vuln
@@ -22,17 +24,47 @@ from tqdm import tqdm
 from typing import Union
 
 
-def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
+class Level(enum.Enum):
+    """
+    A class to represent the confidence and severity level of vulnerabilities
+    """
+
+    NONE = 0
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
+
+    def __str__(self):
+        return self.name
+
+    @staticmethod
+    def from_string(s):
+        """
+        Convert the argparse string into Level member
+
+        :param s: The argparse string
+        :return: The corresponding Level member
+        """
+        try:
+            return Level[s]
+        except KeyError:
+            raise ValueError()
+
+
+def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining, severity: Level, confidence: Level):
     """
     Iterate through all commits of the given repository from the given revision (default: active branch)
 
     :param repo: The Git repository
     :param repo_mining: The RepositoryMining object
+    :param severity: The minimum severity level of vulnerabilities
+    :param confidence: The minimum confidence level of vulnerabilities
     """
 
     output = {}
     gitpython_repo = git.Repo(repo.path)
 
+    # Get the commit count for tqdm
     if repo_mining._single:
         commit_count = 1
     elif repo_mining._only_in_branch:
@@ -67,14 +99,15 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining):
             # Run Flawfinder for C/C++ files, and 'grep'-like analysis for other languages files
             if file_extension.lower() in c_lang.c_extensions:
                 source_code_dict = get_source_code_dict(gitpython_repo, commit.hash, file, modification.source_code)
-                partial_output = run_flawfinder(repo.parse_diff(modification.diff), source_code_dict)
+                partial_output = run_flawfinder(repo.parse_diff(modification.diff), source_code_dict, severity,
+                                                confidence)
 
             elif file_extension.lower() in py_lang.py_extensions:
                 source_code_dict = get_source_code_dict(gitpython_repo, commit.hash, file, modification.source_code)
-                partial_output = run_bandit(repo.parse_diff(modification.diff), source_code_dict)
+                partial_output = run_bandit(repo.parse_diff(modification.diff), source_code_dict, severity, confidence)
 
             else:
-                partial_output = process_diff(repo.parse_diff(modification.diff), file_extension)
+                partial_output = process_diff(repo.parse_diff(modification.diff), file_extension, severity, confidence)
 
             # Only add the file if it has useful code changes (comments already removed)
             if partial_output:
@@ -144,12 +177,14 @@ def get_source_code_dict(gitpython_repo: git.Repo, commit_hash: str, file: str, 
     return {'new': b_source, 'old': a_source}
 
 
-def process_diff(diff: dict, file_extension: str) -> dict:
+def process_diff(diff: dict, file_extension: str, severity: Level, confidence: Level) -> dict:
     """
     Given the diff of a file, check if any vulnerable lines of code are added or deleted
 
     :param diff: The diff dictionary containing added and deleted lines of the file
     :param file_extension: The file extension of the file
+    :param severity: The minimum severity level of vulnerabilities
+    :param confidence: The minimum confidence level of vulnerabilities
     :return: A partial output containing the vulnerable lines of code added or deleted
     """
 
@@ -169,9 +204,14 @@ def process_diff(diff: dict, file_extension: str) -> dict:
 
                     # Use the regular expressions of the ruleset
                     for rule in language.rule_set:
-                        if re.compile(fr'\b{rule}\b', re.S).search(line) and \
-                                (rule.startswith('import') or not line.strip().startswith('import')):
-                            vulnerability[rule] = language.rule_set[rule]
+                        if re.compile(fr'\b{rule}\b', re.S).search(line) \
+                                and (rule.startswith('import') or not line.strip().startswith('import')):
+
+                            vuln_severity_level = Level[language.rule_set[rule]['severity']]
+                            vuln_confidence_level = Level[language.rule_set[rule]['confidence']]
+
+                            if include_vulnerability(severity, confidence, vuln_severity_level, vuln_confidence_level):
+                                vulnerability[rule] = language.rule_set[rule]
 
                     if vulnerability:
                         partial_output = append_vulnerability(partial_output, key, num, line, vulnerability)
@@ -179,13 +219,15 @@ def process_diff(diff: dict, file_extension: str) -> dict:
             return partial_output
 
 
-def run_flawfinder(diff: dict, source_code_dict: dict) -> dict:
+def run_flawfinder(diff: dict, source_code_dict: dict, severity: Level, confidence: Level) -> dict:
     """
     Given the diff of a file in C/C++ extension, check if any vulnerable lines of code
     are added or delete using flawfinder (https://github.com/david-a-wheeler/flawfinder/)
 
     :param diff: The diff dictionary containing added and deleted lines of the file
     :param source_code_dict: The dictionary containing old and new source code
+    :param severity: The minimum severity level of vulnerabilities
+    :param confidence: The minimum confidence level of vulnerabilities
     :return: A partial output containing the vulnerable lines of code added or deleted
     """
 
@@ -210,7 +252,17 @@ def run_flawfinder(diff: dict, source_code_dict: dict) -> dict:
 
                 for line_num, line in (b_hitlist & set(diff['added'])):
                     name, level = next((hit.name, hit.level) for hit in flawfinder.hitlist if hit.line == line_num)
-                    partial_output = append_vulnerability(partial_output, 'added', line_num, line, name, level)
+
+                    if level < 3:
+                        vuln_severity_level = Level.LOW
+                    elif level > 3:
+                        vuln_severity_level = Level.HIGH
+                    else:
+                        vuln_severity_level = Level.MEDIUM
+
+                    if include_vulnerability(severity, confidence, vuln_severity_level, Level.NONE):
+                        partial_output = append_vulnerability(partial_output, 'added', line_num, line, name,
+                                                              severity=vuln_severity_level)
             else:
                 # a_hitlist contains deleted hits and possible unchanged hits
                 a_hitlist = filtered_hitlist
@@ -224,18 +276,30 @@ def run_flawfinder(diff: dict, source_code_dict: dict) -> dict:
                 for category, hits in hits_dict.items():
                     for line_num, line in hits:
                         name, level = next((hit.name, hit.level) for hit in flawfinder.hitlist if hit.line == line_num)
-                        partial_output = append_vulnerability(partial_output, 'added', line_num, line, name, level)
+
+                        if level < 3:
+                            vuln_severity_level = Level.LOW
+                        elif level > 3:
+                            vuln_severity_level = Level.HIGH
+                        else:
+                            vuln_severity_level = Level.MEDIUM
+
+                        if include_vulnerability(severity, confidence, vuln_severity_level, Level.NONE):
+                            partial_output = append_vulnerability(partial_output, 'added', line_num, line, name,
+                                                                  severity=vuln_severity_level)
 
     return partial_output
 
 
-def run_bandit(diff: dict, source_code_dict: dict):
+def run_bandit(diff: dict, source_code_dict: dict, severity: Level, confidence: Level):
     """
     Given the diff of a file in Python extension, check if any vulnerable lines of code
     are added or delete using bandit (https://github.com/PyCQA/bandit)
 
     :param diff: The diff dictionary containing added and deleted lines of the file
     :param source_code_dict: The dictionary containing old and new source code
+    :param severity: The minimum severity level of vulnerabilities
+    :param confidence: The minimum confidence level of vulnerabilities
     :return: A partial output containing the vulnerable lines of code added or deleted
     """
 
@@ -263,10 +327,14 @@ def run_bandit(diff: dict, source_code_dict: dict):
                         added_vulnerable_line = next(line for num, line in diff['added'] if num == issue.lineno)
 
                         if added_vulnerable_line:
-                            partial_output = append_vulnerability(
-                                partial_output, 'added', issue.lineno, added_vulnerable_line, issue.text,
-                                issue.severity, issue.confidence
-                            )
+                            vuln_severity_level = Level[issue.severity]
+                            vuln_confidence_level = Level[issue.confidence]
+
+                            if include_vulnerability(severity, confidence, vuln_severity_level, vuln_confidence_level):
+                                partial_output = append_vulnerability(
+                                    partial_output, 'added', issue.lineno, added_vulnerable_line, issue.text,
+                                    severity=issue.severity, confidence=issue.confidence
+                                )
                     except StopIteration:
                         continue
             else:
@@ -274,58 +342,76 @@ def run_bandit(diff: dict, source_code_dict: dict):
                     # Skip the loop if the line is not in the deleted list
                     try:
                         deleted_vulnerable_line = next(line for num, line in diff['deleted'] if num == issue.lineno)
+                        vuln_severity_level = Level[issue.severity]
+                        vuln_confidence_level = Level[issue.confidence]
+
                         # If the issue if not in diff['deleted'], then it's an unchanged issue
                         if deleted_vulnerable_line:
-                            partial_output = append_vulnerability(
-                                partial_output, 'deleted', issue.lineno, deleted_vulnerable_line, issue.text,
-                                issue.severity, issue.confidence
-                            )
+                            if include_vulnerability(severity, confidence, vuln_severity_level, vuln_confidence_level):
+                                partial_output = append_vulnerability(
+                                    partial_output, 'deleted', issue.lineno, deleted_vulnerable_line, issue.text,
+                                    severity=issue.severity, confidence=issue.confidence
+                                )
                         else:
                             unchanged_vulnerable_line = source.splitlines()[issue.lineno - 1]
 
-                            partial_output = append_vulnerability(
-                                partial_output, 'unchanged', issue.lineno, unchanged_vulnerable_line, issue.text,
-                                issue.severity, issue.confidence
-                            )
+                            if include_vulnerability(severity, confidence, vuln_severity_level, vuln_confidence_level):
+                                partial_output = append_vulnerability(
+                                    partial_output, 'unchanged', issue.lineno, unchanged_vulnerable_line, issue.text,
+                                    severity=issue.severity, confidence=issue.confidence
+                                )
                     except StopIteration:
                         continue
 
     return partial_output
 
 
-def append_vulnerability(partial_output: dict, key: str, line_num: int,
-                         line: str, vulnerability: Union[str, dict],
-                         severity='None', confidence='None') -> dict:
+def include_vulnerability(severity: Level, confidence: Level, vuln_severity: Level, vuln_confidence: Level) -> bool:
     """
-    Appended the vulnerability found to the partial output
+    Check whether the vulnerability found should be included in the output
+
+    :param severity: The minimum severity level of vulnerabilities
+    :param confidence: The minimum confidence level of vulnerabilities
+    :param vuln_severity: The severity level of the vulnerability
+    :param vuln_confidence: The confidence level of the vulnerability
+    :return: True if the severity and confidence level of the issue is higher than the minimum specified
+    """
+
+    if vuln_confidence == Level.NONE:
+        return vuln_severity.value >= severity.value
+    else:
+        return vuln_severity.value >= severity.value and vuln_confidence.value >= confidence.value
+
+
+def append_vulnerability(partial_output: dict, key: str, line_num: int,
+                         line: str, vulnerability: Union[str, dict], **kwargs) -> dict:
+    """
+    Append the vulnerability found to the partial output
 
     :param partial_output: The partial output dictionary
     :param key: The key (added, deleted, or unchanged)
     :param line_num: The line number of the vulnerability
     :param line: The actual code of the vulnerability
     :param vulnerability: The vulnerability description
-    :param severity: The severity of the vulnerability
-    :param confidence: The confidence level for the vulnerability
     :return: The partial output with the vulnerability appended
     """
 
     if key not in partial_output:
         partial_output[key] = []
 
-    # Severity and Confidence is None for Java language (might contains multiple vulnerabilities in one line)
-    if severity == 'None' and confidence == 'None':
+    if 'severity' in kwargs and 'confidence' in kwargs:
         partial_output[key].append({
             'line_num': line_num,
             'line': line.strip(),
-            'vulnerability': vulnerability
+            'vulnerability': vulnerability,
+            'severity': kwargs['severity'],
+            'confidence': kwargs['confidence'],
         })
     else:
         partial_output[key].append({
             'line_num': line_num,
             'line': line.strip(),
-            'vulnerability': vulnerability,
-            'severity': severity,
-            'confidence': confidence,
+            'vulnerability': vulnerability
         })
 
     return partial_output
@@ -354,6 +440,12 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--single', metavar='HASH', type=str, help='Only analyse the provided commit (full hash)')
     parser.add_argument('-o', '--output', type=str, help='Write the result to the specified file name and path '
                                                          '(Default: as output.json in current working directory)')
+    parser.add_argument('--severity', type=Level.from_string, choices=list(Level), default=Level.NONE,
+                        help='Only include vulnerabilities of given severity level or higher '
+                             '(Default: NONE, include all)')
+    parser.add_argument('--confidence', type=Level.from_string, choices=list(Level), default=Level.NONE,
+                        help='Only include vulnerabilities of given confidence level or higher '
+                             '(Default: NONE, include all)')
     parser.add_argument('--no-merge', action='store_true', help='Do not include merge commits')
     parser.add_argument('--reverse', action='store_false', help='Analyse the commits from oldest to newest')
     args = parser.parse_args()
@@ -380,7 +472,7 @@ if __name__ == '__main__':
         else:
             output_path = 'output.json'
 
-        output_result(search_repository(repo, repo_mining), output_path)
+        output_result(search_repository(repo, repo_mining, args.severity, args.confidence), output_path)
     except git.NoSuchPathError:
         print(f"shefmine.py: '{args.repo}' is not a Git repository")
     except git.GitCommandError:

@@ -4,7 +4,10 @@ Shefstat: A tool for analysing the results produced by Shefmine
 """
 
 import argparse
+import collections
 import json
+
+from typing import Union
 
 
 def analyse_result(result: dict) -> None:
@@ -123,6 +126,36 @@ def analyse_result(result: dict) -> None:
     #     print(x)
 
     print(f'{"Total commits found":<53}: {total_commits}')
+    print(f'{"":>2}│')
+
+    low = sum(1 for _ in severity_confidence_stats("LOW", result))
+    low_low = sum(1 for _ in severity_confidence_stats("LOW", result, confidence_level="LOW"))
+    low_medium = sum(1 for _ in severity_confidence_stats("LOW", result, confidence_level="MEDIUM"))
+    low_high = sum(1 for _ in severity_confidence_stats("LOW", result, confidence_level="HIGH"))
+
+    medium = sum(1 for _ in severity_confidence_stats("MEDIUM", result))
+    medium_low = sum(1 for _ in severity_confidence_stats("MEDIUM", result, confidence_level="LOW"))
+    medium_medium = sum(1 for _ in severity_confidence_stats("MEDIUM", result, confidence_level="MEDIUM"))
+    medium_high = sum(1 for _ in severity_confidence_stats("MEDIUM", result, confidence_level="HIGH"))
+
+    high = sum(1 for _ in severity_confidence_stats("HIGH", result))
+    high_low = sum(1 for _ in severity_confidence_stats("HIGH", result, confidence_level="LOW"))
+    high_medium = sum(1 for _ in severity_confidence_stats("HIGH", result, confidence_level="MEDIUM"))
+    high_high = sum(1 for _ in severity_confidence_stats("HIGH", result, confidence_level="HIGH"))
+
+    print(f'{"":>2}{"├── Severity: LOW":<51}: {low}')
+    print(f'{"":>2}│{"":>5}{"├── Confidence: LOW":<49}: {low_low}')
+    print(f'{"":>2}│{"":>5}{"├── Confidence: MEDIUM":<49}: {low_medium}')
+    print(f'{"":>2}│{"":>5}{"└── Confidence: HIGH":<49}: {low_high}')
+    print(f'{"":>2}{"├── Severity: MEDIUM":<51}: {medium}')
+    print(f'{"":>2}│{"":>5}{"├── Confidence: LOW":<49}: {medium_low}')
+    print(f'{"":>2}│{"":>5}{"├── Confidence: MEDIUM":<49}: {medium_medium}')
+    print(f'{"":>2}│{"":>5}{"└── Confidence: HIGH":<49}: {medium_high}')
+    print(f'{"":>2}{"├── Severity: HIGH":<51}: {high}')
+    print(f'{"":>2}│{"":>5}{"├── Confidence: LOW":<49}: {high_low}')
+    print(f'{"":>2}│{"":>5}{"├── Confidence: MEDIUM":<49}: {high_medium}')
+    print(f'{"":>2}│{"":>5}{"└── Confidence: HIGH":<49}: {high_high}')
+    print(f'{"":>2}│')
 
     vulnerabilities_list = (vuln['name'] for commit_hash in result
                             if 'vulnerabilities' in result[commit_hash]
@@ -151,6 +184,43 @@ def analyse_result(result: dict) -> None:
     print(f'{"":>8}{"├── ONLY Added AND Delete lines":<50}: {both_add_and_delete}')
     print(f'{"":>8}{"├── ONLY Added AND Unchanged lines":<50}: {both_add_and_unchange}')
     print(f'{"":>8}{"└── ONLY Delete AND Unchanged lines":<50}: {both_delete_and_unchange}')
+
+
+def severity_confidence_stats(severity_level: str, result: Union[list, dict], **kwargs):
+    """
+    Calculate the number of vulnerabilities with given severity and confidence level
+
+    :param severity_level: Severity level
+    :param result: Result dictionary
+    :param kwargs: Confidence level
+    :return:
+    """
+
+    if hasattr(result, 'items'):
+        for k, v in result.items():
+            if k == 'severity' and v == severity_level:
+                if 'confidence_level' in kwargs:
+                    if result['confidence'] == kwargs['confidence_level']:
+                        yield 1
+                else:
+                    yield 1
+            if isinstance(v, dict):
+                if 'confidence_level' in kwargs:
+                    for result in severity_confidence_stats(severity_level, v,
+                                                            confidence_level=kwargs['confidence_level']):
+                        yield result
+                else:
+                    for result in severity_confidence_stats(severity_level, v):
+                        yield result
+            elif isinstance(v, list):
+                for d in v:
+                    if 'confidence_level' in kwargs:
+                        for result in severity_confidence_stats(severity_level, d,
+                                                                confidence_level=kwargs['confidence_level']):
+                            yield result
+                    else:
+                        for result in severity_confidence_stats(severity_level, d):
+                            yield result
 
 
 if __name__ == '__main__':
