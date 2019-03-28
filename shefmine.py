@@ -15,7 +15,6 @@ import languages.python as py_lang
 import languages.language as lang
 import os
 import pydriller as pd
-import pyt
 import re
 import tempfile
 import vulnerability as vuln
@@ -260,9 +259,9 @@ def run_flawfinder(diff: dict, source_code_dict: dict, severity: Level, confiden
                     else:
                         vuln_severity_level = Level.MEDIUM
 
-                    if include_vulnerability(severity, confidence, vuln_severity_level, Level.NONE):
+                    if include_vulnerability(severity, confidence, vuln_severity_level):
                         partial_output = append_vulnerability(partial_output, 'added', line_num, line, name,
-                                                              severity=vuln_severity_level)
+                                                              severity=vuln_severity_level.__str__())
             else:
                 # a_hitlist contains deleted hits and possible unchanged hits
                 a_hitlist = filtered_hitlist
@@ -284,9 +283,9 @@ def run_flawfinder(diff: dict, source_code_dict: dict, severity: Level, confiden
                         else:
                             vuln_severity_level = Level.MEDIUM
 
-                        if include_vulnerability(severity, confidence, vuln_severity_level, Level.NONE):
+                        if include_vulnerability(severity, confidence, vuln_severity_level):
                             partial_output = append_vulnerability(partial_output, 'added', line_num, line, name,
-                                                                  severity=vuln_severity_level)
+                                                                  severity=vuln_severity_level.__str__())
 
     return partial_output
 
@@ -366,7 +365,7 @@ def run_bandit(diff: dict, source_code_dict: dict, severity: Level, confidence: 
     return partial_output
 
 
-def include_vulnerability(severity: Level, confidence: Level, vuln_severity: Level, vuln_confidence: Level) -> bool:
+def include_vulnerability(severity: Level, confidence: Level, vuln_severity: Level, vuln_confidence=Level.NONE) -> bool:
     """
     Check whether the vulnerability found should be included in the output
 
@@ -377,10 +376,7 @@ def include_vulnerability(severity: Level, confidence: Level, vuln_severity: Lev
     :return: True if the severity and confidence level of the issue is higher than the minimum specified
     """
 
-    if vuln_confidence == Level.NONE:
-        return vuln_severity.value >= severity.value
-    else:
-        return vuln_severity.value >= severity.value and vuln_confidence.value >= confidence.value
+    return vuln_severity.value >= severity.value and vuln_confidence.value >= confidence.value
 
 
 def append_vulnerability(partial_output: dict, key: str, line_num: int,
@@ -407,11 +403,14 @@ def append_vulnerability(partial_output: dict, key: str, line_num: int,
             'severity': kwargs['severity'],
             'confidence': kwargs['confidence'],
         })
-    else:
+    elif 'severity' in kwargs:
+        # Flawfinder has no confidence level
         partial_output[key].append({
             'line_num': line_num,
             'line': line.strip(),
-            'vulnerability': vulnerability
+            'vulnerability': vulnerability,
+            'severity': kwargs['severity'],
+            'confidence': 'NONE'
         })
 
     return partial_output
@@ -451,6 +450,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     try:
+        # Although traverse_commits() will clone automatically, but tqdm
+        # requires total commit count
+        self = pd.RepositoryMining(args.repo)
+        if self._isremote(args.repo):
+            tmp_folder = tempfile.TemporaryDirectory()
+            args.repo = self._clone_remote_repos(tmp_folder.name, args.repo)
+
         repo = pd.GitRepository(args.repo)
         repo_mining = pd.RepositoryMining(args.repo,
                                           single=args.single,
