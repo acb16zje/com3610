@@ -16,6 +16,7 @@ import languages.language as lang
 import os
 import pydriller as pd
 import re
+import subprocess
 import tempfile
 import vulnerability as vuln
 
@@ -33,7 +34,7 @@ class Level(enum.Enum):
     MEDIUM = 2
     HIGH = 3
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     @staticmethod
@@ -93,20 +94,29 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining, 
         # Add files changed, each modification is a file changed
         for modification in commit.modifications:
             file = modification.old_path if modification.change_type.name is 'DELETE' else modification.new_path
-            file_extension = os.path.splitext(file)[1]
+            file_extension = os.path.splitext(file)[1].lower()
 
-            # Run Flawfinder for C/C++ files, and 'grep'-like analysis for other languages files
-            if file_extension.lower() in c_lang.c_extensions:
-                source_code_dict = get_source_code_dict(gitpython_repo, commit.hash, file, modification.source_code)
-                partial_output = run_flawfinder(repo.parse_diff(modification.diff), source_code_dict, severity,
+            # Skip this file if the file extension is not supported
+            if file_extension not in lang.supported_extensions:
+                continue
+
+            source_code_dict = get_source_code_dict(gitpython_repo, commit.hash, file, modification.source_code)
+            diff = repo.parse_diff(modification.diff)
+
+            # Run Flawfinder for C/C++ files, and
+            if file_extension in c_lang.c_extensions:
+                partial_output = run_flawfinder(diff, source_code_dict, severity,
                                                 confidence)
+            # Run bandit for Python files
+            elif file_extension in py_lang.py_extensions:
+                partial_output = run_bandit(diff, source_code_dict, severity, confidence)
 
-            elif file_extension.lower() in py_lang.py_extensions:
-                source_code_dict = get_source_code_dict(gitpython_repo, commit.hash, file, modification.source_code)
-                partial_output = run_bandit(repo.parse_diff(modification.diff), source_code_dict, severity, confidence)
-
+            # Run 'grep'-like analysis for other languages files (very noisy)
             else:
-                partial_output = process_diff(repo.parse_diff(modification.diff), file_extension, severity, confidence)
+                unchanged_diff = get_unchanged_lines(diff, source_code_dict)
+                diff = {**diff, **unchanged_diff}
+
+                partial_output = process_diff(diff, file_extension, severity, confidence)
 
             # Only add the file if it has useful code changes (comments already removed)
             if partial_output:
@@ -192,7 +202,7 @@ def process_diff(diff: dict, file_extension: str, severity: Level, confidence: L
     # 'grep'-like analysis for other languages
     for language in lang.language_list:
         # Only analyse files that are supported
-        if file_extension.lower() in language.extensions:
+        if file_extension in language.extensions:
             diff = {k: ((num, line.strip()) for (num, line) in v if line and language.is_not_comment(line))
                     for k, v in diff.items()}
 
@@ -216,6 +226,27 @@ def process_diff(diff: dict, file_extension: str, severity: Level, confidence: L
                         partial_output = append_vulnerability(partial_output, key, num, line, vulnerability)
 
             return partial_output
+
+
+def get_unchanged_lines(diff: dict, source_code_dict: dict) -> dict:
+    """
+    Get the unchanged lines in the commit
+
+    :param diff: The diff dictionary containing added and deleted lines of the file
+    :param source_code_dict: The dictionary containing old and new source code
+    :return: A dictionary containing a list of unchanged lines
+    """
+
+    unchanged_diff = {'unchanged': []}
+
+    # The line numbers of added and deleted
+    diff_line_nums = [line_num for k, v in diff.items() for (line_num, _) in v]
+
+    for index, line in enumerate(source_code_dict['new'].split('\n'), start=1):
+        if index not in diff_line_nums:
+            unchanged_diff['unchanged'].append((index, line))
+
+    return unchanged_diff
 
 
 def run_flawfinder(diff: dict, source_code_dict: dict, severity: Level, confidence: Level) -> dict:
@@ -250,18 +281,17 @@ def run_flawfinder(diff: dict, source_code_dict: dict, severity: Level, confiden
                 b_hitlist = filtered_hitlist
 
                 for line_num, line in (b_hitlist & set(diff['added'])):
-                    name, level = next((hit.name, hit.level) for hit in flawfinder.hitlist if hit.line == line_num)
-
-                    if level < 3:
-                        vuln_severity_level = Level.LOW
-                    elif level > 3:
-                        vuln_severity_level = Level.HIGH
-                    else:
-                        vuln_severity_level = Level.MEDIUM
+                    name, vuln_severity_level = flawfinder_get_name_level(flawfinder.hitlist, line_num)
 
                     if include_vulnerability(severity, confidence, vuln_severity_level):
-                        partial_output = append_vulnerability(partial_output, 'added', line_num, line, name,
-                                                              severity=vuln_severity_level.__str__())
+                        partial_output = append_vulnerability(
+                            partial_output,
+                            'added',
+                            line_num,
+                            line,
+                            name,
+                            severity=vuln_severity_level.__str__()
+                        )
             else:
                 # a_hitlist contains deleted hits and possible unchanged hits
                 a_hitlist = filtered_hitlist
@@ -274,20 +304,40 @@ def run_flawfinder(diff: dict, source_code_dict: dict, severity: Level, confiden
                 # Deleted and unchanged
                 for category, hits in hits_dict.items():
                     for line_num, line in hits:
-                        name, level = next((hit.name, hit.level) for hit in flawfinder.hitlist if hit.line == line_num)
-
-                        if level < 3:
-                            vuln_severity_level = Level.LOW
-                        elif level > 3:
-                            vuln_severity_level = Level.HIGH
-                        else:
-                            vuln_severity_level = Level.MEDIUM
+                        name, vuln_severity_level = flawfinder_get_name_level(flawfinder.hitlist, line_num)
 
                         if include_vulnerability(severity, confidence, vuln_severity_level):
-                            partial_output = append_vulnerability(partial_output, 'added', line_num, line, name,
-                                                                  severity=vuln_severity_level.__str__())
+                            partial_output = append_vulnerability(
+                                partial_output,
+                                category,
+                                line_num,
+                                line,
+                                name,
+                                severity=vuln_severity_level.__str__()
+                            )
 
     return partial_output
+
+
+def flawfinder_get_name_level(hitlist: list, line_num: int) -> (str, Level):
+    """
+    Get the name and the severity level of vulnerability found by flawfinder
+
+    :param hitlist: The flawfinder hitlist
+    :param line_num: The line number
+    :return: A tuple containing the name and severity level
+    """
+
+    name, level = next((hit.name, hit.level) for hit in hitlist if hit.line == line_num)
+
+    if level < 3:
+        vuln_severity_level = Level.LOW
+    elif level > 3:
+        vuln_severity_level = Level.HIGH
+    else:
+        vuln_severity_level = Level.MEDIUM
+
+    return name, vuln_severity_level
 
 
 def run_bandit(diff: dict, source_code_dict: dict, severity: Level, confidence: Level):
@@ -412,6 +462,12 @@ def append_vulnerability(partial_output: dict, key: str, line_num: int,
             'severity': kwargs['severity'],
             'confidence': 'NONE'
         })
+    else:
+        partial_output[key].append({
+            'line_num': line_num,
+            'line': line.strip(),
+            'vulnerability': vulnerability,
+        })
 
     return partial_output
 
@@ -430,6 +486,20 @@ def output_result(output: dict, path: str):
         json.dump(output, outfile, indent=2)
 
     print(f'{"Output location":<20}: {os.path.realpath(path)}')
+
+
+def get_repo_name(path: str) -> str:
+    """
+    Get the name of the repository
+
+    :param path: The path to the repository
+    :return: The the
+    """
+
+    origin = subprocess.check_output(['git', 'config', '--get', 'remote.origin.url'], cwd=path).decode()
+    repo_name, _ = os.path.splitext(os.path.basename(origin))
+
+    return repo_name
 
 
 if __name__ == '__main__':
@@ -476,7 +546,7 @@ if __name__ == '__main__':
             else:
                 output_path = output_name + '.json'
         else:
-            output_path = 'output.json'
+            output_path = f'{get_repo_name(args.repo)}.json'
 
         output_result(search_repository(repo, repo_mining, args.severity, args.confidence), output_path)
     except git.NoSuchPathError:

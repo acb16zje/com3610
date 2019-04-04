@@ -380,4 +380,4 @@ java_ruleset = {
 java_extensions = ['.java']
 java_comments = re.compile(r'^(/\*|\*|\*/|//)', re.S)
 
-java_language = Language(java_ruleset, java_extensions, java_comments)
+Language(java_ruleset, java_extensions, java_comments)

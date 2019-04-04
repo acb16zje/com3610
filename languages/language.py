@@ -10,7 +10,7 @@ class Language(object):
     A class for programming languages
     """
 
-    def __init__(self, rule_set: dict, extensions: list, comments: re) -> None:
+    def __init__(self, rule_set: dict, extensions: list, comments=None) -> None:
         """
         Constructor for Language class
 
@@ -23,6 +23,7 @@ class Language(object):
         self.extensions = extensions
         self.comments = comments
         language_list.append(self)
+        supported_extensions.extend(self.extensions)
 
     def is_not_comment(self, line: str) -> bool:
         """
@@ -36,3 +37,4 @@ class Language(object):
 
 
 language_list = []
+supported_extensions = []
