@@ -1,5 +1,11 @@
 #!/bin/bash
 
+#$ -l h_rt=96:00:00
+#$ -l rmem=32G
+#$ -pe smp 16
+
+module load apps/python/conda && source activate shefmine
+
 repo=
 folder=
 

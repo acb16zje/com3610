@@ -10,7 +10,7 @@ import json
 from typing import Union
 
 
-def analyse_result(result: dict) -> None:
+def analyse_result(result: dict) -> dict:
     """
     Analyse the result file to show
     1. The number of issues found
@@ -184,6 +184,31 @@ def analyse_result(result: dict) -> None:
     print(f'{"":>8}{"├── ONLY Added AND Delete lines":<50}: {both_add_and_delete}')
     print(f'{"":>8}{"├── ONLY Added AND Unchanged lines":<50}: {both_add_and_unchange}')
     print(f'{"":>8}{"└── ONLY Delete AND Unchanged lines":<50}: {both_delete_and_unchange}')
+
+    # JSON
+    output = {
+        'total_commits': total_commits,
+        'severity_low': {
+            'total': low,
+            'confidence_low': low_low,
+            'confidence_med': low_medium,
+            'confidence_high': low_high
+        },
+        'severity_med': {
+            'total': medium,
+            'confidence_low': medium_low,
+            'confidence_med': medium_medium,
+            'confidence_high': medium_high
+        },
+        'severity_high': {
+            'total': high,
+            'confidence_low': high_low,
+            'confidence_med': high_medium,
+            'confidence_hgh': high_high
+        }
+    }
+
+    return output
 
 
 def severity_confidence_stats(severity_level: str, result: Union[list, dict], **kwargs):

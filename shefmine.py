@@ -113,10 +113,7 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining, 
 
             # Run 'grep'-like analysis for other languages files (very noisy)
             else:
-                unchanged_diff = get_unchanged_lines(diff, source_code_dict)
-                diff = {**diff, **unchanged_diff}
-
-                partial_output = process_diff(diff, file_extension, severity, confidence)
+                partial_output = process_diff(diff, source_code_dict, file_extension, severity, confidence)
 
             # Only add the file if it has useful code changes (comments already removed)
             if partial_output:
@@ -186,11 +183,12 @@ def get_source_code_dict(gitpython_repo: git.Repo, commit_hash: str, file: str, 
     return {'new': b_source, 'old': a_source}
 
 
-def process_diff(diff: dict, file_extension: str, severity: Level, confidence: Level) -> dict:
+def process_diff(diff: dict, source_code_dict: dict, file_extension: str, severity: Level, confidence: Level) -> dict:
     """
     Given the diff of a file, check if any vulnerable lines of code are added or deleted
 
     :param diff: The diff dictionary containing added and deleted lines of the file
+    :param source_code_dict: The dictionary containing old and new source code
     :param file_extension: The file extension of the file
     :param severity: The minimum severity level of vulnerabilities
     :param confidence: The minimum confidence level of vulnerabilities
@@ -228,24 +226,22 @@ def process_diff(diff: dict, file_extension: str, severity: Level, confidence: L
             return partial_output
 
 
-def get_unchanged_lines(diff: dict, source_code_dict: dict) -> dict:
+def get_unchanged_lines(diff: dict, source_code_dict) -> list:
     """
     Get the unchanged lines in the commit
 
     :param diff: The diff dictionary containing added and deleted lines of the file
     :param source_code_dict: The dictionary containing old and new source code
-    :return: A dictionary containing a list of unchanged lines
+    :return: A list of unchanged lines
     """
-
-    unchanged_diff = {'unchanged': []}
 
     # The line numbers of added and deleted
     diff_line_nums = [line_num for k, v in diff.items() for (line_num, _) in v]
 
-    for index, line in enumerate(source_code_dict['new'].split('\n'), start=1):
-        if index not in diff_line_nums:
-            unchanged_diff['unchanged'].append((index, line))
+    unchanged_diff = [(index, line) for (index, line) in enumerate(source_code_dict['new'].split('\n'), start=1)
+                      if index not in diff_line_nums and line]
 
+    print(len(unchanged_diff))
     return unchanged_diff
 
 
