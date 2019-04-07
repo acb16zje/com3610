@@ -74,6 +74,10 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining, 
                                                   for regex_match in [vulnerability.regex.search(commit_message)]
                                                   if regex_match is not None]
 
+        # Too many files changed will cause the program to hang
+        if len(commit.modifications) > 100:
+          continue
+
         # Add files changed, each modification is a file changed
         for modification in commit.modifications:
             file = modification.old_path if modification.change_type.name is 'DELETE' else modification.new_path
