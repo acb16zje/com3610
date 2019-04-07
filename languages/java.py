@@ -378,6 +378,11 @@ java_ruleset = {
 }
 
 java_extensions = ['.java']
-java_comments = re.compile(r'^(/\*|\*|\*/|//)', re.S)
+java_non_context = re.compile(
+    r'(^(/\*|\*|\*/|//)|'
+    r'^[{}()\'\";]|(\s*|(}\s*)?(do|try|else|finally)\s*{?|'
+    r'@(Override|Deprecated|SuppressWarnings|Inherited)|'
+    r'(return|break|continue)\s*;)$)',
+    re.S)
 
-Language(java_ruleset, java_extensions, java_comments)
+Language(java_ruleset, java_extensions, java_non_context)

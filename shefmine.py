@@ -64,32 +64,15 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining, 
     output = {}
     gitpython_repo = git.Repo(repo.path)
 
-    # Get the commit count for tqdm
-    if repo_mining._single:
-        commit_count = 1
-    elif repo_mining._only_in_branch:
-        commit_count = gitpython_repo.commit(repo_mining._only_in_branch).count()
-    else:
-        commit_count = gitpython_repo.commit().count()
-
-    for commit in tqdm(repo_mining.traverse_commits(), total=commit_count):
+    for commit in tqdm(repo_mining.traverse_commits(), total=len(list(repo_mining.traverse_commits()))):
         commit_message = process_commit_message(commit.msg)
-        output[commit.hash] = {}
-        output[commit.hash]['message'] = commit_message
+        output[commit.hash] = {'message': commit_message}
 
         # Find matching vulnerabilities
-        for vulnerability in vuln.vulnerability_list:
-            regex_match = vulnerability.regex.search(commit_message)
-
-            if regex_match is not None:
-                if 'vulnerabilities' not in output[commit.hash]:
-                    output[commit.hash]['vulnerabilities'] = []
-
-                # Add vulnerabilities item
-                output[commit.hash]['vulnerabilities'].append({
-                    'name': vulnerability.name,
-                    'match': regex_match.group()
-                })
+        output[commit.hash]['vulnerabilities'] = [{'name': vulnerability.name, 'match': regex_match.group()}
+                                                  for vulnerability in vuln.vulnerability_list
+                                                  for regex_match in [vulnerability.regex.search(commit_message)]
+                                                  if regex_match is not None]
 
         # Add files changed, each modification is a file changed
         for modification in commit.modifications:
@@ -101,6 +84,11 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining, 
                 continue
 
             source_code_dict = get_source_code_dict(gitpython_repo, commit.hash, file, modification.source_code)
+
+            # Encoding will be None for some cases
+            if source_code_dict is None:
+                continue
+
             diff = repo.parse_diff(modification.diff)
 
             # Run Flawfinder for C/C++ files, and
@@ -113,14 +101,12 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining, 
 
             # Run 'grep'-like analysis for other languages files (very noisy)
             else:
+                diff['unchanged'] = get_unchanged_lines(diff, source_code_dict)
                 partial_output = process_diff(diff, source_code_dict, file_extension, severity, confidence)
 
             # Only add the file if it has useful code changes (comments already removed)
             if partial_output:
-                if 'files_changed' not in output[commit.hash]:
-                    output[commit.hash]['files_changed'] = []
-
-                output[commit.hash]['files_changed'].append({'file': file, **partial_output})
+                output[commit.hash]['files_changed'] = [{'file': file, **partial_output}]
 
         # Remove the commit if regex doesnt match or no vulnerable lines of code are detected
         if 'vulnerabilities' not in output[commit.hash] and 'files_changed' not in output[commit.hash]:
@@ -178,7 +164,11 @@ def get_source_code_dict(gitpython_repo: git.Repo, commit_hash: str, file: str, 
                 a_source = a_stream.decode('utf-8')
             except UnicodeDecodeError:
                 a_encoding = cchardet.detect(a_stream)['encoding']
-                a_source = a_stream.decode(a_encoding)
+
+                if a_encoding is None:
+                    return None
+
+                a_source = a_stream.decode(a_encoding, 'replace')
 
     return {'new': b_source, 'old': a_source}
 
@@ -201,24 +191,20 @@ def process_diff(diff: dict, source_code_dict: dict, file_extension: str, severi
     for language in lang.language_list:
         # Only analyse files that are supported
         if file_extension in language.extensions:
-            diff = {k: ((num, line.strip()) for (num, line) in v if line and language.is_not_comment(line))
+            diff = {k: ((num, line.strip()) for (num, line) in v if language.is_context(line))
                     for k, v in diff.items()}
 
             # Check if any vulnerable lines of code are added or deleted
             for key, value in diff.items():
                 for num, line in value:
-                    vulnerability = {}
-
                     # Use the regular expressions of the ruleset
-                    for rule in language.rule_set:
-                        if re.compile(fr'\b{rule}\b', re.S).search(line) \
-                                and (rule.startswith('import') or not line.strip().startswith('import')):
-
-                            vuln_severity_level = Level[language.rule_set[rule]['severity']]
-                            vuln_confidence_level = Level[language.rule_set[rule]['confidence']]
-
-                            if include_vulnerability(severity, confidence, vuln_severity_level, vuln_confidence_level):
-                                vulnerability[rule] = language.rule_set[rule]
+                    vulnerability = {rule: language.rule_set[rule] for rule in language.rule_set
+                                     if re.compile(fr'\b{rule}\b', re.S).search(line)
+                                     and (rule.startswith('import') or not line.strip().startswith('import'))
+                                     and include_vulnerability(severity, confidence,
+                                                               Level[language.rule_set[rule]['severity']],
+                                                               Level[language.rule_set[rule]['confidence']])
+                                     }
 
                     if vulnerability:
                         partial_output = append_vulnerability(partial_output, key, num, line, vulnerability)
@@ -241,7 +227,6 @@ def get_unchanged_lines(diff: dict, source_code_dict) -> list:
     unchanged_diff = [(index, line) for (index, line) in enumerate(source_code_dict['new'].split('\n'), start=1)
                       if index not in diff_line_nums and line]
 
-    print(len(unchanged_diff))
     return unchanged_diff
 
 
@@ -516,8 +501,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     try:
-        # Although traverse_commits() will clone automatically, but tqdm
-        # requires total commit count
+        # Clone the repo if URL is provided
         self = pd.RepositoryMining(args.repo)
         if self._isremote(args.repo):
             tmp_folder = tempfile.TemporaryDirectory()

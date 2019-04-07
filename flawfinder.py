@@ -39,8 +39,6 @@
 # Python 2, make it possible (though ugly) to write code that runs on both.
 # That *finally* makes it possible to semi-gracefully transition.
 
-from __future__ import division
-from __future__ import print_function
 import functools
 import sys
 import re
@@ -50,10 +48,6 @@ import pickle  # To support load/save/diff of hitlist
 import os
 import glob
 import operator  # To support filename expansion on Windows
-import time
-import csv  # To support generating CSV format
-import hashlib
-# import formatter
 
 version = "2.0.9"
 
@@ -86,8 +80,6 @@ showheading = 0  # --dataonly turns this off
 ruleset_initialised = False
 output_format = 0  # 0 = normal, 1 = html.
 single_line = 0  # 1 = singleline (can 't be 0 if html)
-csv_output = 0  # 1 = Generate CSV
-csv_writer = None
 omit_time = 0  # 1 = omit time-to-run (needed for testing)
 required_regex = None  # If non-None, regex that must be met to report
 required_regex_compiled = None
@@ -115,7 +107,6 @@ linenumber = 0  # Linenumber from original file.
 ignoreline = -1  # Line number to ignore.
 sumlines = 0  # Number of lines (total) examined.
 sloc = 0  # Physical SLOC
-starttime = time.time()  # Used to determine analyzed lines/second.
 
 
 # Send warning message.  This is written this way to work on
@@ -127,183 +118,11 @@ def print_warning(message):
     sys.stderr.flush()
 
 
-# The following code accepts unified diff format from both subversion (svn)
-# and GNU diff, which aren't well-documented.  It gets filenames from
-# "Index:" if exists, else from the "+++ FILENAME ..." entry.
-# Note that this is different than some tools (which will use "+++" in
-# preference to "Index:"), but subversion's nonstandard format is easier
-# to handle this way.
-# Since they aren't well-documented, here's some info on the diff formats:
-# GNU diff format:
-#    --- OLDFILENAME OLDTIMESTAMP
-#    +++ NEWFILENAME NEWTIMESTAMP
-#    @@ -OLDSTART,OLDLENGTH +NEWSTART,NEWLENGTH @@
-#    ... Changes where preceeding "+" is add, "-" is remove, " " is unchanged.
-#
-#    ",OLDLENGTH" and ",NEWLENGTH" are optional  (they default to 1).
-#    GNU unified diff format doesn't normally output "Index:"; you use
-#    the "+++/---" to find them (presuming the diff user hasn't used --label
-#    to mess it up).
-#
-# Subversion format:
-#    Index: FILENAME
-#    --- OLDFILENAME (comment)
-#    +++ NEWFILENAME (comment)
-#    @@ -OLDSTART,OLDLENGTH +NEWSTART,NEWLENGTH @@
-#
-#    In subversion, the "Index:" always occurs, and note that paren'ed
-#    comments are in the oldfilename/newfilename, NOT timestamps like
-#    everyone else.
-#
-# Git format:
-#    diff --git a/junk.c b/junk.c
-#    index 03d668d..5b005a1 100644
-#    --- a/junk.c
-#    +++ b/junk.c
-#    @@ -6,4 +6,5 @@ main() {
-#
-# Single Unix Spec version 3 (http://www.unix.org/single_unix_specification/)
-# does not specify unified format at all; it only defines the older
-# (obsolete) context diff format.  That format DOES use "Index:", but
-# only when the filename isn't specified otherwise.
-# We're only supporting unified format directly; if you have an older diff
-# format, use "patch" to apply it, and then use "diff -u" to create a
-# unified format.
-#
-
-diff_index_filename = re.compile(r'^Index:\s+(?P<filename>.*)')
-diff_git_filename = re.compile(r'^diff --git a/.* b/(?P<filename>.*)$')
-diff_newfile = re.compile(r'^\+\+\+\s(?P<filename>.*)$')
-diff_hunk = re.compile(r'^@@ -\d+(,\d+)?\s+\+(?P<linenumber>\d+)[, ].*@@$')
-diff_line_added = re.compile(r'^\+[^+].*')
-diff_line_del = re.compile(r'^-[^-].*')
-# The "+++" newfile entries have the filename, followed by a timestamp
-# or " (comment)" postpended.
-# Timestamps can be of these forms:
-#   2005-04-24 14:21:39.000000000 -0400
-#   Mon Mar 10 15:13:12 1997
-# Also, "newfile" can have " (comment)" postpended.  Find and eliminate this.
-# Note that the expression below is Y10K (and Y100K) ready. :-).
-diff_findjunk = re.compile(
-    r'^(?P<filename>.*)('
-    r'(\s\d\d\d\d+-\d\d-\d\d\s+\d\d:\d[0-9:.]+Z?(\s+[\-\+0-9A-Z]+)?)|'
-    r'(\s[A-Za-z][a-z]+\s[A-za-z][a-z]+\s\d+\s\d+:\d[0-9:.]+Z?'
-    r'(\s[\-\+0-9]*)?\s\d\d\d\d+)|'
-    r'(\s\(.*\)))\s*$'
-)
-
-
-def is_svn_diff(sLine):
-    if sLine.find('Index:') != -1:
-        return True
-    return False
-
-
-def is_gnu_diff(sLine):
-    if sLine.startswith('--- '):
-        return True
-    return False
-
-
-def is_git_diff(sLine):
-    if sLine.startswith('diff --git a'):
-        return True
-    return False
-
-
-def svn_diff_get_filename(sLine):
-    return diff_index_filename.match(sLine)
-
-
-def gnu_diff_get_filename(sLine):
-    newfile_match = diff_newfile.match(sLine)
-    if newfile_match:
-        patched_filename = newfile_match.group('filename').strip()
-        # Clean up filename - remove trailing timestamp and/or (comment).
-        return diff_findjunk.match(patched_filename)
-    return None
-
-
-def git_diff_get_filename(sLine):
-    return diff_git_filename.match(sLine)
-
 
 # For each file found in the file input_patch_file, keep the
 # line numbers of the new file (after patch is applied) which are added.
 # We keep this information in a hash table for a quick access later.
 #
-def load_patch_info(input_patch_file):
-    patch = {}
-    line_counter = 0
-    initial_number = 0
-    try:
-        hPatch = open(input_patch_file, 'r')
-    except BaseException:
-        print("Error: failed to open", h(input_patch_file))
-        sys.exit(10)
-
-    patched_filename = ""  # Name of new file patched by current hunk.
-
-    sLine = hPatch.readline()
-    # Heuristic to determine if it's a svn diff, git diff, or a GNU diff.
-    if is_svn_diff(sLine):
-        fn_get_filename = svn_diff_get_filename
-    elif is_git_diff(sLine):
-        fn_get_filename = git_diff_get_filename
-    elif is_gnu_diff(sLine):
-        fn_get_filename = gnu_diff_get_filename
-    else:
-        print("Error: Unrecognized patch format")
-        sys.exit(11)
-
-    while True:  # Loop-and-half construct.  Read a line, end loop when no more
-
-        # This is really a sequence of if ... elsif ... elsif..., but
-        # because Python forbids '=' in conditions, we do it this way.
-        filename_match = fn_get_filename(sLine)
-        if filename_match:
-            patched_filename = filename_match.group('filename').strip()
-            if patched_filename in patch:
-                error("filename occurs more than once in the patch: %s" %
-                      patched_filename)
-                sys.exit(12)
-            else:
-                patch[patched_filename] = {}
-        else:
-            hunk_match = diff_hunk.match(sLine)
-            if hunk_match:
-                if patched_filename == "":
-                    error(
-                        "wrong type of patch file : "
-                        "we have a line number without having seen a filename"
-                    )
-                    sys.exit(13)
-                initial_number = hunk_match.group('linenumber')
-                line_counter = 0
-            else:
-                line_added_match = diff_line_added.match(sLine)
-                if line_added_match:
-                    line_added = line_counter + int(initial_number)
-                    patch[patched_filename][line_added] = True
-                    # Let's also warn about the lines above and below this one,
-                    # so that errors that "leak" into adjacent lines are caught.
-                    # Besides, if you're creating a patch, you had to at
-                    # least look at adjacent lines,
-                    # so you're in a position to fix them.
-                    patch[patched_filename][line_added - 1] = True
-                    patch[patched_filename][line_added + 1] = True
-                    line_counter += 1
-                else:
-                    line_del_match = diff_line_del.match(sLine)
-                    if line_del_match is None:
-                        line_counter += 1
-
-        sLine = hPatch.readline()
-        if sLine == '':
-            break  # Done reading.
-
-    return patch
-
 
 def htmlize(s):
     # Take s, and return legal (UTF-8) HTML.
@@ -400,20 +219,6 @@ class Hit(object):
         result = find_cwe_pattern.search(self.warning)
         return result.group()[1:-1] if result else ''
 
-    def fingerprint(self):
-        """Return fingerprint of stripped context."""
-        m = hashlib.sha256()
-        m.update(self.context_text.strip().encode('utf-8'))
-        return m.hexdigest()
-
-    # Show as CSV format
-    def show_csv(self):
-        csv_writer.writerow([
-            self.filename, self.line, self.column, self.level, self.category,
-            self.name, self.warning, self.suggestion, self.note,
-            self.cwes(), self.context_text, self.fingerprint()
-        ])
-
     def show(self):
         if csv_output:
             self.show_csv()
@@ -486,7 +291,7 @@ def add_warning(hit):
 
 
 def internal_warn(message):
-    print(h(message))
+    pass
 
 
 # C Language Specific
@@ -1970,7 +1775,6 @@ def process_options():
                 csv_output = 1
                 quiet = 1
                 showheading = 0
-                csv_writer = csv.writer(sys.stdout)
             elif opt == "--error-level":
                 error_level = int(value)
             elif opt == "--immediate" or opt == "-i":
@@ -2045,8 +1849,6 @@ def process_files():
         return True
     else:
         patch_infos = None
-        if patch_file != "":
-            patch_infos = load_patch_info(patch_file)
         files = sys.argv[1:]
         if not files:
             print("*** No input files")
@@ -2060,163 +1862,10 @@ def hitlist_sort_key(hit):
     return (-hit.level, hit.filename, hit.line, hit.column, hit.name)
 
 
-def show_final_results():
-    global hitlist
-    global error_level_exceeded
-    count = 0
-    count_per_level = {}
-    count_per_level_and_up = {}
-    # Name levels directly, to avoid Python "range" (a Python 2/3 difference)
-    possible_levels = (0, 1, 2, 3, 4, 5)
-    for i in possible_levels:  # Initialize count_per_level
-        count_per_level[i] = 0
-    for i in possible_levels:  # Initialize count_per_level_and_up
-        count_per_level_and_up[i] = 0
-    if show_immediately or not quiet:  # Separate the final results.
-        print()
-        if showheading:
-            if output_format:
-                print("<h2>Final Results</h2>")
-            else:
-                print("FINAL RESULTS:")
-                print()
-    hitlist.sort(key=hitlist_sort_key)
-    # Display results.  The HTML format now uses
-    # <ul> so that the format differentiates each entry.
-    # I'm not using <ol>, because its numbers might be confused with
-    # the risk levels or line numbers.
-    if diffhitlist_filename:
-        diff_file = open(diffhitlist_filename)
-        diff_hitlist = pickle.load(diff_file)
-    if output_format:
-        print("<ul>")
-    for hit in hitlist:
-        if not diffhitlist_filename or hit not in diff_hitlist:
-            count_per_level[hit.level] = count_per_level[hit.level] + 1
-            if hit.level >= minimum_level:
-                hit.show()
-                count += 1
-            if hit.level >= error_level:
-                error_level_exceeded = True
-    if output_format:
-        print("</ul>")
-    if diffhitlist_filename:
-        diff_file.close()
-    # Done with list, show the post-hitlist summary.
-    if showheading:
-        if output_format:
-            print("<h2>Analysis Summary</h2>")
-        else:
-            print()
-            print("ANALYSIS SUMMARY:")
-        if output_format:
-            print("<p>")
-        else:
-            print()
-        if count > 0:
-            print("Hits =", count)
-        else:
-            print("No hits found.")
-        if output_format:
-            print("<br>")
-        # Compute the amount of time spent, and lines analyzed/second.
-        # By computing time here, we also include the time for
-        # producing the list of hits, which is reasonable.
-        time_analyzing = time.time() - starttime
-        if required_regex:
-            print("Hits limited to regular expression " + required_regex)
-        print("Lines analyzed = %d" % sumlines, end='')
-        if time_analyzing > 0 and not omit_time:  # Avoid divide-by-zero.
-            print(" in approximately %.2f seconds (%.0f lines/second)" % (
-                time_analyzing, (sumlines / time_analyzing)))
-        else:
-            print()
-        if output_format:
-            print("<br>")
-        print("Physical Source Lines of Code (SLOC) = %d" % sloc)
-        if output_format:
-            print("<br>")
-        # Output hits@each level.
-        print("Hits@level =", end='')
-        for i in possible_levels:
-            print(" [%d] %3d" % (i, count_per_level[i]), end='')
-        if output_format:
-            print(" <br>")
-        else:
-            print()
-        # Compute hits at "level x or higher"
-        print("Hits@level+ =", end='')
-        for i in possible_levels:
-            for j in possible_levels:
-                if j >= i:
-                    count_per_level_and_up[
-                        i] = count_per_level_and_up[i] + count_per_level[j]
-        # Display hits at "level x or higher"
-        for i in possible_levels:
-            print(" [%d+] %3d" % (i, count_per_level_and_up[i]), end='')
-        if output_format:
-            print(" <br>")
-        else:
-            print()
-        if sloc > 0:
-            print("Hits/KSLOC@level+ =", end='')
-            for i in possible_levels:
-                print(" [%d+] %3g" % (
-                    i, count_per_level_and_up[i] * 1000.0 / sloc), end='')
-        if output_format:
-            print(" <br>")
-        else:
-            print()
-        #
-        if num_links_skipped:
-            print("Symlinks skipped =", num_links_skipped, "(--allowlink overrides but see doc for security issue)")
-            if output_format:
-                print("<br>")
-        if num_dotdirs_skipped:
-            print("Dot directories skipped =", num_dotdirs_skipped, "(--followdotdir overrides)")
-            if output_format:
-                print("<br>")
-        if num_ignored_hits > 0:
-            print("Suppressed hits =", num_ignored_hits, "(use --neverignore to show them)")
-            if output_format:
-                print("<br>")
-        print("Minimum risk level = %d" % minimum_level)
-        if output_format:
-            print("<br>")
-        if count > 0:
-            print("Not every hit is necessarily a security vulnerability.")
-            if output_format:
-                print("<br>")
-        print("There may be other security vulnerabilities; review your code!")
-        if output_format:
-            print("<br>")
-            print("See '<a href=\"https://dwheeler.com/secure-programs\">Secure Programming HOWTO</a>'")
-            print("(<a href=\"https://dwheeler.com/secure-programs\">https://dwheeler.com/secure-programs</a>) for more information.")
-        else:
-            print("See 'Secure Programming HOWTO'")
-            print("(https://dwheeler.com/secure-programs) for more information.")
-        if output_format:
-            print("</body>")
-            print("</html>")
-
-
-def save_if_desired():
-    # We'll save entire hitlist, even if only differences displayed.
-    if savehitlist:
-        if not quiet:
-            print("Saving hitlist to", savehitlist)
-        f = open(savehitlist, "wb")
-        pickle.dump(hitlist, f)
-        f.close()
-
-
 def flawfind():
     process_options()
     display_header()
     initialize_ruleset()
-    if process_files():
-        show_final_results()
-        save_if_desired()
     return 1 if error_level_exceeded else 0
 
 
