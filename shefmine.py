@@ -65,6 +65,9 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining, 
     gitpython_repo = git.Repo(repo.path)
 
     for commit in tqdm(repo_mining.traverse_commits(), total=len(list(repo_mining.traverse_commits()))):
+        # Too many files changed will cause the program to hang
+        if len(commit.modifications) > 100: continue
+
         commit_message = process_commit_message(commit.msg)
         output[commit.hash] = {'message': commit_message}
 
@@ -72,11 +75,9 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining, 
         output[commit.hash]['vulnerabilities'] = [{'name': vulnerability.name, 'match': regex_match.group()}
                                                   for vulnerability in vuln.vulnerability_list
                                                   for regex_match in [vulnerability.regex.search(commit_message)]
-                                                  if regex_match is not None]
-
-        # Too many files changed will cause the program to hang
-        if len(commit.modifications) > 100:
-          continue
+                                                  if regex_match]
+        if not output[commit.hash]['vulnerabilities']:
+            output[commit.hash].pop('vulnerabilities')
 
         # Add files changed, each modification is a file changed
         for modification in commit.modifications:
@@ -90,15 +91,15 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining, 
             source_code_dict = get_source_code_dict(gitpython_repo, commit.hash, file, modification.source_code)
 
             # Encoding will be None for some cases
-            if source_code_dict is None:
+            if not source_code_dict:
                 continue
 
             diff = repo.parse_diff(modification.diff)
 
-            # Run Flawfinder for C/C++ files, and
+            # Run Flawfinder for C/C++ files
             if file_extension in c_lang.c_extensions:
-                partial_output = run_flawfinder(diff, source_code_dict, severity,
-                                                confidence)
+                partial_output = run_flawfinder(diff, source_code_dict, severity, confidence)
+
             # Run bandit for Python files
             elif file_extension in py_lang.py_extensions:
                 partial_output = run_bandit(diff, source_code_dict, severity, confidence)
@@ -110,7 +111,10 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining, 
 
             # Only add the file if it has useful code changes (comments already removed)
             if partial_output:
-                output[commit.hash]['files_changed'] = [{'file': file, **partial_output}]
+                if 'files_changed' not in output[commit.hash]:
+                    output[commit.hash]['files_changed'] = []
+
+                output[commit.hash]['files_changed'].append({'file': file, **partial_output})
 
         # Remove the commit if regex doesnt match or no vulnerable lines of code are detected
         if 'vulnerabilities' not in output[commit.hash] and 'files_changed' not in output[commit.hash]:
@@ -170,7 +174,7 @@ def get_source_code_dict(gitpython_repo: git.Repo, commit_hash: str, file: str, 
                 a_encoding = cchardet.detect(a_stream)['encoding']
 
                 if a_encoding is None:
-                    return None
+                    return False
 
                 a_source = a_stream.decode(a_encoding, 'replace')
 
