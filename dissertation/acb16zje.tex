@@ -541,22 +541,22 @@ that improve the feasibility of this project.
 \begin{longtable}{|p{10.3cm}|c|}
   \hline \endfirsthead
   \rowcolor[HTML]{D8D8D8}
-  \multicolumn{1}{|c|}{Criteria}                                                               & Importance \\ \hline
+  \multicolumn{1}{|c|}{Criteria} & Importance \\ \hline
   \textbf{Compatibility}: The mining tool should be able to run on all machines that meet the
-  system requirements.                                                                         & Essential  \\ \hline
+  system requirements. & Essential \\ \hline
   \textbf{Completeness}: The mining tool should be able to find all relevant commits of security
-  vulnerabilities based on the regular expressions.                                            & Essential  \\ \hline
+  vulnerabilities based on the regular expressions. & Essential \\ \hline
   \textbf{Informative}: The statistical tool should return a complete analysis of the results. &
-  Essential                                                                                                 \\ \hline
-  \textbf{Repeatable}: The results should be repeatable and reproducible.                      & Essential  \\ \hline
+  Essential \\ \hline
+  \textbf{Repeatable}: The results should be repeatable and reproducible. & Essential \\ \hline
   \textbf{Scalability}: The mining tool should be able to work on different project sizes, provided
-  that the repository contains a certain amount of information.                                & Essential  \\ \hline
+  that the repository contains a certain amount of information. & Essential \\ \hline
   \textbf{Automated Evaluation}: The process of classifying and evaluating the commits into
-  different vulnerabilities patch should be automated to a certain extent.                     & Desirable  \\ \hline
+  different vulnerabilities patch should be automated to a certain extent. & Desirable \\ \hline
   \textbf{Extensibility}: New vulnerability patterns and programming languages should be easily
-  added into the tool.                                                                         & Desirable  \\ \hline
+  added into the tool. & Desirable \\ \hline
   \textbf{Robustness}: The mining tool should be able to handle all possible errors without
-  terminating the mining process.                                                              & Desirable  \\ \hline
+  terminating the mining process. & Desirable \\ \hline
   \caption{Functional requirements of the mining tool} \label{table:func_req}
 \end{longtable}
 
@@ -566,15 +566,15 @@ that improve the feasibility of this project.
     \begin{tabular}{|p{10.3cm}|c|}
       \hline
       \rowcolor[HTML]{D8D8D8}
-      \multicolumn{1}{|c|}{Criteria}                                           & Importance \\ \hline
+      \multicolumn{1}{|c|}{Criteria} & Importance \\ \hline
       \textbf{Code Style}: The source code should be well-commented and follow a consistent coding
-      style.                                                                   & Essential  \\ \hline
-      \textbf{Documentation}: Installation and user manual should be provided. & Essential  \\ \hline
-      \textbf{Lightweight}: The mining tool should have minimal dependencies.  & Essential  \\ \hline
+      style. & Essential  \\ \hline
+      \textbf{Documentation}: Installation and user manual should be provided. & Essential \\ \hline
+      \textbf{Lightweight}: The mining tool should have minimal dependencies. & Essential \\ \hline
       \textbf{Open source}: As the mining tool is built for researching open source repositories, it
-      should be open source to suit the use cases.                             & Essential  \\ \hline
+      should be open source to suit the use cases. & Essential \\ \hline
       \textbf{Performance}: The performance of the mining tool should be optmised for different
-      project sizes.                                                           & Desirable  \\ \hline
+      project sizes. & Desirable \\ \hline
     \end{tabular}
     \caption{Non-functional requirements of the mining tool} \label{table:nonfunc_req}
   \end{center}
@@ -615,7 +615,8 @@ requirements can be included to define the scope of the mining tool.
     \subcaption{Common vulnerability fix \cite{common_vuln}}
     \label{figure:common_vuln}
   \end{subfigure}
-  \caption[Comparison of a \acrshort{cve}-identified and common vulnerability-fixing commit]%
+  \caption[A comparison between a \acrshort{cve}-identified fixing commit and a common
+  vulnerability-fixing commit]%
   %
   {An example of \hyperref[figure:cve_vuln]{\textbf{(a)}} a \acrshort{cve}-identified vulnerability
     fix and \hyperref[figure:common_vuln]{\textbf{(b)}} a common vulnerability fix.}
@@ -672,24 +673,52 @@ the list of commits that might potentially contain a patch in a \acrshort{json} 
 every commit in the log file to identify the real patches.
 
 \section{Problems and Constraints} \label{sec:problems_and_constraints}
-As mentioned in \hyperref[sec:challenges]{\textbf{Section \ref*{sec:challenges}}}, the main challenges of this project
-are \textbf{data}, \textbf{misclassification}, \textbf{evaluation} and \textbf{time}. The subsequent
-challenge is the implementation difficulties, which the severity is dependent on the complexity of
-the problems and the resources available. It is also expected that some problems might not be solved
-and new problems could emerge in the course of the project. This section will discuss the problems
-in detail and review several ways of mitigating them, as well as analysing the possible constraints
-that might affect the progress of the project.
+As mentioned in \hyperref[sec:challenges]{\textbf{Section \ref*{sec:challenges}}}, the main
+challenges of this project are \textbf{data}, \textbf{misclassification}, \textbf{evaluation} and
+\textbf{time}. The subsequent challenge is the implementation difficulties, which the severity is
+dependent on the complexity of the problems and the resources available. It is also expected that
+some problems might not be solved and new problems could emerge in the course of the project. This
+section will discuss the problems in detail and review several ways of mitigating them, as well as
+analysing the possible constraints that might affect the progress of the project.
 
 \subsection{Quality of Commit Messages} \label{subsec:commit_quality}
 Although there are a lot of open source repositories available online, the majority of them does not
 have a formal guideline for the documenting the changes in the commit messages. As part of the
 \textbf{data} problem, the commit messages in the real-world repositories
-(\hyperref[sec:realworld]{\textbf{Section \ref*{sec:realworld}}}) might have lower quality compared to a
-self-created repository. It has been reported that the terms \textit{fix}, \textit{add}, and
+(\hyperref[sec:realworld]{\textbf{Section \ref*{sec:realworld}}}) might have lower quality compared
+to a self-created repository. It has been reported that the terms \textit{fix}, \textit{add}, and
 \textit{test} have the top average term frequency in the commit messages \cite{alali_2008}. With
 these indistinct terms being widely used in the commit messages, the performance of the tool may
 drop on real-world repository test sets and it would require extra effort for finding the relevant
 vulnerability-fixing commits.
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{.5\textwidth}
+    \centering
+    \includegraphics[width=.85\linewidth]{images/bad_commit_msg.png}
+    \subcaption{Bad commit message quality \cite{bad_commit_msg}}
+    \label{figure:bad_commit_msg}
+  \end{subfigure}%
+  \begin{subfigure}{.5\textwidth}
+    \centering
+    \includegraphics[width=.95\linewidth]{images/good_commit_msg.png}
+    \subcaption{Good commit message quality \cite{good_commit_msg}}
+    \label{figure:good_commit_msg}
+  \end{subfigure}
+  \caption[A comparison between a bad quality and a good quality commit message]%
+  %
+  {An example of \hyperref[figure:bad_commit_msg]{\textbf{(a)}} a bad quality commit message and
+  \hyperref[figure:good_commit_msg]{\textbf{(b)}} a good quality commit message.}
+  \label{figure:quality_commit_msg}
+\end{figure}
+
+\hyperref[figure:quality_commit_msg]{\textbf{Figure \ref*{figure:quality_commit_msg}}} shows a
+comparison between a bad quality and a good quality commit message. It should be noted that the
+commit message quality vary across different repositories and different authors. In real-world
+scenario, repositories that belong to organisations generally have a set of guidelines for
+documenting commit message. Such repositories would normally have higher quality commit message and
+are more likely to include valuable information in the commit messages too.
 
 \subsection{Results Evaluation Process}
 It is estimated that the \textbf{evaluation} process would be the biggest challenge of this project
@@ -722,7 +751,7 @@ to find the relationship between code changes in different files.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=.85\linewidth]{images/code_diff.png}
+  \includegraphics[width=.75\linewidth]{images/code_diff.png}
   \caption{An example of code changes to prevent SQL injection \cite{code_diff}}
   \label{figure:code_diff}
 \end{figure}
@@ -774,11 +803,11 @@ for a small set of repositories, and it might require comprehensive experiments 
 configurations to achieve the best result.
 
 Real-world projects including the Linux kernel \cite{linux_repo}, Apache HTTP Server
-\cite{apache_httpd_repo}, Apache Tomcat \cite{apache_tomcat_repo}, GitLab Community Edition
-\cite{gitlab_repo}, Homebrew core \cite{homebrew_core_repo}, Nixpkgs \cite{nix_packages_repo} and
-Odoo \cite{odoo_repo} are a good starting point for this project as they all have a large number of
-commits. This approach is reasoable as larger repositories are more likely to contain vulnerability-
-fixing commits and have a higher standard or informative commit messages.
+\cite{apache_httpd_repo}, Apache Tomcat \cite{apache_tomcat_repo}, Curl \cite{curl_repo}, OpenSSL
+\cite{openssl_repo}, and Python programming language \cite{cpython_repo} are a good starting point
+for this project as they all have a large number of commits. This approach is reasonable as larger
+repositories are more likely to contain vulnerability- fixing commits and have a higher standard or
+informative commit messages.
 
 \subsection{Quality Evaluation}
 Having completed the testing stage does not infer that the repository mining tool would be practical
@@ -788,8 +817,10 @@ defining and measuring the quality metrics listed below:
 \begin{itemize}
   \item \textbf{Relevance}: The measurement of the number of relevant commits retrieved when given a
   regular expression that represent the commit message pattern of a vulnerability.
-  \item \textbf{False positive}:
-  \item \textbf{False negative}
+  \item \textbf{False positive rate}: The proportion of non-vulnerable commits or code being
+  reported as a vulnerability.
+  \item \textbf{False negative rate}: The proportion of vulnerable commits or code \textbf{not}
+  being reported as a vulnerability.
   \item \textbf{Efficiency}: The total time taken required for the tool to complete the seaching
   process.
 \end{itemize}
@@ -802,6 +833,8 @@ softwares highly vulnerable to attackers \cite{arora_2010}, and it is recommende
 official announcement from the software vendors.
 
 \chapter{Design}
+This chapter outlines the 
+
 \begin{itemize}
   \item Locally detectable
   \item Control flow
@@ -822,7 +855,7 @@ official announcement from the software vendors.
 \end{figure}
 
 \hyperref[figure:keyword_search]{\textbf{Figure \ref*{figure:keyword_search}}} shows an example of
-expected search results returned for the query \textbf{`CVE'}. 
+expected search results returned for the query \textbf{`CVE'}.
 
 \chapter{Implementation and Testing}
 httpd repo
