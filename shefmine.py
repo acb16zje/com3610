@@ -20,6 +20,7 @@ import subprocess
 import tempfile
 import vulnerability as vuln
 
+from datetime import datetime
 from tqdm import tqdm
 from typing import Union
 
@@ -51,25 +52,28 @@ class Level(enum.Enum):
             raise ValueError()
 
 
-def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining, severity: Level, confidence: Level):
+def search_repository(repo_mining: pd.RepositoryMining, severity: Level, confidence: Level):
     """
     Iterate through all commits of the given repository from the given revision (default: active branch)
 
-    :param repo: The Git repository
     :param repo_mining: The RepositoryMining object
     :param severity: The minimum severity level of vulnerabilities
     :param confidence: The minimum confidence level of vulnerabilities
     """
 
     output = {}
-    gitpython_repo = git.Repo(repo.path)
+    gitpython_repo = git.Repo(repo_mining._path_to_repo)
 
-    for commit in tqdm(repo_mining.traverse_commits(), total=len(list(repo_mining.traverse_commits()))):
+    commits = list(repo_mining.traverse_commits())
+    commit_count = len(commits)
+
+    for commit in tqdm(commits, total=commit_count):
         # Too many files changed will cause the program to hang
-        if len(commit.modifications) > 100: continue
+        if len(commit.modifications) > 100:
+            continue
 
         commit_message = process_commit_message(commit.msg)
-        output[commit.hash] = {'message': commit_message}
+        output[commit.hash] = {'message': commit_message, 'date': str(commit.author_date)}
 
         # Find matching vulnerabilities
         output[commit.hash]['vulnerabilities'] = [{'name': vulnerability.name, 'match': regex_match.group()}
@@ -107,7 +111,7 @@ def search_repository(repo: pd.GitRepository, repo_mining: pd.RepositoryMining, 
             # Run 'grep'-like analysis for other languages files (very noisy)
             else:
                 diff['unchanged'] = get_unchanged_lines(diff, source_code_dict)
-                partial_output = process_diff(diff, source_code_dict, file_extension, severity, confidence)
+                partial_output = process_diff(diff, file_extension, severity, confidence)
 
             # Only add the file if it has useful code changes (comments already removed)
             if partial_output:
@@ -181,12 +185,11 @@ def get_source_code_dict(gitpython_repo: git.Repo, commit_hash: str, file: str, 
     return {'new': b_source, 'old': a_source}
 
 
-def process_diff(diff: dict, source_code_dict: dict, file_extension: str, severity: Level, confidence: Level) -> dict:
+def process_diff(diff: dict, file_extension: str, severity: Level, confidence: Level) -> dict:
     """
     Given the diff of a file, check if any vulnerable lines of code are added or deleted
 
     :param diff: The diff dictionary containing added and deleted lines of the file
-    :param source_code_dict: The dictionary containing old and new source code
     :param file_extension: The file extension of the file
     :param severity: The minimum severity level of vulnerabilities
     :param confidence: The minimum confidence level of vulnerabilities
@@ -404,7 +407,8 @@ def run_bandit(diff: dict, source_code_dict: dict, severity: Level, confidence: 
     return partial_output
 
 
-def include_vulnerability(severity: Level, confidence: Level, vuln_severity: Level, vuln_confidence=Level.NONE) -> bool:
+def include_vulnerability(severity: Level, confidence: Level, vuln_severity: Level,
+                          vuln_confidence: Level = Level.NONE) -> bool:
     """
     Check whether the vulnerability found should be included in the output
 
@@ -495,7 +499,19 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('repo', type=str, help='Path or URL of the Git repository')
     parser.add_argument('-b', '--branch', type=str, help='Only analyse the commits in this branch')
-    parser.add_argument('-s', '--single', metavar='HASH', type=str, help='Only analyse the provided commit (full hash)')
+    parser.add_argument('-s', '--single', metavar='HASH', type=str, help='Only analyse the provided commit')
+    parser.add_argument('--since', metavar='DATE', default=None,
+                        help='Starting date, date included (format: YYYY/MM/DD)')
+    parser.add_argument('--to', metavar='DATE', default=None,
+                        help='Ending date, date excluded (format: YYYY/MM/DD)')
+    parser.add_argument('--from-commit', metavar='HASH', type=str, default=None,
+                        help='Starting commit (only if since is None)')
+    parser.add_argument('--to-commit', metavar='HASH', type=str, default=None,
+                        help='Ending commit (only if to is None)')
+    parser.add_argument('--from-tag', metavar='TAG', type=str, default=None,
+                        help='Start the analysis from specified tag (only if since and from-commit are None)')
+    parser.add_argument('--to-tag', metavar='TAG', type=str, default=None,
+                        help='End the analysis to specified tag (only if to and to-commit are None)')
     parser.add_argument('-o', '--output', type=str, help='Write the result to the specified file name and path '
                                                          '(Default: as output.json in current working directory)')
     parser.add_argument('--severity', type=Level.from_string, choices=list(Level), default=Level.NONE,
@@ -505,7 +521,6 @@ if __name__ == '__main__':
                         help='Only include vulnerabilities of given confidence level or higher '
                              '(Default: NONE, include all)')
     parser.add_argument('--no-merge', action='store_true', help='Do not include merge commits')
-    parser.add_argument('--reverse', action='store_false', help='Analyse the commits from oldest to newest')
     args = parser.parse_args()
 
     try:
@@ -516,11 +531,24 @@ if __name__ == '__main__':
             args.repo = self._clone_remote_repos(tmp_folder.name, args.repo)
 
         repo = pd.GitRepository(args.repo)
+
+        args.single = repo.get_commit(args.single).hash if args.single else None
+        args.since = datetime.strptime(args.since, '%Y/%m/%d') if args.since else None
+        args.to = datetime.strptime(args.to, '%Y/%m/%d') if args.to else None
+        args.from_commit = repo.get_commit(args.from_commit).hash if args.from_commit else None
+        args.to_commit = repo.get_commit(args.to_commit).hash if args.to_commit else None
+
         repo_mining = pd.RepositoryMining(args.repo,
                                           single=args.single,
+                                          since=args.since,
+                                          to=args.to,
+                                          from_commit=args.from_commit,
+                                          to_commit=args.to_commit,
+                                          from_tag=args.from_tag,
+                                          to_tag=args.to_tag,
                                           only_in_branch=args.branch,
                                           only_no_merge=args.no_merge,
-                                          reversed_order=args.reverse)
+                                          reversed_order=True)
 
         if args.output:
             output_name, output_extension = os.path.splitext(args.output)
@@ -536,7 +564,7 @@ if __name__ == '__main__':
         else:
             output_path = f'{get_repo_name(args.repo)}.json'
 
-        output_result(search_repository(repo, repo_mining, args.severity, args.confidence), output_path)
+        output_result(search_repository(repo_mining, args.severity, args.confidence), output_path)
     except git.NoSuchPathError:
         print(f"shefmine.py: '{args.repo}' is not a Git repository")
     except git.GitCommandError:
