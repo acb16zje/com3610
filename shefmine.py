@@ -73,7 +73,7 @@ def search_repository(repo_mining: pd.RepositoryMining, severity: Level, confide
             continue
 
         commit_message = process_commit_message(commit.msg)
-        output[commit.hash] = {'message': commit_message, 'date': str(commit.author_date)}
+        output[commit.hash] = {'date': str(commit.author_date)}
 
         # Find matching vulnerabilities
         output[commit.hash]['vulnerabilities'] = [{'name': vulnerability.name, 'match': regex_match.group()}

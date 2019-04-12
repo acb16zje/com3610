@@ -66,13 +66,13 @@ mkdir -p ../repositories/java
 mkdir -p ../repositories/python
 
 for c_repo in "${c_repos[@]}"; do
-  cd "$DIR/../repositories/c" && git clone --mirror $c_repo
+  cd "$DIR/../repositories/c" && git clone --single-branch --bare $c_repo
 done
 
 for java_repo in "${java_repos[@]}"; do
-  cd "$DIR/../repositories/java" && git clone --mirror $java_repo
+  cd "$DIR/../repositories/java" && git clone --single-branch --bare $java_repo
 done
 
 for python_repo in "${python_repos[@]}"; do
-  cd "$DIR/../repositories/python" && git clone --mirror $python_repo
+  cd "$DIR/../repositories/python" && git clone --single-branch --bare $python_repo
 done
