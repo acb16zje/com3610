@@ -6,6 +6,7 @@ Shefmine: A tool for finding vulnerabilities in Git repositories
 import argparse
 import bandit
 import cchardet
+import copy
 import enum
 import flawfinder
 import git
@@ -63,11 +64,9 @@ def search_repository(repo_mining: pd.RepositoryMining, severity: Level, confide
 
     output = {}
     gitpython_repo = git.Repo(repo_mining._path_to_repo)
+    commit_count = len(list(copy.copy(repo_mining).traverse_commits()))
 
-    commits = list(repo_mining.traverse_commits())
-    commit_count = len(commits)
-
-    for commit in tqdm(commits, total=commit_count):
+    for commit in tqdm(repo_mining.traverse_commits(), total=commit_count):
         # Too many files changed will cause the program to hang
         if len(commit.modifications) > 100:
             continue
