@@ -93,7 +93,7 @@ def search_repository(repo_mining: pd.RepositoryMining, severity: Level, confide
 
             source_code_dict = get_source_code_dict(gitpython_repo, commit.hash, file, modification.source_code)
 
-            # Encoding will be None for some cases
+            # Encoding will be None or not supported by decode() for some cases
             if not source_code_dict:
                 continue
 
@@ -179,7 +179,10 @@ def get_source_code_dict(gitpython_repo: git.Repo, commit_hash: str, file: str, 
                 if a_encoding is None:
                     return False
 
-                a_source = a_stream.decode(a_encoding, 'replace')
+                try:
+                    a_source = a_stream.decode(a_encoding, 'replace')
+                except LookupError:
+                    return False
 
     return {'new': b_source, 'old': a_source}
 
