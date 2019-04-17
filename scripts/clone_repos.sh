@@ -56,6 +56,8 @@ python_repos=(
   "https://github.com/vmware/photon.git"
   "https://github.com/certifi/python-certifi.git"
   "https://github.com/sqlmapproject/sqlmap.git"
+  "https://github.com/tornadoweb/tornado.git"
+  "https://github.com/paramiko/paramiko.git"
 )
 
 DIR=`pwd`

@@ -7,10 +7,11 @@ import argparse
 import collections
 import json
 
+from datetime import datetime
 from typing import Union
 
 
-def analyse_result(result: dict):
+def show_regex_and_lines(result: dict):
     """
     Analyse the result file to show
     1. The number of issues found
@@ -22,205 +23,287 @@ def analyse_result(result: dict):
     :param result: The result file produced by Shefmine
     """
 
-    total_commits = len(result)
-
-    regexp_only = sum(1 for commit_hash in result
-                      if 'vulnerabilities' in result[commit_hash]
-                      and 'files_changed' not in result[commit_hash])
+    regexp_only = sum(1 for commit in result
+                      if 'vulnerabilities' in result[commit]
+                      and 'files_changed' not in result[commit])
 
     # Vulnerable lines changed only
-    lines_only_dict = {commit_hash: v for commit_hash, v in result.items()
-                       if 'vulnerabilities' not in result[commit_hash]
-                       and 'files_changed' in result[commit_hash]}
+    lines_only_dict = {commit: v for commit, v in result.items()
+                       if 'vulnerabilities' not in result[commit]
+                       and 'files_changed' in result[commit]}
 
     lines_only = len(lines_only_dict)
 
-    lines_add_only = sum(1 for commit_hash in lines_only_dict
+    lines_add_only = sum(1 for commit in lines_only_dict
                          if all('added' in f
                                 and 'deleted' not in f
                                 and 'unchanged' not in f
-                                for f in lines_only_dict[commit_hash]['files_changed']))
+                                for f in lines_only_dict[commit]['files_changed']))
 
-    lines_delete_only = sum(1 for commit_hash in lines_only_dict
+    lines_delete_only = sum(1 for commit in lines_only_dict
                             if all('added' not in f
                                    and 'deleted' in f
                                    and 'unchanged' not in f
-                                   for f in lines_only_dict[commit_hash]['files_changed']))
+                                   for f in lines_only_dict[commit]['files_changed']))
 
-    lines_unchange_only = sum(1 for commit_hash in lines_only_dict
+    lines_unchange_only = sum(1 for commit in lines_only_dict
                               if all('added' not in f
                                      and 'deleted' not in f
                                      and 'unchanged' in f
-                                     for f in lines_only_dict[commit_hash]['files_changed']))
+                                     for f in lines_only_dict[commit]['files_changed']))
 
-    lines_add_and_delete = sum(1 for commit_hash in lines_only_dict
+    lines_add_and_delete = sum(1 for commit in lines_only_dict
                                if all('added' in f
                                       and 'deleted' in f
                                       and 'unchanged' not in f
-                                      for f in lines_only_dict[commit_hash]['files_changed']))
+                                      for f in lines_only_dict[commit]['files_changed']))
 
-    lines_add_and_unchange = sum(1 for commit_hash in lines_only_dict
+    lines_add_and_unchange = sum(1 for commit in lines_only_dict
                                  if all('added' in f
                                         and 'deleted' not in f
                                         and 'unchanged' in f
-                                        for f in lines_only_dict[commit_hash]['files_changed']))
+                                        for f in lines_only_dict[commit]['files_changed']))
 
-    lines_delete_and_unchange = sum(1 for commit_hash in lines_only_dict
+    lines_delete_and_unchange = sum(1 for commit in lines_only_dict
                                     if all('added' not in f
                                            and 'deleted' in f
                                            and 'unchanged' in f
-                                           for f in lines_only_dict[commit_hash]['files_changed']))
+                                           for f in lines_only_dict[commit]['files_changed']))
 
     # RegExp match and vulnerable lines changed
-    both_dict = {commit_hash: v for commit_hash, v in result.items()
-                 if 'vulnerabilities' in result[commit_hash]
-                 and 'files_changed' in result[commit_hash]}
+    both_dict = {commit: v for commit, v in result.items()
+                 if 'vulnerabilities' in result[commit]
+                 and 'files_changed' in result[commit]}
 
     both = len(both_dict)
 
-    both_add_only = sum(1 for commit_hash in both_dict
+    both_add_only = sum(1 for commit in both_dict
                         if all('added' in f
                                and 'deleted' not in f
                                and 'unchanged' not in f
-                               for f in both_dict[commit_hash]['files_changed']))
+                               for f in both_dict[commit]['files_changed']))
 
-    both_delete_only = sum(1 for commit_hash in both_dict
+    both_delete_only = sum(1 for commit in both_dict
                            if all('added' not in f
                                   and 'deleted' in f
                                   and 'unchanged' not in f
-                                  for f in both_dict[commit_hash]['files_changed']))
+                                  for f in both_dict[commit]['files_changed']))
 
-    both_unchange_only = sum(1 for commit_hash in both_dict
+    both_unchange_only = sum(1 for commit in both_dict
                              if all('added' not in f
                                     and 'deleted' not in f
                                     and 'unchanged' in f
-                                    for f in both_dict[commit_hash]['files_changed']))
+                                    for f in both_dict[commit]['files_changed']))
 
-    both_add_and_delete = sum(1 for commit_hash in both_dict
+    both_add_and_delete = sum(1 for commit in both_dict
                               if all('added' in f
                                      and 'deleted' in f
                                      and 'unchanged' not in f
-                                     for f in both_dict[commit_hash]['files_changed']))
+                                     for f in both_dict[commit]['files_changed']))
 
-    both_add_and_unchange = sum(1 for commit_hash in both_dict
+    both_add_and_unchange = sum(1 for commit in both_dict
                                 if all('added' in f
                                        and 'deleted' not in f
                                        and 'unchanged' in f
-                                       for f in both_dict[commit_hash]['files_changed']))
+                                       for f in both_dict[commit]['files_changed']))
 
-    both_delete_and_unchange = sum(1 for commit_hash in both_dict
+    both_delete_and_unchange = sum(1 for commit in both_dict
                                    if all('added' not in f
                                           and 'deleted' in f
                                           and 'unchanged' in f
-                                          for f in both_dict[commit_hash]['files_changed']))
+                                          for f in both_dict[commit]['files_changed']))
 
-    # import random
-    # r = random.Random(3243)
-    # test = [commit_hash for commit_hash in lines_only_dict
-    #                      if all('added' in f
-    #                             and 'deleted' not in f
-    #                             and 'unchanged' not in f
-    #                             for f in lines_only_dict[commit_hash]['files_changed'])]
+    pad = f'{"":>2}'
+    nested_pad = pad + f'│{"":>5}'
+    final_pad = f'{"":>8}'
 
-    # for x in r.sample(test, 4):
-    #     print(x)
-
-    print(f'{"Total commits found":<53}: {total_commits}')
-    print(f'{"":>2}│')
-
-    low = sum(1 for _ in severity_confidence_stats("LOW", result))
-    low_low = sum(1 for _ in severity_confidence_stats("LOW", result, confidence_level="LOW"))
-    low_medium = sum(1 for _ in severity_confidence_stats("LOW", result, confidence_level="MEDIUM"))
-    low_high = sum(1 for _ in severity_confidence_stats("LOW", result, confidence_level="HIGH"))
-
-    medium = sum(1 for _ in severity_confidence_stats("MEDIUM", result))
-    medium_low = sum(1 for _ in severity_confidence_stats("MEDIUM", result, confidence_level="LOW"))
-    medium_medium = sum(1 for _ in severity_confidence_stats("MEDIUM", result, confidence_level="MEDIUM"))
-    medium_high = sum(1 for _ in severity_confidence_stats("MEDIUM", result, confidence_level="HIGH"))
-
-    high = sum(1 for _ in severity_confidence_stats("HIGH", result))
-    high_low = sum(1 for _ in severity_confidence_stats("HIGH", result, confidence_level="LOW"))
-    high_medium = sum(1 for _ in severity_confidence_stats("HIGH", result, confidence_level="MEDIUM"))
-    high_high = sum(1 for _ in severity_confidence_stats("HIGH", result, confidence_level="HIGH"))
-
-    print(f'{"":>2}{"├── Severity: LOW":<51}: {low}')
-    print(f'{"":>2}│{"":>5}{"├── Confidence: LOW":<49}: {low_low}')
-    print(f'{"":>2}│{"":>5}{"├── Confidence: MEDIUM":<49}: {low_medium}')
-    print(f'{"":>2}│{"":>5}{"└── Confidence: HIGH":<49}: {low_high}')
-    print(f'{"":>2}{"├── Severity: MEDIUM":<51}: {medium}')
-    print(f'{"":>2}│{"":>5}{"├── Confidence: LOW":<49}: {medium_low}')
-    print(f'{"":>2}│{"":>5}{"├── Confidence: MEDIUM":<49}: {medium_medium}')
-    print(f'{"":>2}│{"":>5}{"└── Confidence: HIGH":<49}: {medium_high}')
-    print(f'{"":>2}{"├── Severity: HIGH":<51}: {high}')
-    print(f'{"":>2}│{"":>5}{"├── Confidence: LOW":<49}: {high_low}')
-    print(f'{"":>2}│{"":>5}{"├── Confidence: MEDIUM":<49}: {high_medium}')
-    print(f'{"":>2}│{"":>5}{"└── Confidence: HIGH":<49}: {high_high}')
-    print(f'{"":>2}│')
-
-    vulnerabilities_list = (vuln['name'] for commit_hash in result
-                            if 'vulnerabilities' in result[commit_hash]
-                            for vuln in result[commit_hash]['vulnerabilities'])
-
-    for k, v in collections.Counter(vulnerabilities_list).most_common():
-        print(f'{"":>2}├── {k:<51}: {v}')
-
-    print(f'{"":>2}│')
-    print(f'{"":>2}{"├── ONLY Vulnerability RegExp match":<51}: {regexp_only}')
-    print(f'{"":>2}│')
-    print(f'{"":>2}{"├── ONLY Vulnerable lines changed":<51}: {lines_only}')
-    print(f'{"":>2}│{"":>5}{"├── ONLY Added lines":<50}: {lines_add_only}')
-    print(f'{"":>2}│{"":>5}{"├── ONLY Deleted lines":<50}: {lines_delete_only}')
-    print(f'{"":>2}│{"":>5}{"├── ONLY Unchanged lines":<50}: {lines_unchange_only}')
-    print(f'{"":>2}│{"":>5}│')
-    print(f'{"":>2}│{"":>5}{"├── ONLY Added AND Delete lines":<50}: {lines_add_and_delete}')
-    print(f'{"":>2}│{"":>5}{"├── ONLY Added AND Unchanged lines":<50}: {lines_add_and_unchange}')
-    print(f'{"":>2}│{"":>5}{"└── ONLY Delete AND Unchanged lines":<50}: {lines_delete_and_unchange}')
-    print(f'{"":>2}│')
-    print(f'{"":>2}{"└── BOTH RegExp match and vulnerable lines changed":<51}: {both}')
-    print(f'{"":>8}{"├── ONLY Added lines":<50}: {both_add_only}')
-    print(f'{"":>8}{"├── ONLY Deleted lines":<50}: {both_delete_only}')
-    print(f'{"":>8}{"├── ONLY Unchanged lines":<50}: {both_unchange_only}')
-    print(f'{"":>8}│')
-    print(f'{"":>8}{"├── ONLY Added AND Delete lines":<50}: {both_add_and_delete}')
-    print(f'{"":>8}{"├── ONLY Added AND Unchanged lines":<50}: {both_add_and_unchange}')
-    print(f'{"":>8}{"└── ONLY Delete AND Unchanged lines":<50}: {both_delete_and_unchange}')
+    print(f'{pad}{"├── ONLY Vulnerability RegExp match":<51}: {regexp_only}')
+    print(f'{pad}│')
+    print(f'{pad}{"├── ONLY Vulnerable lines changed":<51}: {lines_only}')
+    print(f'{nested_pad}{"├── ONLY Added lines":<50}: {lines_add_only}')
+    print(f'{nested_pad}{"├── ONLY Deleted lines":<50}: {lines_delete_only}')
+    print(f'{nested_pad}{"├── ONLY Unchanged lines":<50}: {lines_unchange_only}')
+    print(f'{nested_pad}│')
+    print(f'{nested_pad}{"├── ONLY Added AND Deleted lines":<50}: {lines_add_and_delete}')
+    print(f'{nested_pad}{"├── ONLY Added AND Unchanged lines":<50}: {lines_add_and_unchange}')
+    print(f'{nested_pad}{"└── ONLY Deleted AND Unchanged lines":<50}: {lines_delete_and_unchange}')
+    print(f'{pad}│')
+    print(f'{pad}{"└── BOTH RegExp match and vulnerable lines changed":<51}: {both}')
+    print(f'{final_pad}{"├── ONLY Added lines":<50}: {both_add_only}')
+    print(f'{final_pad}{"├── ONLY Deleted lines":<50}: {both_delete_only}')
+    print(f'{final_pad}{"├── ONLY Unchanged lines":<50}: {both_unchange_only}')
+    print(f'{final_pad}│')
+    print(f'{final_pad}{"├── ONLY Added AND Deleted lines":<50}: {both_add_and_delete}')
+    print(f'{final_pad}{"├── ONLY Added AND Unchanged lines":<50}: {both_add_and_unchange}')
+    print(f'{final_pad}{"└── ONLY Deleted AND Unchanged lines":<50}: {both_delete_and_unchange}')
 
 
-def severity_confidence_stats(severity_level: str, result: Union[list, dict], **kwargs):
+def severity_confidence_stats(severity_level: str, result: Union[list, dict], confidence_level: str = None):
     """
     Calculate the number of vulnerabilities with given severity and confidence level
 
     :param severity_level: Severity level
     :param result: Result dictionary
-    :param kwargs: Confidence level
+    :param confidence_level: Confidence level
     :return:
     """
 
     if hasattr(result, 'items'):
         for k, v in result.items():
             if k == 'severity' and v == severity_level:
-                if 'confidence_level' in kwargs:
-                    if result['confidence'] == kwargs['confidence_level']:
+                if confidence_level:
+                    if result['confidence'] == confidence_level:
                         yield 1
                 else:
                     yield 1
             if isinstance(v, dict):
-                if 'confidence_level' in kwargs:
-                    for result in severity_confidence_stats(severity_level, v,
-                                                            confidence_level=kwargs['confidence_level']):
+                if confidence_level:
+                    for result in severity_confidence_stats(severity_level, v, confidence_level):
                         yield result
                 else:
                     for result in severity_confidence_stats(severity_level, v):
                         yield result
             elif isinstance(v, list):
                 for d in v:
-                    if 'confidence_level' in kwargs:
-                        for result in severity_confidence_stats(severity_level, d,
-                                                                confidence_level=kwargs['confidence_level']):
+                    if confidence_level:
+                        for result in severity_confidence_stats(severity_level, d, confidence_level):
                             yield result
                     else:
                         for result in severity_confidence_stats(severity_level, d):
                             yield result
+
+
+def show_total_commits(result: dict):
+    """
+    Prints total commits found
+
+    :param result: The result file produced by Shefmine
+    """
+    print(f'{"Total commits found":<53}: {len(result)}')
+
+
+def show_commit_years(result: dict):
+    """
+    Prints a list of years
+
+    :param result: The result file produced by Shefmine
+    """
+    date_list = (datetime.strptime(result[commit]['date'], '%Y-%m-%d %H:%M:%S%z').year for commit in result)
+
+    [print(f'{"":>2}├── {k:<7}: {v}')
+     for k, v in sorted(collections.Counter(date_list).items(), key=lambda item: item[0], reverse=True)]
+
+
+def show_severity_confidence(result: dict):
+    """
+    Prints severity and confidence statistics
+
+    :param result: The result file produced by Shefmine
+    """
+    pad = f'{"":>2}'
+    nested_pad = pad + f'│{"":>5}'
+
+    print(f'{pad}{"├── Severity: LOW":<51}: {sum(severity_confidence_stats("LOW", result))}')
+    print(f'{nested_pad}{"├── Confidence: NONE":<49}: {sum(severity_confidence_stats("LOW", result, "NONE"))}')
+    print(f'{nested_pad}{"├── Confidence: LOW":<49}: {sum(severity_confidence_stats("LOW", result, "LOW"))}')
+    print(f'{nested_pad}{"├── Confidence: MEDIUM":<49}: {sum(severity_confidence_stats("LOW", result, "MEDIUM"))}')
+    print(f'{nested_pad}{"└── Confidence: HIGH":<49}: {sum(severity_confidence_stats("LOW", result, "HIGH"))}')
+    print(f'{pad}{"├── Severity: MEDIUM":<51}: {sum(severity_confidence_stats("MEDIUM", result))}')
+    print(f'{nested_pad}{"├── Confidence: NONE":<49}: {sum(severity_confidence_stats("MEDIUM", result, "NONE"))}')
+    print(f'{nested_pad}{"├── Confidence: LOW":<49}: {sum(severity_confidence_stats("MEDIUM", result, "LOW"))}')
+    print(f'{nested_pad}{"├── Confidence: MEDIUM":<49}: {sum(severity_confidence_stats("MEDIUM", result, "MEDIUM"))}')
+    print(f'{nested_pad}{"└── Confidence: HIGH":<49}: {sum(severity_confidence_stats("MEDIUM", result, "HIGH"))}')
+    print(f'{pad}{"├── Severity: HIGH":<51}: {sum(severity_confidence_stats("HIGH", result))}')
+    print(f'{nested_pad}{"├── Confidence: NONE":<49}: {sum(severity_confidence_stats("HIGH", result, "NONE"))}')
+    print(f'{nested_pad}{"├── Confidence: LOW":<49}: {sum(severity_confidence_stats("HIGH", result, "LOW"))}')
+    print(f'{nested_pad}{"├── Confidence: MEDIUM":<49}: {sum(severity_confidence_stats("HIGH", result, "MEDIUM"))}')
+    print(f'{nested_pad}{"└── Confidence: HIGH":<49}: {sum(severity_confidence_stats("HIGH", result, "HIGH"))}')
+
+
+def show_regex_vulnerabilities(result: dict):
+    """
+    Prints vulnerabilities found by RegExp
+
+    :param result: The result file produced by Shefmine
+    """
+    vulnerabilities_list = (vuln['name'] for commit in result
+                            if 'vulnerabilities' in result[commit]
+                            for vuln in result[commit]['vulnerabilities'])
+
+    [print(f'{"":>2}├── {k:<51}: {v}')
+     for k, v in collections.Counter(vulnerabilities_list).most_common()]
+
+
+def get_random_commits(result: dict):
+    """
+    Prints random commits for evaluation purposes
+
+    :param result: The result file produced by Shefmine
+    """
+
+    print('ONLY Vulnerability RegExp match \n================================')
+    get_samples([commit for commit in result
+                 if 'vulnerabilities' in result[commit]
+                 and 'files_changed' not in result[commit]])
+
+    # Vulnerable lines changed only
+    lines_only_dict = {commit: v for commit, v in result.items()
+                       if 'vulnerabilities' not in result[commit]
+                       and 'files_changed' in result[commit]}
+
+    print('\nONLY Vulnerable lines changed \n================================')
+    get_samples(list(lines_only_dict))
+
+    print('\nONLY Vulnerable lines changed: Added \n================================')
+    get_samples([commit for commit in lines_only_dict
+                 if all('added' in f
+                        and 'deleted' not in f
+                        and 'unchanged' not in f
+                        for f in lines_only_dict[commit]['files_changed'])])
+
+    print('\nONLY Vulnerable lines changed: Deleted \n================================')
+    get_samples([commit for commit in lines_only_dict
+                 if all('added' not in f
+                        and 'deleted' in f
+                        and 'unchanged' not in f
+                        for f in lines_only_dict[commit]['files_changed'])])
+
+    print('\nONLY Vulnerable lines changed: Unchanged \n================================')
+    get_samples([commit for commit in lines_only_dict
+                 if all('added' not in f
+                        and 'deleted' not in f
+                        and 'unchanged' in f
+                        for f in lines_only_dict[commit]['files_changed'])])
+
+    print('\nONLY Vulnerable lines changed: Added and Deleted\n================================')
+    get_samples([commit for commit in lines_only_dict
+                 if all('added' in f
+                        and 'deleted' in f
+                        and 'unchanged' not in f
+                        for f in lines_only_dict[commit]['files_changed'])])
+
+    print('\nBOTH RegExp match and vulnerable lines changed\n================================')
+    get_samples([commit for commit in result
+                 if 'vulnerabilities' in result[commit] and 'files_changed' in result[commit]])
+
+    exit(0)
+
+
+def get_samples(samples: list):
+    """
+
+    :param samples: List of filtered commits
+    :param sample_size: The sample size (number of commits to returned)
+    """
+    import random
+
+    sample_size = 4
+    r = random.Random(3243)
+
+    try:
+        [print(x) for x in r.sample(samples, sample_size)]
+    except ValueError:
+        [print(x) for x in r.sample(samples, len(samples))]
 
 
 if __name__ == '__main__':
@@ -233,7 +316,18 @@ if __name__ == '__main__':
         with open(args.file) as file:
             result = json.load(file)
 
-        analyse_result(result)
+        # Evaluation only
+        # get_random_commits(result)
+
+        show_total_commits(result)
+        print(f'{"":>2}│')
+        show_commit_years(result)
+        print(f'{"":>2}│')
+        show_regex_vulnerabilities(result)
+        print(f'{"":>2}│')
+        show_severity_confidence(result)
+        print(f'{"":>2}│')
+        show_regex_and_lines(result)
     except FileNotFoundError:
         print(f"shefstat.py: FileNotFoundError, no such file '{args.file}'")
     except json.JSONDecodeError:
