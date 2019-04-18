@@ -14,11 +14,16 @@
 \usepackage{longtable}
 \usepackage{microtype}
 \usepackage{parskip}
-\usepackage{pgfgantt}
+\usepackage{pgfplots}
 \usepackage{subcaption}
+\usepackage{tikz}
 
 \linespread{1.2}
 \restoreparindent
+
+\pgfplotsset{small, compat=1.16}
+\usetikzlibrary{fpu}
+\usetikzlibrary{positioning}
 
 \pagestyle{fancy}
 \fancyhf{}
@@ -28,10 +33,12 @@
 \makeglossaries
 \renewcommand*{\glstextformat}[1]{\textbf{#1}}
 \newacronym{apis}{APIs}{application processing interfaces}
+\newacronym{cli}{CLI}{Command-line Interface}
 \newacronym{cve}{CVE}{Common Vulnerabilities and Exposures}
 \newacronym{cwe}{CWE}{Common Weakness Enumeration}
 \newacronym{floss}{FLOSS}{Free/Libre and Open Source Software}
 \newacronym{gui}{GUI}{Graphical User Interface}
+\newacronym{hpc}{HPC}{High Performance Computing}
 \newacronym{json}{JSON}{JavaScript Object Notation}
 \newacronym{msr}{MSR}{Mining Software Repositories}
 \newacronym{nvd}{NVD}{National Vulnerability Database}
@@ -116,7 +123,7 @@ future.
 
 \chapter{Introduction}
 \section{Background}
-\acrfull{floss} is a type of software whose license allows the users to inspect, use, modify and
+\acrfull{floss} is a type of software whose license allows the users to inspect, use, change and
 redistribute the software's source code \cite{crowston_2012}. Since the introduction of the version
 control system, many repository hosting sites such as SourceForge \cite{sourceforge}, Google Code
 \cite{google_code}, and GitHub \cite{github} have been launched. As a result, the participation of
@@ -132,11 +139,11 @@ security is determined by the information provided by the vendor of the software
 deciding whether to perform the security update. Hence, the users of software components are advised
 to check the \acrfull{nvd} \cite{nvd} regularly for detailed information of the vulnerabilities
 identified in the software components used. Furthermore, it would be more helpful if the developers
-of the software components clearly record the list of changes or provide informative Git commit
-messages for every version update of their component.
+of the software components recorded the list of changes or provide informative Git commit messages
+for every version update of their component.
 
 To perform a risk assessment of a potentially vulnerable component, it is required to have a deep
-understanding of the vulnerability entry points. However, not all projects follow the \acrfull{cve}
+understanding of the vulnerability entry points. Yet, not all projects follow the \acrfull{cve}
 format or publish \acrshort{cve}, and \acrshort{cve} reports are usually lack of technical details
 that attribute the specific entry points of the vulnerability, which is an important aspect in part
 of the risk assessment. By identifying the vulnerability-fixing commits, the vulnerable lines of
@@ -406,7 +413,7 @@ to address a vulnerability, which matches the assumption of Neuhaus and Plattner
     \subcaption{Vulerability fix in oauth2 proxy repository \cite{bad_vfc}}
     \label{figure:bad_vfc}
   \end{subfigure}
-  \caption[Examples of vulnerability-fixing commit]%
+  \caption[Examples of vulnerability-fixing commit.]%
   %
   {A comparison of \hyperref[figure:g_vfc]{\textbf{(a)}} a higher quality and
     \hyperref[figure:bad_vfc]{\textbf{(b)}} a lower quality vulnerability-fixing
@@ -485,7 +492,7 @@ This statement is justifiable if and only if an update does not introduce securi
 fixes. As a result, it is helpful to run static analysis in an older version of software and inform
 the users about the potential security vulnerabilities if the users decided not to update the
 software. This can be done by traversing through the history of a given software repository and
-reports the issues found in each revision.
+reports the issues found in each revision, the implementation details are further explained in .
 
 \section{Usage of the Repository Mining Tool in Other Areas}
 While the repository mining tool developed in this project is only capable of finding security
@@ -536,7 +543,7 @@ that improve the feasibility of this project.
   while maintaining the accuracy of the results at the standard level.
 \end{enumerate}
 
-\section{Software Requirements and Scope}
+\section{Software Requirements and Scope} \label{sec:software_req}
 \subsection{Functional Requirements}
 \begin{longtable}{|p{10.3cm}|c|}
   \hline \endfirsthead
@@ -557,27 +564,26 @@ that improve the feasibility of this project.
   added into the tool. & Desirable \\ \hline
   \textbf{Robustness}: The mining tool should be able to handle all possible errors without
   terminating the mining process. & Desirable \\ \hline
-  \caption{Functional requirements of the mining tool} \label{table:func_req}
+  \caption{Functional requirements of the mining tool.} \label{table:func_req}
 \end{longtable}
 
 \subsection{Non-functional Requirements}
 \begin{table}[H]
-  \begin{center}
-    \begin{tabular}{|p{10.3cm}|c|}
-      \hline
-      \rowcolor[HTML]{D8D8D8}
-      \multicolumn{1}{|c|}{Criteria} & Importance \\ \hline
-      \textbf{Code Style}: The source code should be well-commented and follow a consistent coding
-      style. & Essential  \\ \hline
-      \textbf{Documentation}: Installation and user manual should be provided. & Essential \\ \hline
-      \textbf{Lightweight}: The mining tool should have minimal dependencies. & Essential \\ \hline
-      \textbf{Open source}: As the mining tool is built for researching open source repositories, it
-      should be open source to suit the use cases. & Essential \\ \hline
-      \textbf{Performance}: The performance of the mining tool should be optmised for different
-      project sizes. & Desirable \\ \hline
-    \end{tabular}
-    \caption{Non-functional requirements of the mining tool} \label{table:nonfunc_req}
-  \end{center}
+  \centering
+  \begin{tabular}{|p{10.3cm}|c|}
+    \hline
+    \rowcolor[HTML]{D8D8D8}
+    \multicolumn{1}{|c|}{Criteria} & Importance \\ \hline
+    \textbf{Code Style}: The source code should be well-commented and follow a consistent coding
+    style. & Essential  \\ \hline
+    \textbf{Documentation}: Installation and user manual should be provided. & Essential \\ \hline
+    \textbf{Lightweight}: The mining tool should have minimal dependencies. & Essential \\ \hline
+    \textbf{Open source}: As the mining tool is built for researching open source repositories, it
+    should be open source to suit the use cases. & Essential \\ \hline
+    \textbf{Performance}: The performance of the mining tool should be optmised for different
+    project sizes. & Desirable \\ \hline
+  \end{tabular}
+  \caption{Non-functional requirements of the mining tool.} \label{table:nonfunc_req}
 \end{table}
 
 \subsection{Scope}
@@ -616,7 +622,7 @@ requirements can be included to define the scope of the mining tool.
     \label{figure:common_vuln}
   \end{subfigure}
   \caption[A comparison between a \acrshort{cve}-identified fixing commit and a common
-  vulnerability-fixing commit]%
+  vulnerability-fixing commit.]%
   %
   {An example of \hyperref[figure:cve_vuln]{\textbf{(a)}} a \acrshort{cve}-identified vulnerability
     fix and \hyperref[figure:common_vuln]{\textbf{(b)}} a common vulnerability fix.}
@@ -706,7 +712,7 @@ vulnerability-fixing commits.
     \subcaption{Good commit message quality \cite{good_commit_msg}}
     \label{figure:good_commit_msg}
   \end{subfigure}
-  \caption[A comparison between a bad quality and a good quality commit message]%
+  \caption[A comparison between a bad quality and a good quality commit message.]%
   %
   {An example of \hyperref[figure:bad_commit_msg]{\textbf{(a)}} a bad quality commit message and
   \hyperref[figure:good_commit_msg]{\textbf{(b)}} a good quality commit message.}
@@ -752,7 +758,7 @@ to find the relationship between code changes in different files.
 \begin{figure}[H]
   \centering
   \includegraphics[width=.75\linewidth]{images/code_diff.png}
-  \caption{An example of code changes to prevent SQL injection \cite{code_diff}}
+  \caption{An example of code changes to prevent SQL injection \cite{code_diff}.}
   \label{figure:code_diff}
 \end{figure}
 
@@ -767,16 +773,15 @@ project. Fundamental test cases include checking the functions for an expected r
 test cases are based on the functionality of the tool to cover every feature implemented.
 
 \begin{table}[H]
-  \begin{center}
-    \begin{tabular}{|c|c|c|c|c|}
-      \hline
-      \rowcolor[HTML]{D8D8D8}
-      \begin{tabular}[c]{@{}c@{}}Test \\ Case \#\end{tabular} & Test Data & Expected Result & Actual
-      Result                         & Status                                 \\ \hline
-                                     &           &                 &        & \\ \hline
+  \centering
+  \begin{tabular}{|c|c|c|c|c|}
+    \hline
+    \rowcolor[HTML]{D8D8D8}
+    \begin{tabular}[c]{@{}c@{}}Test \\ Case \#\end{tabular} & Test Data & Expected Result & Actual
+    Result & Status \\ \hline
+    & & & & \\ \hline
     \end{tabular}
-    \caption{Documentation format of the unit testing} \label{table:unittest}
-  \end{center}
+  \caption{Documentation format of the unit testing.} \label{table:unittest}
 \end{table}
 
 \subsection{System Testing}
@@ -826,61 +831,221 @@ defining and measuring the quality metrics listed below:
 \end{itemize}
 
 \section{Ethical Issues}
-In this project, it has to be clearly declared that any known or unknown vulnerabilities found by
-the mining tool in any repositories will not be publicly disclosed without the permission of the
-original authors. The reason is that publishing the vulnerabilities publicly would make the
-softwares highly vulnerable to attackers \cite{arora_2010}, and it is recommended to wait for the
-official announcement from the software vendors.
+In this project, it is declared that any known or unknown vulnerabilities found by the mining tool
+in any repositories will not be publicly disclosed without the permission of the original authors.
+The reason is that publishing the vulnerabilities publicly would make the softwares highly
+vulnerable to attackers \cite{arora_2010}, and it is recommended to wait for the official
+announcement from the software vendors.
 
 \chapter{Design}
-This chapter outlines the 
+This chapter outlines the design concepts and justifies any decisions and approaches taken for the
+development of the project.
 
-\begin{itemize}
-  \item Locally detectable
-  \item Control flow
-\end{itemize}
+\section{Implementation Model}
+There are several methods to implement the repository mining tool, and the selected approach must
+maximises the usability, while satisfying the requirements stated in
+\hyperref[sec:software_req]{\textbf{Section \ref*{sec:software_req}}}. In this section, all
+approaches will be discussed and evaluated, with the selected approach further justified.
+
+\subsection{Considered implementation models}
+
+\subsubsection*{\underline{Model 1: \acrfull{gui}}} \label{subsec:model1}
+The first model suggests implementing the repository mining tool with graphical user interface using
+libraries such as tkinter \cite{tkinter} or PyQt \cite{pyqt}. The interface can be divided into two
+parts:
+\begin{enumerate}
+  \item \textbf{Repository Analysing:} This interface allows the users to open, view, and
+  analyse the selected repository with specified parameters. During the analysing process, progress
+  will be shown on the interface, and users are able to pause or stop the process.
+  \item \textbf{Statistical Evaluation:} This interface allows the users to read and edit the result
+  file. Assuming the system has enough computing power and memory, the interface would allow reading
+  and editing the result file concurrently with the analysing process. In this interface, users can
+  browse through the results file and evaluate the results manually by marking the issues as false
+  positive or false negative.
+\end{enumerate}
+
+This model has several advantages, including better results presentation, multitasking ability on
+the same interface window, and easier result evaluation. However, the disadvantages includes the
+increased usage of system resources and incompatibility for batch job processing on the
+\acrfull{hpc} of the University of Sheffield.
+
+\subsubsection*{\underline{Model 2: Executable Python Script}}\label{subsec:model2}
+The second model suggests implementing the repository mining tool as an executable Python script.
+The tool does not have its own interface. It must be executed in a \acrfull{cli} such as
+\textit{terminal}, \textit{console}, or \textit{shell}.
+
+will accept user specified options via
+arguments and could be run on any terminals or consoles, assuming the system requirements are met
+and dependencies are installed.
+
+In comparison with \hyperref[subsec:model1]{\textbf{Model 1}}, this model uses less system
+resources, and supports batch job processing on the \acrshort{hpc} of the University of Sheffield.
+However,
+
+\subsection{Chosen implementation model}
+\hyperref[subsec:model2]{\textbf{Model 2}} was chosen to be the final implementation model. Users
+are required to have basic knowledge of the command-line,
 
 \section{Supported Programming Languages}
-\subsection{C/C++}
-\subsection{Python}
-\subsection{Other Programming Languages}
+Many open source repositories are written in more than one programming languages. Therefore, the
+repository mining tool must be extensible and able to support multiple programming languages. The
+tool is predefined to support the repositories written in the following language:
+\begin{enumerate}
+  \item C/C++ (based on Flawfinder \cite{flawfinder})
+  \item Java (adapted and modified from graudit \cite{graudit})
+  \item Python (based on bandit \cite{bandit})
+\end{enumerate}
+
+In addition, the repository can be extended to support user-defined language
 
 \section{Overview of the Repository Mining Tool}
-\subsection{Commit Messages Searching}
+\subsection{Structure}
+
+\subsection{Program Flow}
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    [node distance=2cm,
+    start/.style={circle, fill=black, minimum size=8mm},
+    end/.style={path picture={\draw circle [radius=4mm]; \fill circle [radius=3mm];}},
+    arrow/.style={thick, ->, >=stealth}]
+    \node [start] (start) {};
+    \node [end, minimum size=8.2mm, below of=start] (end) {};
+
+    \draw [arrow] (start) -- (end);
+  \end{tikzpicture}
+\end{figure}
+
+\subsection{Commit Messages Matching}
 \begin{figure}[H]
   \centering
   \includegraphics[width=.85\linewidth]{images/keyword_search.png}
-  \caption{An example of expected search behaviour for the query \textbf{`CVE'}}
+  \caption{An example of expected search for the query \textbf{`CVE'}.}
   \label{figure:keyword_search}
 \end{figure}
+
+\section{Overview of the Statistical Analysis Tool}
 
 \hyperref[figure:keyword_search]{\textbf{Figure \ref*{figure:keyword_search}}} shows an example of
 expected search results returned for the query \textbf{`CVE'}.
 
 \chapter{Implementation and Testing}
 httpd repo
-% ---------
-% 89fd8d0353f6dc234bf026594c7b4f00caa8dbd8: only comment changes
-% cd2b7a26c776b0754fb98426a67804fd48118708: CVE in message, comment and code changes
+---------
+89fd8d0353f6dc234bf026594c7b4f00caa8dbd8: only comment changes
+cd2b7a26c776b0754fb98426a67804fd48118708: CVE in message, comment and code changes
 
-% \section{Testing}
-% - self-created repo
-% - not supported programming languages
-% - supported programming languages
+\section{Testing}
+- self-created repo
+- not supported programming languages
+- supported programming languages
 
-% weakness of flawfinder:
-% memcpy() changes to memcpy () will be detected as well
+weakness of flawfinder:
+memcpy() changes to memcpy () will be detected as well
 
-% https://github.com/apache/camel/commit/b9a3117f19dd19abd2ea8b789c42c3e86fe4c488
-% Too many files changed will cause the program to hang, so skip the commit
+https://github.com/apache/camel/commit/b9a311
+Too many files changed will cause the program to hang, so skip the commit
 
-\chapter{Results and Discussion}
-\section{Case Study}
-% CVE-2019-0211
-% https://github.com/apache/httpd/commit/a41bac19547489f399015064ffdf52545c5c3a87
+\subsection{Edge Cases}
+CVE-2019-0211
+% https://github.com/apache/httpd/commit/a41bac
 % https://httpd.apache.org/security/vulnerabilities_24.html
 % https://cfreal.github.io/carpe-diem-cve-2019-0211-apache-local-root.html
 
+\subsection{Verification and Validation}
+
+\chapter{Results and Discussion}
+This chapter
+
+\section{Results Overview}
+Repositories are not randomly selected. Selected based on actual software usage of large software
+vendor.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+      width=\textwidth, height=8cm,
+      title style={align=center, yshift=1em},
+      title={Number of Potentially Vulnerable Commits Found Since 1990},
+      xtick=data,
+      x tick label style={/pgf/number format/1000 sep=, rotate=45, font=\scriptsize},
+      xlabel near ticks, xlabel=Year,
+      enlarge x limits=0.02,
+      restrict x to domain=1970:2019,
+      ylabel near ticks, ylabel=Number of Commits,
+      ybar, ymin=0, ymax=85000,
+      nodes near coords={
+        \pgfkeys{/pgf/fpu=true, /pgf/fpu/output format=fixed}
+        \pgfmathparse{\thenumber > 1000 ? \thenumber/1000 : \thenumber}
+        \pgfmathprintnumber[precision=0]{\pgfmathresult}%
+        \pgfmathparse{\thenumber > 1000 ? 1 : 0}%
+        \pgfkeys{/pgf/fpu=false}%
+        \pgfmathparse{\pgfmathresult > 0 ? "k" : ""}%
+        \pgfmathresult
+        },
+      nodes near coords style={rotate=45, xshift=3pt, font=\tiny},
+      visualization depends on=y \as \thenumber,
+    ]
+    \addplot coordinates {(1990, 37) (1991, 146) (1992, 173) (1993, 101) (1994, 113) (1995, 365)
+    (1996, 345) (1997, 573) (1998, 475) (1999, 1591) (2000, 5512) (2001, 8294) (2002, 6652) (2003,
+    6461) (2004, 6468) (2005, 17198) (2006, 28484) (2007, 31482) (2008, 42376) (2009, 47475) (2010,
+    46850) (2011, 54332) (2012, 62334) (2013, 60464) (2014, 64928) (2015, 65717) (2016, 68757)
+    (2017, 70924) (2018, 67828) (2019, 14270)};
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Number of potentially vulnerable commits found since 1990 in all repositories analysed.}
+\end{figure}
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|l|l|l|}
+    \hline
+    \rowcolor[HTML]{D8D8D8}
+    \multicolumn{1}{|c|}{Vulnerabilities} & \multicolumn{1}{|c|}{Total} &
+    \multicolumn{1}{|c|}{Percentage} \\ \hline
+    Broken Access Control & 190 & 0.13\% \\
+    Broken Authentication and Session Management & 978 & 0.67\% \\
+    Buffer Overflow & 1,365 & 0.94\% \\
+    Bug Tracker Issue & 34,799 & 23.90\% \\
+    Context Leaks & 17 & 0.01\% \\
+    Cross-Site Request Forgery & 204 & 0.14\% \\
+    Cross-Site Scripting & 310 & 0.21\% \\
+    Distributed Denial-of-Service / Denial-of-Service & 7,340 & 5.04\% \\
+    Encryption Issues & 24,291 & 16.68\% \\
+    Hard Coded & 1,766 & 1.21\% \\
+    Injection & 1,772 & 1.22\% \\
+    Insufficient Attack Protection & 191 & 0.13\% \\
+    Memory Leaks & 5,819 & 4.00\% \\
+    Miscellaneous & 14,409 & 9.89\% \\
+    Null Pointers & 7,803 & 5.36\% \\
+    Overflow & 4,929 & 3.38\% \\
+    Resource Leaks & 98 & 0.07\% \\
+    Path / Directory Traversal & 177 & 0.12\% \\
+    SHA-1 Collision & 1 & 0.00\% \\
+    Security Misconfiguration & 10,457 & 7.18\% \\
+    Sensitive Data Exposure & 22,657 & 15.56\% \\
+    Using Components with Known Vulnerabilities & 186 & 0.13\% \\
+    Underprotected APIs & 5,862 & 4.03\% \\ \hline \hline
+    \textbf{Total} & \textbf{145,621} & \textbf{100.00\%} \\ \hline
+  \end{tabular}
+  \caption{Vulnerabilities matched by the regular expressions in all repositories analysed.}
+\end{table}
+
+\section{Case Study}
+
+\section{Problems}
+Linux repo
+224426f168aa4af3dcb628e6edaa824d32d60e6f, date is year 1970, parent is year 2007
+09f2724a786f76475ef2985cf84f5359c553aade, date is year 2030, parent is year 2008
+12ca45fea91cfbb09df828bea958b47348caee6d, date is year 2037, parent is year 2009
+
+\section{Evaluation}
+
+\section{Goals Achieved}
+
+\section{Further Work}
+pyhton multiprocessing
 
 \chapter{Conclusion}
 
