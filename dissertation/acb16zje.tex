@@ -43,6 +43,7 @@
 \newacronym{msr}{MSR}{Mining Software Repositories}
 \newacronym{nvd}{NVD}{National Vulnerability Database}
 \newacronym{owasp}{OWASP}{Open Web Application Security Project}
+\newacronym{stdout}{stdout}{Standard Output}
 \newacronym{xml}{XML}{Extensible Markup Language}
 
 \addbibresource{references.bib}
@@ -166,14 +167,14 @@ version control system are also supported after they have been migrated to Git.
 \section{Objectives} \label{sec:objectives}
 \begin{itemize}
   \item Identify the security patterns of the most popular security issues in \acrfull{owasp} Top
-        Ten Project.
+  Ten Project.
   \item Develop a repository mining tool to search through the commit history of a repository and
-        find a list of commit messages that match the patterns. The list should be produced in
-        \acrfull{json} file format.
+  find a list of commit messages that match the patterns. The list should be produced in
+  \acrfull{json} file format.
   \item Extend the mining tool which checks the code difference in the commits found to obtain the
-        actual commits fixing the security vulnerabilities.
+  actual commits fixing the security vulnerabilities.
   \item Create a statistical tool that reads the output file and reports a detailed analysis of the
-        results.
+  results.
 \end{itemize}
 
 \section{Challenges} \label{sec:challenges}
@@ -183,18 +184,18 @@ more thorough analysis of the problems and constraints is carried out in
 
 \begin{itemize}
   \item \textbf{Data}: There are a large number of open source repositories available on GitHub.
-        However, it is challenging to find a set of sample repositories that can produce accurate and
-        consistent results.
+  However, it is challenging to find a set of sample repositories that can produce accurate and
+  consistent results.
   \item \textbf{Misclassification}: The commit messages for the same vulnerability patch are not
-        always the same, thus misclassification is inevitable. Using regular expressions to match the
-        patterns in the mining process do not guarantee the correctness of the result.
+  always the same, thus misclassification is inevitable. Using regular expressions to match the
+  patterns in the mining process do not guarantee the correctness of the result.
   \item \textbf{Evaluation}: After mining a list of commits that contain the identified patterns in
-        its message, the evaluation process might not correctly locate the lines of code that addressed
-        the security vulnerability. It might be required to perform a manual evaluation to correctly
-        identify some of the results.
+  its message, the evaluation process might not correctly locate the lines of code that addressed
+  the security vulnerability. It might be required to perform a manual evaluation to correctly
+  identify some of the results.
   \item \textbf{Time}: Large repository such as Linux which has more than 820,000 commits in total
-        \cite{linux_repo} could be extremely time-consuming for the repository mining tool to complete the
-        search and evaluation process.
+  \cite{linux_repo} could be extremely time-consuming for the repository mining tool to complete the
+  search and evaluation process.
 \end{itemize}
 
 \section{Report Structure}
@@ -854,14 +855,14 @@ The first model suggests implementing the repository mining tool with graphical 
 libraries such as tkinter \cite{tkinter} or PyQt \cite{pyqt}. The interface can be divided into two
 parts:
 \begin{enumerate}
-  \item \textbf{Repository Analysing:} This interface allows the users to open, view, and
-  analyse the selected repository with specified parameters. During the analysing process, progress
-  will be shown on the interface, and users are able to pause or stop the process.
+  \item \textbf{Repository Analysis:} This interface allows the users to open, view, and analyse the
+  selected repository with specified parameters. During the analysis process, progress will be shown
+  on the interface, and users are able to pause or stop the process.
   \item \textbf{Statistical Evaluation:} This interface allows the users to read and edit the result
   file. Assuming the system has enough computing power and memory, the interface would allow reading
-  and editing the result file concurrently with the analysing process. In this interface, users can
+  and editing the result file concurrently with the analysis process. In this interface, users can
   browse through the results file and evaluate the results manually by marking the issues as false
-  positive or false negative.
+  positive.
 \end{enumerate}
 
 This model has several advantages, including better results presentation, multitasking ability on
@@ -871,20 +872,45 @@ increased usage of system resources and incompatibility for batch job processing
 
 \subsubsection*{\underline{Model 2: Executable Python Script}}\label{subsec:model2}
 The second model suggests implementing the repository mining tool as an executable Python script.
-The tool does not have its own interface. It must be executed in a \acrfull{cli} such as
-\textit{terminal}, \textit{console}, or \textit{shell}.
+The tool does not have its own interface. It must be executed in a \acrfull{cli} such as a
+\textit{terminal}, \textit{console}, or \textit{shell}. This model will divide the tool into two
+Python files:
+\begin{enumerate}
+  \item \textbf{Repository Analysis:} This executable Python script file is responsible for
+  analysing the repositories. It will accept user specified options via arguments, and perform the
+  analysis on the command-line interface. Progress will be shown but the users are not able to pause
+  the process. A \acrshort{json} result file will be created when the analysis process has completed
+  successfully.
+  \item \textbf{Statistical Evaluation:} This executable Python script file is responsible for
+  analysing the result file. The script could be customsed by the user to filter the results. The
+  statistics is written to the \acrfull{stdout}, which defaults to the user's screen in the
+  \textit{terminal}.
+\end{enumerate}
 
-will accept user specified options via
-arguments and could be run on any terminals or consoles, assuming the system requirements are met
-and dependencies are installed.
-
-In comparison with \hyperref[subsec:model1]{\textbf{Model 1}}, this model uses less system
-resources, and supports batch job processing on the \acrshort{hpc} of the University of Sheffield.
-However,
+In comparison with \hyperref[subsec:model1]{\textbf{Model 1}}, this model features a lightweight and
+simplistic approach with all the core functionalities included. Running the tool as an executable
+script file uses less system resources and supports batch job processing on the \acrshort{hpc} of
+the University of Sheffield. However, the users are not able to evaluate false positive results
+directly with the tool.
 
 \subsection{Chosen implementation model}
-\hyperref[subsec:model2]{\textbf{Model 2}} was chosen to be the final implementation model. Users
-are required to have basic knowledge of the command-line,
+After further consideration of both the software requirements and project objectives,
+\hyperref[subsec:model2]{\textbf{Model 2}} was chosen to be the final implementation model. The
+reasons are justified below:
+\begin{enumerate}
+  \item Although new users generally find \acrshort{gui} to be visually intuitive, the tool itself
+  does not require complex commands to operate. Moreover, the target users of the repository mining
+  tool are researchers interested in the computer security field, which could be assumed to have
+  basic knowledge of command line commands.
+  \item Considering the time frame available for this project, creating a fully functional and
+  visually attractive \acrshort{gui} might not be feasible. It would be more practical to allocate
+  more time into improving the tool instead.
+  \item The tool can analyse multiple repositories in a single command by executing it in a shell
+  script. This implies that the repositories analysis process could be divided into multiple parts
+  and submitted to \acrshort{hpc} for batch processing.
+  \item Executing the Python script on a \acrshort{cli} uses less system resources than running a
+  \acrshort{gui}.
+\end{enumerate}
 
 \section{Supported Programming Languages}
 Many open source repositories are written in more than one programming languages. Therefore, the
@@ -896,10 +922,17 @@ tool is predefined to support the repositories written in the following language
   \item Python (based on bandit \cite{bandit})
 \end{enumerate}
 
-In addition, the repository can be extended to support user-defined language
+In addition, the tool could be extended to support other programming languages. To support an extra
+programming language, the user must provide a \textit{rule set}, a list of file extensions used by the programming language, and a regular expression pattern for \textit{non-context} lines.
 
 \section{Overview of the Repository Mining Tool}
 \subsection{Structure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=.62\linewidth]{images/class_diagram.png}
+  \caption{Class diagram.}
+  \label{figure:class_diagram}
+\end{figure}
 
 \subsection{Program Flow}
 \begin{figure}[H]
@@ -924,10 +957,10 @@ In addition, the repository can be extended to support user-defined language
   \label{figure:keyword_search}
 \end{figure}
 
-\section{Overview of the Statistical Analysis Tool}
-
 \hyperref[figure:keyword_search]{\textbf{Figure \ref*{figure:keyword_search}}} shows an example of
 expected search results returned for the query \textbf{`CVE'}.
+
+\section{Overview of the Statistical Analysis Tool}
 
 \chapter{Implementation and Testing}
 httpd repo

@@ -17,7 +17,6 @@ import languages.language as lang
 import os
 import pydriller as pd
 import re
-import subprocess
 import tempfile
 import vulnerability as vuln
 
@@ -483,20 +482,6 @@ def output_result(output: dict, path: str):
     print(f'{"Output location":<20}: {os.path.realpath(path)}')
 
 
-def get_repo_name(path: str) -> str:
-    """
-    Get the name of the repository
-
-    :param path: The path to the repository
-    :return: The the
-    """
-
-    origin = subprocess.check_output(['git', 'config', '--get', 'remote.origin.url'], cwd=path).decode()
-    repo_name, _ = os.path.splitext(os.path.basename(origin))
-
-    return repo_name
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('repo', type=str, help='Path or URL of the Git repository')
@@ -564,7 +549,8 @@ if __name__ == '__main__':
             else:
                 output_path = output_name + '.json'
         else:
-            output_path = f'{get_repo_name(args.repo)}.json'
+            repo_name, _ = os.path.splitext(os.path.basename(next(repo.repo.remote('origin').urls)))
+            output_path = f'{repo_name}.json'
 
         output_result(search_repository(repo_mining, args.severity, args.confidence), output_path)
     except git.NoSuchPathError:

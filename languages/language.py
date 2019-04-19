@@ -10,7 +10,7 @@ class Language(object):
     A class for programming languages
     """
 
-    def __init__(self, rule_set: dict, extensions: list, non_context=None) -> None:
+    def __init__(self, rule_set: dict, extensions: list, non_context: re = None) -> None:
         """
         Constructor for Language class
 
