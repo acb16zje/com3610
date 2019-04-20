@@ -22,8 +22,7 @@
 \restoreparindent
 
 \pgfplotsset{small, compat=1.16}
-\usetikzlibrary{fpu}
-\usetikzlibrary{positioning}
+\usetikzlibrary{fpu, positioning, shapes}
 
 \pagestyle{fancy}
 \fancyhf{}
@@ -842,6 +841,23 @@ announcement from the software vendors.
 This chapter outlines the design concepts and justifies any decisions and approaches taken for the
 development of the project.
 
+\section{Programming Practices}
+To meet both functional and non-functional requirements defined in
+\hyperref[sec:software_req]{\textbf{Section \ref*{sec:software_req}}}, a set of good practices has
+been adopted.
+\begin{itemize}
+  \item \textbf{Performance:} Analysing large repositories can be time consuming. Therefore, the
+  code should be written in a performance oriented style by following the advice of the Python Wiki
+  \cite{python_performance_tips}
+  \item \textbf{Reliability:} Exception errors might occur during the runtime of the repository
+  mining tool. Hence, exceptions should be handled in the code to ensure that the program continues
+  to run when it encounters an error.
+  \item \textbf{Simplification:} The coding logic should be clear and easy to follow. Large
+  functions should be split into multiple sub-functions to improve code maintainability.
+  \item \textbf{Documentation:} The code should be well documented and follow the PEP8 \cite{pep8}
+  coding style.
+\end{itemize}
+
 \section{Implementation Model}
 There are several methods to implement the repository mining tool, and the selected approach must
 maximises the usability, while satisfying the requirements stated in
@@ -849,7 +865,6 @@ maximises the usability, while satisfying the requirements stated in
 approaches will be discussed and evaluated, with the selected approach further justified.
 
 \subsection{Considered implementation models}
-
 \subsubsection*{\underline{Model 1: \acrfull{gui}}} \label{subsec:model1}
 The first model suggests implementing the repository mining tool with graphical user interface using
 libraries such as tkinter \cite{tkinter} or PyQt \cite{pyqt}. The interface can be divided into two
@@ -897,7 +912,7 @@ directly with the tool.
 After further consideration of both the software requirements and project objectives,
 \hyperref[subsec:model2]{\textbf{Model 2}} was chosen to be the final implementation model. The
 reasons are justified below:
-\begin{enumerate}
+\begin{itemize}
   \item Although new users generally find \acrshort{gui} to be visually intuitive, the tool itself
   does not require complex commands to operate. Moreover, the target users of the repository mining
   tool are researchers interested in the computer security field, which could be assumed to have
@@ -910,44 +925,99 @@ reasons are justified below:
   and submitted to \acrshort{hpc} for batch processing.
   \item Executing the Python script on a \acrshort{cli} uses less system resources than running a
   \acrshort{gui}.
-\end{enumerate}
+\end{itemize}
 
 \section{Supported Programming Languages}
 Many open source repositories are written in more than one programming languages. Therefore, the
 repository mining tool must be extensible and able to support multiple programming languages. The
 tool is predefined to support the repositories written in the following language:
-\begin{enumerate}
+\begin{itemize}
   \item C/C++ (based on Flawfinder \cite{flawfinder})
   \item Java (adapted and modified from graudit \cite{graudit})
   \item Python (based on bandit \cite{bandit})
+\end{itemize}
+
+In addition, the tool could be extended by the user to support other programming languages. The user
+must provide:
+\begin{enumerate}
+  \item A \textit{rule set}. This is a dictionary of common vulnerabilities. Each vulnerability are
+  given a severity and confidence level.
+  \item A list of file extensions used by the programming language.
+  \item An optional regular expression pattern for \textit{non-context} lines. A non-context line
+  can be defined as a line of code that does not have positive contribution to the vulnerability
+  analysis. Examples are code comments, blank line, and print statements for debugging purposes.
 \end{enumerate}
 
-In addition, the tool could be extended to support other programming languages. To support an extra
-programming language, the user must provide a \textit{rule set}, a list of file extensions used by the programming language, and a regular expression pattern for \textit{non-context} lines.
+User-defined languages are expected to generate noisy results. This is because the tool does not
+understand the syntax and semantics of the code, thus it could not perform any control flow or data
+flow analysis. The generated results only give an indication of the possible vulnerabilities, it has
+to be reviewed and evaluated manually.
 
 \section{Overview of the Repository Mining Tool}
 \subsection{Structure}
 \begin{figure}[H]
   \centering
-  \includegraphics[width=.62\linewidth]{images/class_diagram.png}
-  \caption{Class diagram.}
+  \includegraphics[width=.65\linewidth]{images/class_diagram.png}
+  \caption{UML Class diagram of Shefmine, the repository mining tool.}
   \label{figure:class_diagram}
 \end{figure}
+
+\hyperref[figure:class_diagram]{\textbf{Figure \ref*{figure:class_diagram}}} is a class diagram of
+the repository mining tool designed based on the requirements. The tool itself does not involve
+complex class relationships. Flawfinder and Bandit are external module dependencies, where the tool
+makes use of their analysis techniques to identify possible vulnerabilities.
 
 \subsection{Program Flow}
 \begin{figure}[H]
   \centering
   \begin{tikzpicture}
-    [node distance=2cm,
+    [node distance=1.5cm,
     start/.style={circle, fill=black, minimum size=8mm},
     end/.style={path picture={\draw circle [radius=4mm]; \fill circle [radius=3mm];}},
+    activity/.style={rectangle, draw, text centered, rounded corners},
+    decision/.style={diamond, draw, text width=4em, text badly centered, inner sep=0pt,
+    node distance=2.5cm},
+    input/.style={signal, draw, signal from=west, signal to=nowhere},
+    output/.style={signal, draw, signal to=east},
     arrow/.style={thick, ->, >=stealth}]
     \node [start] (start) {};
-    \node [end, minimum size=8.2mm, below of=start] (end) {};
+    \node [input, below of=start] (load_repo) {User provide a repository};
+    \node [activity, below of=load_repo] (for_commit) {Get list of commits};
+    \node [decision, below of=for_commit] (has_next_commit) {Has next commit?};
+    \node [activity, below of=has_next_commit, node distance=3cm] (match_regex)
+    {Search commit message for vulnerability pattern};
+    \node [activity, below of=match_regex] (for_mods) {Get list of files changed};
+    \node [decision, below of=for_mods] (has_next_file) {Has next file?};
+    \node [decision, below of=has_next_file, text width=4.7em, node distance=4cm] (file_supported)
+    {Language supported?};
+    \node [activity, right of=file_supported, text width=6em, node distance=4.8cm] (search_diff)
+    {Search \textit{diff} for vulnerable code changes};
+    \node [output, left of=has_next_commit, text width=4em, node distance=4cm] (output) {Output
+    result file};
+    \node [end, minimum size=8.2mm, left of=output, node distance=3cm] (end) {};
 
-    \draw [arrow] (start) -- (end);
+    \draw [arrow] (start) -- (load_repo);
+    \draw [arrow] (load_repo) -- (for_commit);
+    \draw [arrow] (for_commit) -- (has_next_commit);
+    \draw [arrow] (has_next_commit) -- node [anchor=east] {yes} (match_regex);
+    \draw [arrow] (has_next_commit) -- node [anchor=south] {no} (output);
+    \draw [arrow] (match_regex) -- (for_mods);
+    \draw [arrow] (for_mods) -- (has_next_file);
+    \draw [arrow] (has_next_file) -- node [anchor=east] {yes} (file_supported);
+    \draw [arrow] (has_next_file) -| node [very near start, anchor=south] {no} (-5.5,-7.5) ++ (0,
+    0) -- (has_next_commit);
+    \draw [arrow] (file_supported) -- node [anchor=south] {yes} (search_diff);
+    \draw [arrow] (file_supported) -| node [very near start, anchor=south] {no} (-5.5, -7.5) ++ (0,
+    0) -- (has_next_commit);
+    \draw [arrow] (search_diff.north) |- (has_next_commit.east);
+    \draw [arrow] (output) -- (end);
   \end{tikzpicture}
+  \caption{UML activity diagram of the repository mining tool}
+  \label{figure:activity_diagram}
 \end{figure}
+
+The general flow of the repository mining tool is shown in
+\hyperref[figure:activity_diagram]{\textbf{Figure \ref*{figure:activity_diagram}}}. Details
 
 \subsection{Commit Messages Matching}
 \begin{figure}[H]
@@ -967,6 +1037,8 @@ httpd repo
 ---------
 89fd8d0353f6dc234bf026594c7b4f00caa8dbd8: only comment changes
 cd2b7a26c776b0754fb98426a67804fd48118708: CVE in message, comment and code changes
+
+\section{Flawfinder and Bandit Integration}
 
 \section{Testing}
 - self-created repo
