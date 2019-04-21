@@ -476,7 +476,7 @@ more false positives than dynamic analysis. Static analysis is considered to be 
 for detecting possible and obvious security vulnerabilities \cite{evans_2002}. Zitser, Lippmann, and
 Leek \cite{zitser_2004} have developed a static code analysis tool to find buffer overflow
 vulnerability in C programming language code. Their approach requires manual definitions of the
-overflow pattenrs in their tool, which is considered to be a general method in static analysis.
+overflow patterns in their tool, which is considered to be a general method in static analysis.
 
 \section{Improving Software Security with Static Analysis and Repository Mining}
 The methods discussed in \hyperref[sec:msr]{\textbf{Section \ref*{sec:msr}}} could be used in
@@ -958,7 +958,7 @@ to be reviewed and evaluated manually.
 \begin{figure}[H]
   \centering
   \includegraphics[width=.65\linewidth]{images/class_diagram.png}
-  \caption{UML Class diagram of Shefmine, the repository mining tool.}
+  \caption{UML class diagram of Shefmine, the repository mining tool.}
   \label{figure:class_diagram}
 \end{figure}
 
@@ -1007,8 +1007,8 @@ makes use of their analysis techniques to identify possible vulnerabilities.
     \draw [arrow] (has_next_file) -| node [very near start, anchor=south] {no} (-5.5,-7.5) ++ (0,
     0) -- (has_next_commit);
     \draw [arrow] (file_supported) -- node [anchor=south] {yes} (search_diff);
-    \draw [arrow] (file_supported) -| node [very near start, anchor=south] {no} (-5.5, -7.5) ++ (0,
-    0) -- (has_next_commit);
+    \draw [arrow] (file_supported) -| node [very near start, anchor=south] {no} (-5.5, -14.5) ++ (0,
+    0) -- (has_next_file);
     \draw [arrow] (search_diff.north) |- (has_next_commit.east);
     \draw [arrow] (output) -- (end);
   \end{tikzpicture}
@@ -1016,10 +1016,67 @@ makes use of their analysis techniques to identify possible vulnerabilities.
   \label{figure:activity_diagram}
 \end{figure}
 
-The general flow of the repository mining tool is shown in
-\hyperref[figure:activity_diagram]{\textbf{Figure \ref*{figure:activity_diagram}}}. Details
+The program flow of the repository mining tool is shown in
+\hyperref[figure:activity_diagram]{\textbf{Figure \ref*{figure:activity_diagram}}}. It is an general
+representation of the whole process. Hence, exhaustive details including exception handling,
+function calls, and user inputs validation are not included.
 
-\subsection{Commit Messages Matching}
+\section{Commit Messages Matching} \label{sec:design_commit_matching}
+As mentioned in previous chapters and sections, there is already a concept of how commit messages
+matching should be functioning. It can be defined as the process of matching the commit message with
+the regular expression of each vulnerability pattern to find vulnerability-fixing commit. It
+requires some prior knowledge of the vulnerability patterns to define the regular expressions.
+
+\subsection{Vulnerability Patterns and Regular Expressions}
+The general idea of using regular expressions on commit messages is to construct the search queries
+with multiple conditions. Searching with regular expressions enables the tool to get results with
+one search, and avoid the usage of conditional statements to process the queries. Designing a
+specific, complete, and correct regular expression is challenging. This research question has two
+aspects to consider:
+\begin{enumerate}
+  \item \textbf{Completeness:} If the objective were to achieve high completeness, then the regular
+  expression would be designed to cover a broad range of string patterns. This would match more
+  commit messages with the regular expression, which might possibly find more positive results.
+  Similarly, false positive rate and the effort required for manual evaluation would increase.
+  \item \textbf{Correctness:} If the objective were to achieve high correctness, then the regular
+  expression would be designed to be specific. This approach lowers the false positive rate, but
+  increases the likelihood of generating false negatives.
+\end{enumerate}
+
+The ideal design is to achieve high completeness and high correctness, but this assumption is not
+realistic. This is because the quality of commit messages is not reliable, as discussed in
+\hyperref[subsec:commit_quality]{\textbf{Section \ref{subsec:commit_quality}}}. Achieving high
+correctness (low false positive rate) is desirable, but the additional effort in the improvement
+might not yield the corresponding improvements. Hence, the optimal approach would attempt to achieve
+high completeness first, then perform refinement on the regular expressions based on the results.
+
+\section{Vulnerable Code Searching}
+Commit messages matching (\hyperref[sec:design_commit_matching]{\textbf{Section
+\ref*{sec:design_commit_matching}}}) is not sufficient to prove the validity of the results. A
+commit message does not always summarise the actual changes in the commit object. It is unable to
+fully identify a vulnerability-fixing commit without analysing the code changes.
+
+\subsection{Severity and Confidence Level}
+
+\section{Level of Details in Result File}
+\begin{enumerate}
+  \item The date of the commit
+  \item The matching groups of regular expression
+  \item The vulnerability patterns identified
+  \item The vulnerable code changes identified
+\end{enumerate}
+
+\section{Statistical Evaluation}
+
+\chapter{Implementation and Testing}
+httpd repo
+---------
+89fd8d0353f6dc234bf026594c7b4f00caa8dbd8: only comment changes
+cd2b7a26c776b0754fb98426a67804fd48118708: CVE in message, comment and code changes
+
+\section{Commit Messages Matching}
+\subsection{Expected Behaviour}
+
 \begin{figure}[H]
   \centering
   \includegraphics[width=.85\linewidth]{images/keyword_search.png}
@@ -1030,15 +1087,13 @@ The general flow of the repository mining tool is shown in
 \hyperref[figure:keyword_search]{\textbf{Figure \ref*{figure:keyword_search}}} shows an example of
 expected search results returned for the query \textbf{`CVE'}.
 
-\section{Overview of the Statistical Analysis Tool}
+\section{Vulnerable Code Searching}
 
-\chapter{Implementation and Testing}
-httpd repo
----------
-89fd8d0353f6dc234bf026594c7b4f00caa8dbd8: only comment changes
-cd2b7a26c776b0754fb98426a67804fd48118708: CVE in message, comment and code changes
+\subsection{Flawfinder Integration}
 
-\section{Flawfinder and Bandit Integration}
+\subsection{Bandit Integration}
+
+\section{Exceptions and Errors}
 
 \section{Testing}
 - self-created repo
@@ -1053,14 +1108,29 @@ Too many files changed will cause the program to hang, so skip the commit
 
 \subsection{Edge Cases}
 CVE-2019-0211
+Vulneable code searching is unable to detect very specific code
 % https://github.com/apache/httpd/commit/a41bac
 % https://httpd.apache.org/security/vulnerabilities_24.html
 % https://cfreal.github.io/carpe-diem-cve-2019-0211-apache-local-root.html
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|c|c|c|c|c|}
+    \hline
+    \rowcolor[HTML]{D8D8D8}
+    \begin{tabular}[c]{@{}c@{}}Test \\ Case \#\end{tabular} & Test Data & Expected Result & Actual
+    Result & Status \\ \hline
+    & & & & \\ \hline
+    \end{tabular}
+  \caption{some test.}
+\end{table}
 
 \subsection{Verification and Validation}
 
 \chapter{Results and Discussion}
 This chapter
+
+\section{Introduction}
 
 \section{Results Overview}
 Repositories are not randomly selected. Selected based on actual software usage of large software
