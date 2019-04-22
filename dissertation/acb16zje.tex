@@ -14,6 +14,7 @@
 \usepackage{longtable}
 \usepackage{microtype}
 \usepackage{parskip}
+\usepackage[dvipsnames]{xcolor}
 \usepackage{pgfplots}
 \usepackage{subcaption}
 \usepackage{tikz}
@@ -822,7 +823,7 @@ defining and measuring the quality metrics listed below:
 \begin{itemize}
   \item \textbf{Relevance}: The measurement of the number of relevant commits retrieved when given a
   regular expression that represent the commit message pattern of a vulnerability.
-  \item \textbf{False positive rate}: The proportion of non-vulnerable commits or code being
+  \item \textbf{True positive rate}: The proportion of actual vulnerable commits or code being
   reported as a vulnerability.
   \item \textbf{False negative rate}: The proportion of vulnerable commits or code \textbf{not}
   being reported as a vulnerability.
@@ -999,17 +1000,17 @@ makes use of their analysis techniques to identify possible vulnerabilities.
     \draw [arrow] (start) -- (load_repo);
     \draw [arrow] (load_repo) -- (for_commit);
     \draw [arrow] (for_commit) -- (has_next_commit);
-    \draw [arrow] (has_next_commit) -- node [anchor=east] {yes} (match_regex);
-    \draw [arrow] (has_next_commit) -- node [anchor=south] {no} (output);
+    \draw [arrow] (has_next_commit) -- node [anchor=east] {\textcolor{Green}{yes}} (match_regex);
+    \draw [arrow] (has_next_commit) -- node [anchor=south] {\textcolor{Red}{no}} (output);
     \draw [arrow] (match_regex) -- (for_mods);
     \draw [arrow] (for_mods) -- (has_next_file);
-    \draw [arrow] (has_next_file) -- node [anchor=east] {yes} (file_supported);
-    \draw [arrow] (has_next_file) -| node [very near start, anchor=south] {no} (-5.5,-7.5) ++ (0,
-    0) -- (has_next_commit);
-    \draw [arrow] (file_supported) -- node [anchor=south] {yes} (search_diff);
-    \draw [arrow] (file_supported) -| node [very near start, anchor=south] {no} (-5.5, -14.5) ++ (0,
-    0) -- (has_next_file);
-    \draw [arrow] (search_diff.north) |- (has_next_commit.east);
+    \draw [arrow] (has_next_file) -- node [anchor=east] {\textcolor{Green}{yes}} (file_supported);
+    \draw [arrow] (has_next_file) -| node [very near start, anchor=south] {\textcolor{Red}{no}}
+    (-5.5,-7.5) ++ (0,0) -- (has_next_commit);
+    \draw [arrow] (file_supported) -- node [anchor=south] {\textcolor{Green}{yes}} (search_diff);
+    \draw [arrow] (file_supported) -| node [very near start, anchor=south] {\textcolor{Red}{no}}
+    (-5.5, -14.5) ++ (0,0) -- (has_next_file);
+    \draw [arrow] (search_diff.north) |- (has_next_file.east);
     \draw [arrow] (output) -- (end);
   \end{tikzpicture}
   \caption{UML activity diagram of the repository mining tool}
@@ -1034,11 +1035,11 @@ one search, and avoid the usage of conditional statements to process the queries
 specific, complete, and correct regular expression is challenging. This research question has two
 aspects to consider:
 \begin{enumerate}
-  \item \textbf{Completeness:} If the objective were to achieve high completeness, then the regular
+  \item \textbf{Completeness:} If the objective was to achieve high completeness, then the regular
   expression would be designed to cover a broad range of string patterns. This would match more
   commit messages with the regular expression, which might possibly find more positive results.
   Similarly, false positive rate and the effort required for manual evaluation would increase.
-  \item \textbf{Correctness:} If the objective were to achieve high correctness, then the regular
+  \item \textbf{Correctness:} If the objective was to achieve high correctness, then the regular
   expression would be designed to be specific. This approach lowers the false positive rate, but
   increases the likelihood of generating false negatives.
 \end{enumerate}
@@ -1053,18 +1054,78 @@ high completeness first, then perform refinement on the regular expressions base
 \section{Vulnerable Code Searching}
 Commit messages matching (\hyperref[sec:design_commit_matching]{\textbf{Section
 \ref*{sec:design_commit_matching}}}) is not sufficient to prove the validity of the results. A
-commit message does not always summarise the actual changes in the commit object. It is unable to
-fully identify a vulnerability-fixing commit without analysing the code changes.
+commit message does not always summarise the actual changes in the commit object. To correctly
+identify a vulnerability-fixing commit, it is required to analyse the code changes.
+
+\subsection{Code Searching Techniques}
+There are several approaches to scan the source code for vulnerabilities, ranging from simple text
+matching to complex data flow analysis. While The former is easier to build, and provides a quick
+way to find some potential security problems in the source code; the latter provides more accurate
+results, and it is able to detect complex vulnerabilities that involves nested control statements
+and function calls \cite{castro_2006}.
+
+To select an approach, this research question has to consider several factors:
+\begin{enumerate} \label{subsec:code_searching}
+  \item \textbf{Performance:} The amount of system resources and time required to complete one
+  search of the chosen technique.
+  \item \textbf{Complexity:} The difficulty of implementing such technique.
+  \item \textbf{Feasibility:} The possibility measurement of producing a functional implemention of
+  the chosen technique that satisfies the requirements.
+  \item \textbf{Accuracy:} The measurement of the ability to correctly identify the vulnerable lines
+  of code.
+\end{enumerate}
+
+\subsection{Chosen Technique}
+After consideration of the factors listed in \hyperref[subsec:code_searching]{\textbf{Section
+\ref*{subsec:code_searching}}}, it is chosen to implement a \textbf{static analysis technique}. It
+has been widely used in many security analysis tools including SpotBugs \cite{spotbugs}, Flawfinder
+\cite{flawfinder}, Bandit \cite{bandit}, and Progpilot \cite{progpilot}. As a result, it is required
+to discuss the strengths and weaknesses of the chosen technique to obtain an abstract indication of
+the expected results.
+
+\subsection*{Strengths}
+\begin{itemize}
+  \item It scales accordingly to the code size. Unlike data flow analysis, it does not need to
+  construct abstract syntax tree or control flow graph for its analysis process. Therefore, it is
+  unlikely to encounter severe performance or memory issues.
+  \item It is able to detect relatively simple vulnerabilities such as buffer overflows and SQL
+  injections with high confidence. Although these vulnerabilities can sometimes be very complex as
+  well.
+\end{itemize}
+
+\subsection*{Weaknesses}
+\begin{itemize}
+  \item It is unable to detect many security vulnerabilities automatically and accurately. These
+  security vulnerabilities usually require sophisticated analysis method to detect.
+  \item It is expected to generate numberous false postiive results.
+  \item It is difficult to prove the validity of the results. Since the analysis does not involve
+  any data flow analysis, the reported results do not contain any detailed information such as
+  variables value, and the steps to exploit the vulnerabilities.
+\end{itemize}
 
 \subsection{Severity and Confidence Level}
+To mitigate the weaknesses, a severity and confidence level can be assigned to each vulnerability
+identified. They give the user an indication about the seriousness of a vulnerability, and the
+likelihood for the vulnerability to be correctly identified. With these parameters, the user can now
+choose to filter the results with severity or confidence higher than a certain level. This would
+lower the effort and time required for manual evaluation.
 
 \section{Level of Details in Result File}
+Every Git commit object contains a lot of metadata \cite{chacon_2014}. Storing all metadata of each
+commit found will consume a substantial amount of storage space, as well as increasing the reading
+time of the result file. Hence, only relevant information that will be used in statistical
+evaluation are included, which are listed below:
 \begin{enumerate}
+  \item The commit message (optional)
   \item The date of the commit
   \item The matching groups of regular expression
-  \item The vulnerability patterns identified
-  \item The vulnerable code changes identified
+  \item The vulnerability pattern of the matched regular expression
+  \item The vulnerable code changes identified, with line number, code severity level, and
+  confidence level.
 \end{enumerate}
+
+THe commit message is just for the ease of user reference, which might be trivial as it does not
+have positive usage for the analysis but storing it will increase the file size.
 
 \section{Statistical Evaluation}
 
