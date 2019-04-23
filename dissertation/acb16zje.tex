@@ -10,7 +10,8 @@
 \usepackage{float}
 \usepackage{graphicx}
 \usepackage[hidelinks]{hyperref}
-\usepackage[toc, acronym, automake, nomain]{glossaries}
+\usepackage[toc, acronym, automake, nomain]{glossaries} % after hyperref for link
+\usepackage{import}
 \usepackage{longtable}
 \usepackage{microtype}
 \usepackage{parskip}
@@ -18,12 +19,46 @@
 \usepackage{pgfplots}
 \usepackage{subcaption}
 \usepackage{tikz}
+\usepackage[edges]{forest}
 
 \linespread{1.2}
 \restoreparindent
 
 \pgfplotsset{small, compat=1.16}
 \usetikzlibrary{fpu, positioning, shapes}
+
+\definecolor{folderbg}{RGB}{124,166,198}
+\definecolor{folderborder}{RGB}{110,144,169}
+\newlength\Size
+\setlength\Size{4pt}
+\tikzset{%
+  folder/.pic={%
+    \filldraw [draw=folderborder, top color=folderbg!50, bottom color=folderbg]
+    (-1.05*\Size,0.2\Size+5pt) rectangle ++(.75*\Size,-0.2\Size-5pt); \filldraw [draw=folderborder,
+    top color=folderbg!50, bottom color=folderbg] (-1.15*\Size,-\Size) rectangle (1.15*\Size,\Size);
+  },
+  file/.pic={%
+    \filldraw [draw=folderborder, top color=folderbg!5, bottom color=folderbg!10]
+    (-\Size,.4*\Size+5pt) coordinate (a) |- (\Size,-1.2*\Size) coordinate (b) -- ++(0,1.6*\Size)
+    coordinate (c) -- ++(-5pt,5pt) coordinate (d) -- cycle (d) |- (c) ;
+  },
+}
+\forestset{%
+  declare autowrapped toks={pic me}{},
+  pic dir tree/.style={%
+    for tree={folder, font=\ttfamily, grow'=0},
+    before typesetting nodes={%
+      for tree={edge label+/.option={pic me},},
+    },
+  },
+  pic me set/.code n args=2{%
+    \forestset{%
+      #1/.style={inner xsep=2\Size, pic me={pic {#2}},}
+    }
+  },
+  pic me set={directory}{folder},
+  pic me set={file}{file},
+}
 
 \pagestyle{fancy}
 \fancyhf{}
@@ -42,6 +77,7 @@
 \newacronym{json}{JSON}{JavaScript Object Notation}
 \newacronym{msr}{MSR}{Mining Software Repositories}
 \newacronym{nvd}{NVD}{National Vulnerability Database}
+\newacronym{oop}{OOP}{Object-oriented Programming}
 \newacronym{owasp}{OWASP}{Open Web Application Security Project}
 \newacronym{stdout}{stdout}{Standard Output}
 \newacronym{xml}{XML}{Extensible Markup Language}
@@ -286,8 +322,8 @@ worked together to produce a list of the most critical web application security 
 community feedback and comprehensive data contributed by different organizations. The list consists
 of ten categories of security attacks which are considered to be the most dangerous and popular in
 recent years. In \acrshort{owasp} Top Ten 2017 \cite{owasp_top10}, one of the vulnerabilities that
-is closely related to this project is \textit{Using Components with Known Vulnerabilities}, which
-will be extensively discussed.
+is closely related to this project is \hyperref[subsec:components]{`Using Components with Known
+Vulnerabilities'}, which will be extensively discussed.
 
 \subsection{Using Components with Known Vulnerabilities} \label{subsec:components}
 It has been indicated that a small software component could create a large error in a software
@@ -484,7 +520,7 @@ The methods discussed in \hyperref[sec:msr]{\textbf{Section \ref*{sec:msr}}} cou
 conjunction with static analysis tool to improve software security. As common static source code
 analysis tools can only take one version of source code as input, it is unable to find security
 vulnerabilities in previous version of the source code unless it is specifically provided to the
-tool. Therefore, static analysis of source code could be integrated with \acrfull{msr} to find
+tool. Therefore, static analysis of source code could be integrated with \acrshort{msr} to find
 potential security vulnerabilities in older versions of the source code.
 
 Researches have suggested that users often turn off auto-updates for softwares \cite{fagan_2015,
@@ -634,7 +670,7 @@ requirements can be included to define the scope of the mining tool.
 The aim of this section is to contemplate the options available for this project and review some of
 the fundamental decisions to be made before the implementation.
 
-\subsection{Programming Language}
+\subsection{Programming Language} \label{subsec:prog_lang}
 Python 3 \cite{python} is chosen to be the main programming language for the repository mining tool.
 While other programming languages may be more suitable for tackling specific problems of this
 project, Python 3 provides sufficient coverage over every aspect with its comprehensive
@@ -673,31 +709,34 @@ This project strongly emphasises the need for finding security issues in open so
 mining software repositories. While it might be impossible to discover the security patches in a
 repository through a single search, the problem could be solved using divide and conquer. The ideal
 concept of this project is to build a command-line interface program that is able to run two
-separate processes: the \textbf{mining} process and the \textbf{evaluation} process. The
-\textbf{mining} process takes a Git repository as input, searches through the commit log, and stores
-the list of commits that might potentially contain a patch in a \acrshort{json} file. The
-\textbf{evaluation} process takes a \acrshort{json} file as input, and check the code difference of
-every commit in the log file to identify the real patches.
+separate processes:
+\begin{enumerate}
+  \item \textbf{Analysis:} This process takes a Git repository as input, then searches through the
+  commit history and stores the list of potential vulnerability-fixing commits in a \acrshort{json}
+  file.
+  \item \textbf{Evaluation:} The evaluation process takes a \acrshort{json} file as input, and
+  present the results in an information way.
+\end{enumerate}
 
 \section{Problems and Constraints} \label{sec:problems_and_constraints}
 As mentioned in \hyperref[sec:challenges]{\textbf{Section \ref*{sec:challenges}}}, the main
-challenges of this project are \textbf{data}, \textbf{misclassification}, \textbf{evaluation} and
-\textbf{time}. The subsequent challenge is the implementation difficulties, which the severity is
-dependent on the complexity of the problems and the resources available. It is also expected that
-some problems might not be solved and new problems could emerge in the course of the project. This
-section will discuss the problems in detail and review several ways of mitigating them, as well as
-analysing the possible constraints that might affect the progress of the project.
+challenges of this project are data, misclassification, evaluation and time. The subsequent
+challenge is the implementation difficulties, which the severity is dependent on the complexity of
+the problems and the resources available. It is also expected that some problems might not be solved
+and new problems could emerge in the course of the project. This section will discuss the problems
+in detail and review several ways of mitigating them, as well as analysing the possible constraints
+that might affect the progress of the project.
 
 \subsection{Quality of Commit Messages} \label{subsec:commit_quality}
 Although there are a lot of open source repositories available online, the majority of them does not
 have a formal guideline for the documenting the changes in the commit messages. As part of the
 \textbf{data} problem, the commit messages in the real-world repositories
 (\hyperref[sec:realworld]{\textbf{Section \ref*{sec:realworld}}}) might have lower quality compared
-to a self-created repository. It has been reported that the terms \textit{fix}, \textit{add}, and
-\textit{test} have the top average term frequency in the commit messages \cite{alali_2008}. With
-these indistinct terms being widely used in the commit messages, the performance of the tool may
-drop on real-world repository test sets and it would require extra effort for finding the relevant
-vulnerability-fixing commits.
+to a self-created repository. It has been reported that the terms `fix', `add', and `test' have the
+top average term frequency in the commit messages \cite{alali_2008}. With these indistinct terms
+being widely used in the commit messages, the performance of the tool may drop on real-world
+repository test sets and it would require extra effort for finding the relevant vulnerability-fixing
+commits.
 
 \begin{figure}[H]
   \centering
@@ -866,7 +905,7 @@ maximises the usability, while satisfying the requirements stated in
 approaches will be discussed and evaluated, with the selected approach further justified.
 
 \subsection{Considered implementation models}
-\subsubsection*{\underline{Model 1: \acrfull{gui}}} \label{subsec:model1}
+\subsubsection*{Model 1: \acrfull{gui}} \label{subsec:model1}
 The first model suggests implementing the repository mining tool with graphical user interface using
 libraries such as tkinter \cite{tkinter} or PyQt \cite{pyqt}. The interface can be divided into two
 parts:
@@ -886,11 +925,10 @@ the same interface window, and easier result evaluation. However, the disadvanta
 increased usage of system resources and incompatibility for batch job processing on the
 \acrfull{hpc} of the University of Sheffield.
 
-\subsubsection*{\underline{Model 2: Executable Python Script}}\label{subsec:model2}
+\subsubsection*{Model 2: Executable Python Script}\label{subsec:model2}
 The second model suggests implementing the repository mining tool as an executable Python script.
-The tool does not have its own interface. It must be executed in a \acrfull{cli} such as a
-\textit{terminal}, \textit{console}, or \textit{shell}. This model will divide the tool into two
-Python files:
+The tool does not have its own interface. It must be executed in a \acrfull{cli} such as a terminal,
+console, or shell. This model will divide the tool into two Python files:
 \begin{enumerate}
   \item \textbf{Repository Analysis:} This executable Python script file is responsible for
   analysing the repositories. It will accept user specified options via arguments, and perform the
@@ -900,7 +938,7 @@ Python files:
   \item \textbf{Statistical Evaluation:} This executable Python script file is responsible for
   analysing the result file. The script could be customsed by the user to filter the results. The
   statistics is written to the \acrfull{stdout}, which defaults to the user's screen in the
-  \textit{terminal}.
+  terminal.
 \end{enumerate}
 
 In comparison with \hyperref[subsec:model1]{\textbf{Model 1}}, this model features a lightweight and
@@ -928,8 +966,8 @@ reasons are justified below:
   \acrshort{gui}.
 \end{itemize}
 
-\section{Supported Programming Languages}
-Many open source repositories are written in more than one programming languages. Therefore, the
+\section{Supported Programming Languages} \label{sec:supported_prog_lang}
+Many open source repositories are written in more than one programming language. Therefore, the
 repository mining tool must be extensible and able to support multiple programming languages. The
 tool is predefined to support the repositories written in the following language:
 \begin{itemize}
@@ -941,10 +979,10 @@ tool is predefined to support the repositories written in the following language
 In addition, the tool could be extended by the user to support other programming languages. The user
 must provide:
 \begin{enumerate}
-  \item A \textit{rule set}. This is a dictionary of common vulnerabilities. Each vulnerability are
+  \item A rule set. This is a dictionary of common vulnerabilities. Each vulnerability are
   given a severity and confidence level.
   \item A list of file extensions used by the programming language.
-  \item An optional regular expression pattern for \textit{non-context} lines. A non-context line
+  \item An optional regular expression pattern for non-context lines. A non-context line
   can be defined as a line of code that does not have positive contribution to the vulnerability
   analysis. Examples are code comments, blank line, and print statements for debugging purposes.
 \end{enumerate}
@@ -1124,12 +1162,56 @@ evaluation are included, which are listed below:
   confidence level.
 \end{enumerate}
 
-THe commit message is just for the ease of user reference, which might be trivial as it does not
+The commit message is just for the ease of user reference, which might be trivial as it does not
 have positive usage for the analysis but storing it will increase the file size.
 
-\section{Statistical Evaluation}
-
 \chapter{Implementation and Testing}
+This chapter will discuss the implementation of the repository mining tool based on the
+specifications described in previous chapters. It will also provide insights into the challenges
+encountered during the implementation process.
+
+\section{Project Environment and Structure}
+\subsection{Environment}
+As concluded in \hyperref[subsec:prog_lang]{\textbf{Section \ref*{subsec:prog_lang}}}, the project
+has been implemented in Python 3. There are several Python 3 versions available, and the project
+used the latest stable version at the time of this project, which is Python 3.7.3. Specifically, the
+source code is written with the new syntax and features introduced in the latest version, which
+impies that the older versions of Python 3 are not able to run it before updating.
+
+\subsection{Structure}
+\hyperref[fig:directory_structure]{\textbf{Figure \ref*{fig:directory_structure}}} below shows the
+directory stucture of the project. It follows the design in
+\hyperref[figure:class_diagram]{\textbf{Figure \ref*{figure:class_diagram}}}, where the file
+\verb|vulnerability.py| and \verb|language.py| contain the class \verb|Vulnerability| and
+\verb|Language| respectively. It is not necessary to create an individual file for each programming
+language in the \verb|languages| folder, but it is recommended in practice for better
+maintainability and clarity of the project.
+
+\begin{figure}[H]
+  \centering
+  \begin{forest}
+    pic dir tree,
+    where level=0{}{% folder icons by default; override using file for file icons
+      directory,
+    },
+    [root
+      [languages
+        [\_\_init\_\_.py, file]
+        [c.py, file]
+        [java.py, file]
+        [language.py, file]
+        [python.py, file]
+      ]
+      [tests]
+      [flawfinder.py, file]
+      [shefmine.py, file]
+      [shefstat.py, file]
+      [vulnerability.py, file]
+    ]
+  \end{forest}
+  \caption{Directory struture of the project} \label{fig:directory_structure}
+\end{figure}
+
 httpd repo
 ---------
 89fd8d0353f6dc234bf026594c7b4f00caa8dbd8: only comment changes
@@ -1141,18 +1223,62 @@ cd2b7a26c776b0754fb98426a67804fd48118708: CVE in message, comment and code chang
 \begin{figure}[H]
   \centering
   \includegraphics[width=.85\linewidth]{images/keyword_search.png}
-  \caption{An example of expected search for the query \textbf{`CVE'}.}
+  \caption{An example of expected search for the query \textbf{`\acrshort{cve}'}.}
   \label{figure:keyword_search}
 \end{figure}
 
 \hyperref[figure:keyword_search]{\textbf{Figure \ref*{figure:keyword_search}}} shows an example of
-expected search results returned for the query \textbf{`CVE'}.
+expected search results returned for the query \textbf{`\acrshort{cve}'}.
 
 \section{Vulnerable Code Searching}
 
-\subsection{Flawfinder Integration}
+\subsection{Flawfinder Integration} \label{subsec:flawfinder}
+ff
 
-\subsection{Bandit Integration}
+\subsection{Bandit Integration} \label{subsec:bandit}
+ff
+
+\subsection{User-defined Programming Language}
+Python is an \acrfull{oop} language, it can fulfil the design specifications of
+\hyperref[sec:supported_prog_lang]{\textbf{Section \ref*{sec:supported_prog_lang}}}. To support an
+extra programming language, an instance of the \verb|Language| class must be created. The
+`constructor' (the \verb|__init__| method) takes three parameters, a rule set, a list of file
+extensions, and an optional regular expression object for non-context lines.
+
+The importance and impact of the three parameters on the analysis results are explained below:
+\begin{enumerate}
+  \item \textbf{Rule set:} This is related to the core research objectives of this project. The
+  repository mining tool will scan the source code with each rule in the rule set and record the
+  matching one. A well defined rule set could reduce the possibility of false positives. However,
+  there is a still limit on the effectiveness of it as the tool is only performing pure regular
+  expression search with these rules on the source code. An example of the structure of a rule set
+  is shown below.
+  \begin{verbatim}
+    ruleset = {
+      'createStatement\s*\(.*\)': {
+          'severity': 'HIGH',
+          'confidence': 'LOW'
+      },
+      ...
+    }
+  \end{verbatim}
+  \item \textbf{File extensions:} Some programming languages use multiple file extensions as their
+  source code file. The purpose of this parameter is to prevent the tool from carrying the search on
+  irrelevant files.
+  \item \textbf{Regular expression object for non-context lines:} The purpose of this parameter is
+  to improve the accuracy and performance of the tool. By excluding the non-context lines from the
+  search process, the tool is able to perform faster, and it is less likely to obtain false positive
+  results.
+\end{enumerate}
+
+The tool will be word boundary \verb|\b|
+
+With these justifications, it is predicted that the tool would not have better performance
+than Flawfinder (\hyperref[subsec:flawfinder]{\textbf{Section \ref*{subsec:flawfinder}}}) or Bandit
+(\hyperref[subsec:bandit]{\textbf{Section \ref*{subsec:bandit}}}).
+
+\section{Storing the Results}
+In Python, dictionary and \acrshort{json} are interchangeable
 
 \section{Exceptions and Errors}
 
