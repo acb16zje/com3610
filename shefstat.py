@@ -234,17 +234,19 @@ def show_regex_vulnerabilities(result: dict):
      for k, v in collections.Counter(vulnerabilities_list).most_common()]
 
 
-def get_random_commits(result: dict):
+def get_random_commits(result: dict, size: int, seed: int):
     """
     Prints random commits for evaluation purposes
 
     :param result: The result file produced by Shefmine
+    :param size: The sample size (number of commits to returned)
+    :param seed: The seed used to get the random commits
     """
 
     print('ONLY Vulnerability RegExp match \n================================')
     get_samples([commit for commit in result
                  if 'vulnerabilities' in result[commit]
-                 and 'files_changed' not in result[commit]])
+                 and 'files_changed' not in result[commit]], size, seed)
 
     # Vulnerable lines changed only
     lines_only_dict = {commit: v for commit, v in result.items()
@@ -252,53 +254,54 @@ def get_random_commits(result: dict):
                        and 'files_changed' in result[commit]}
 
     print('\nONLY Vulnerable lines changed \n================================')
-    get_samples(list(lines_only_dict))
+    get_samples(list(lines_only_dict), size, seed)
 
     print('\nONLY Vulnerable lines changed: Added \n================================')
     get_samples([commit for commit in lines_only_dict
                  if all('added' in f
                         and 'deleted' not in f
                         and 'unchanged' not in f
-                        for f in lines_only_dict[commit]['files_changed'])])
+                        for f in lines_only_dict[commit]['files_changed'])], size, seed)
 
     print('\nONLY Vulnerable lines changed: Deleted \n================================')
     get_samples([commit for commit in lines_only_dict
                  if all('added' not in f
                         and 'deleted' in f
                         and 'unchanged' not in f
-                        for f in lines_only_dict[commit]['files_changed'])])
+                        for f in lines_only_dict[commit]['files_changed'])], size, seed)
 
     print('\nONLY Vulnerable lines changed: Unchanged \n================================')
     get_samples([commit for commit in lines_only_dict
                  if all('added' not in f
                         and 'deleted' not in f
                         and 'unchanged' in f
-                        for f in lines_only_dict[commit]['files_changed'])])
+                        for f in lines_only_dict[commit]['files_changed'])], size, seed)
 
     print('\nONLY Vulnerable lines changed: Added and Deleted\n================================')
     get_samples([commit for commit in lines_only_dict
                  if all('added' in f
                         and 'deleted' in f
                         and 'unchanged' not in f
-                        for f in lines_only_dict[commit]['files_changed'])])
+                        for f in lines_only_dict[commit]['files_changed'])], size, seed)
 
     print('\nBOTH RegExp match and vulnerable lines changed\n================================')
     get_samples([commit for commit in result
-                 if 'vulnerabilities' in result[commit] and 'files_changed' in result[commit]])
+                 if 'vulnerabilities' in result[commit] and 'files_changed' in result[commit]], size, seed)
 
     exit(0)
 
 
-def get_samples(samples: list):
+def get_samples(samples: list, size: int, seed: int):
     """
 
     :param samples: List of filtered commits
-    :param sample_size: The sample size (number of commits to returned)
+    :param size: The sample size (number of commits to returned)
+    :param seed: The seed used to get the random commits
     """
     import random
 
-    sample_size = 4
-    r = random.Random(3243)
+    sample_size = size
+    r = random.Random(seed)
 
     try:
         [print(x) for x in r.sample(samples, sample_size)]
@@ -309,6 +312,9 @@ def get_samples(samples: list):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('file', type=str, help='Path of the output JSON file')
+    parser.add_argument('--evaluate', action='store_true', help='Get random commits for evaluation')
+    parser.add_argument('--seed', type=int, help='Seed to get random commits (Default: 3243)', default=3243)
+    parser.add_argument('--size', type=int, help='Sample size of random commits (Default: 4)', default=4)
 
     args = parser.parse_args()
 
@@ -317,7 +323,8 @@ if __name__ == '__main__':
             result = json.load(file)
 
         # Evaluation only
-        # get_random_commits(result)
+        if args.evaluate:
+            get_random_commits(result, args.size, args.seed)
 
         show_total_commits(result)
         print(f'{"":>2}│')

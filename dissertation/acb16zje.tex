@@ -12,8 +12,10 @@
 \usepackage[hidelinks]{hyperref}
 \usepackage[toc, acronym, automake, nomain]{glossaries} % after hyperref for link
 \usepackage{import}
+\usepackage{listings}
 \usepackage{longtable}
 \usepackage{microtype}
+\usepackage{multicol}
 \usepackage{parskip}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{pgfplots}
@@ -23,6 +25,8 @@
 
 \linespread{1.2}
 \restoreparindent
+
+\lstset{captionpos=b, columns=flexible}
 
 \pgfplotsset{small, compat=1.16}
 \usetikzlibrary{fpu, positioning, shapes}
@@ -128,14 +132,14 @@ will be considered grounds for failure in this project and the degree examinatio
 \newpage
 
 \chapter*{Abstract}
-In both proprietary and Free/Libre and Open Source Softwares (FLOSS) components, not all security
-vulnerabilities are documented in CVE format nor published in the vulnerability databases such as
-NVD. These vulnerabilities could have been fixed by the developers. Finding these
-vulnerability-fixing commits could provide valuable insights for the developers using those
-components. Therefore, the objective of this project is to develop a repository mining tool that is
-able to detect vulnerability-fixing commits using MSR approach. Comparing to previous approaches,
-the tool will be focusing on searches the commit message first, and then investigates the code
-difference in each commit.
+% In both proprietary and Free/Libre and Open Source Softwares (FLOSS) components, not all security
+% vulnerabilities are documented in CVE format nor published in the vulnerability databases such as
+% NVD. These vulnerabilities could have been fixed by the developers. Finding these
+% vulnerability-fixing commits could provide valuable insights for the developers using those
+% components. Therefore, the objective of this project is to develop a repository mining tool that
+% is able to detect vulnerability-fixing commits using MSR approach. Comparing to previous
+% approaches, the tool will be focusing on searches the commit message first, and then investigates
+% the code difference in each commit.
 
 \chapter*{Acknowledgements}
 I would like to thank my parents for their unconditional love and the full financial support
@@ -153,6 +157,8 @@ future.
 \listoffigures
 
 \listoftables
+
+\lstlistoflistings
 
 \newpage
 
@@ -202,8 +208,9 @@ version control system are also supported after they have been migrated to Git.
 
 \section{Objectives} \label{sec:objectives}
 \begin{itemize}
-  \item Identify the security patterns of the most popular security issues in \acrfull{owasp} Top
-  Ten Project.
+  \item Identify the security patterns of the security issues in the \acrfull{owasp}
+  Top Ten Project. The tool is aimed to cover the most common or important security issues in the
+  list.
   \item Develop a repository mining tool to search through the commit history of a repository and
   find a list of commit messages that match the patterns. The list should be produced in
   \acrfull{json} file format.
@@ -219,17 +226,17 @@ more thorough analysis of the problems and constraints is carried out in
 \hyperref[sec:problems_and_constraints]{\textbf{Section \ref*{sec:problems_and_constraints}}}.
 
 \begin{itemize}
-  \item \textbf{Data}: There are a large number of open source repositories available on GitHub.
+  \item \textbf{Data:} There are a large number of open source repositories available on GitHub.
   However, it is challenging to find a set of sample repositories that can produce accurate and
   consistent results.
-  \item \textbf{Misclassification}: The commit messages for the same vulnerability patch are not
+  \item \textbf{Misclassification:} The commit messages for the same vulnerability patch are not
   always the same, thus misclassification is inevitable. Using regular expressions to match the
   patterns in the mining process do not guarantee the correctness of the result.
-  \item \textbf{Evaluation}: After mining a list of commits that contain the identified patterns in
+  \item \textbf{Evaluation:} After mining a list of commits that contain the identified patterns in
   its message, the evaluation process might not correctly locate the lines of code that addressed
   the security vulnerability. It might be required to perform a manual evaluation to correctly
   identify some of the results.
-  \item \textbf{Time}: Large repository such as Linux which has more than 820,000 commits in total
+  \item \textbf{Time:} Large repository such as Linux which has more than 820,000 commits in total
   \cite{linux_repo} could be extremely time-consuming for the repository mining tool to complete the
   search and evaluation process.
 \end{itemize}
@@ -438,7 +445,7 @@ to address a vulnerability, which matches the assumption of Neuhaus and Plattner
   \centering
   \begin{subfigure}{\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{images/vuln_fixing_commit_good_ex.png}
+    \includegraphics[width=.7\textwidth]{images/vuln_fixing_commit_good_ex.png}
     \subcaption{Vulnerability fix in Linux kernel repository \cite{good_vfc}}
     \label{figure:g_vfc}
   \end{subfigure} \\
@@ -446,7 +453,7 @@ to address a vulnerability, which matches the assumption of Neuhaus and Plattner
 \begin{figure}[H]\ContinuedFloat
   \begin{subfigure}{\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{images/vuln_fixing_commit_bad_ex.png}
+    \includegraphics[width=.7\textwidth]{images/vuln_fixing_commit_bad_ex.png}
     \subcaption{Vulerability fix in oauth2 proxy repository \cite{bad_vfc}}
     \label{figure:bad_vfc}
   \end{subfigure}
@@ -529,7 +536,8 @@ This statement is justifiable if and only if an update does not introduce securi
 fixes. As a result, it is helpful to run static analysis in an older version of software and inform
 the users about the potential security vulnerabilities if the users decided not to update the
 software. This can be done by traversing through the history of a given software repository and
-reports the issues found in each revision, the implementation details are further explained in .
+reports the issues found in each revision, the implementation details are further explained in
+\hyperref[chap:implementation]{\textbf{Chapter \ref*{chap:implementation}}}.
 
 \section{Usage of the Repository Mining Tool in Other Areas}
 While the repository mining tool developed in this project is only capable of finding security
@@ -564,17 +572,17 @@ review, it is now possible to provide a detailed description and more clearly de
 that improve the feasibility of this project.
 
 \begin{enumerate}
-  \item \textbf{Vulnerability patterns}: The term `vulnerability pattern' is used to represent the
+  \item \textbf{Vulnerability patterns:} The term `vulnerability pattern' is used to represent the
   commit message pattern of different vulnerabilities. Correctly identifying the regular expression
   of each vulnerability pattern is time-consuming, and it would also need considerable refinement
   throughout the whole project. Hence, it might be more appropriate to reuse and improve the
   patterns provided in previous related works.
-  \item \textbf{Mining the commits}: This task involves creating a repository mining tool that makes
+  \item \textbf{Mining the commits:} This task involves creating a repository mining tool that makes
   extensive use of the pre-defined regular expressions to search for the relevant commits. It is
   necessary to consider how closely a commit needs to match with the patterns for it to be included
   in the result. The file format for storing the results is \acrshort{json}, and reasons are
   justified in \hyperref[subsec:file_format]{\textbf{Section \ref*{subsec:file_format}}}.
-  \item \textbf{Evaluating the mined commits}: The mining tool can be extended to include a separate
+  \item \textbf{Evaluating the mined commits:} The mining tool can be extended to include a separate
   function that evaluates the commits mined to find the actual code commit addressing the security
   vulnerabilities. This project will consider to automate the evaluation process to some extent
   while maintaining the accuracy of the results at the standard level.
@@ -586,20 +594,20 @@ that improve the feasibility of this project.
   \hline \endfirsthead
   \rowcolor[HTML]{D8D8D8}
   \multicolumn{1}{|c|}{Criteria} & Importance \\ \hline
-  \textbf{Compatibility}: The mining tool should be able to run on all machines that meet the
+  \textbf{Compatibility:} The mining tool should be able to run on all machines that meet the
   system requirements. & Essential \\ \hline
-  \textbf{Completeness}: The mining tool should be able to find all relevant commits of security
+  \textbf{Completeness:} The mining tool should be able to find all relevant commits of security
   vulnerabilities based on the regular expressions. & Essential \\ \hline
-  \textbf{Informative}: The statistical tool should return a complete analysis of the results. &
+  \textbf{Informative:} The statistical tool should return a complete analysis of the results. &
   Essential \\ \hline
-  \textbf{Repeatable}: The results should be repeatable and reproducible. & Essential \\ \hline
-  \textbf{Scalability}: The mining tool should be able to work on different project sizes, provided
+  \textbf{Repeatable:} The results should be repeatable and reproducible. & Essential \\ \hline
+  \textbf{Scalability:} The mining tool should be able to work on different project sizes, provided
   that the repository contains a certain amount of information. & Essential \\ \hline
-  \textbf{Automated Evaluation}: The process of classifying and evaluating the commits into
+  \textbf{Automated Evaluation:} The process of classifying and evaluating the commits into
   different vulnerabilities patch should be automated to a certain extent. & Desirable \\ \hline
-  \textbf{Extensibility}: New vulnerability patterns and programming languages should be easily
+  \textbf{Extensibility:} New vulnerability patterns and programming languages should be easily
   added into the tool. & Desirable \\ \hline
-  \textbf{Robustness}: The mining tool should be able to handle all possible errors without
+  \textbf{Robustness:} The mining tool should be able to handle all possible errors without
   terminating the mining process. & Desirable \\ \hline
   \caption{Functional requirements of the mining tool.} \label{table:func_req}
 \end{longtable}
@@ -611,13 +619,13 @@ that improve the feasibility of this project.
     \hline
     \rowcolor[HTML]{D8D8D8}
     \multicolumn{1}{|c|}{Criteria} & Importance \\ \hline
-    \textbf{Code Style}: The source code should be well-commented and follow a consistent coding
+    \textbf{Code Style:} The source code should be well-commented and follow a consistent coding
     style. & Essential  \\ \hline
-    \textbf{Documentation}: Installation and user manual should be provided. & Essential \\ \hline
-    \textbf{Lightweight}: The mining tool should have minimal dependencies. & Essential \\ \hline
-    \textbf{Open source}: As the mining tool is built for researching open source repositories, it
+    \textbf{Documentation:} Installation and user manual should be provided. & Essential \\ \hline
+    \textbf{Lightweight:} The mining tool should have minimal dependencies. & Essential \\ \hline
+    \textbf{Open source:} As the mining tool is built for researching open source repositories, it
     should be open source to suit the use cases. & Essential \\ \hline
-    \textbf{Performance}: The performance of the mining tool should be optmised for different
+    \textbf{Performance:} The performance of the mining tool should be optmised for different
     project sizes. & Desirable \\ \hline
   \end{tabular}
   \caption{Non-functional requirements of the mining tool.} \label{table:nonfunc_req}
@@ -629,15 +637,14 @@ In addition to \hyperref[table:func_req]{\textbf{Table \ref*{table:func_req}}} a
 requirements can be included to define the scope of the mining tool.
 
 \begin{itemize}
-  \item \textbf{Language in Commit Messages}: The mining tool will only search for commit messages
+  \item \textbf{Language in Commit Messages:} The mining tool will only search for commit messages
   that are written in English.
-  \item \textbf{Programming Language}: The source code analysis function in the mining tool will
-  only support C, C++, Python 3, and other programming languages that have their rule set defined
-  using the .
-  \item \textbf{Repository type}: The mining tool will only support Git repositories. Hence,
+  \item \textbf{Programming Language:} The source code analysis function in the mining tool will
+  support C, C++, Python 3, and Java.
+  \item \textbf{Repository type:} The mining tool will only support Git repositories. Hence,
   repositories using other version control systems such will have to convert to Git first before
   using the mining tool.
-  \item \textbf{Vulnerability type}: It is aimed that the mining tool should be able to detect
+  \item \textbf{Vulnerability type:} It is aimed that the mining tool should be able to detect
   \acrshort{cve}-identified vulnerabilities that have been fixed and recorded in the commit message
   \hyperref[figure:cve_vuln]{\textbf{Figure \ref*{figure:fig_scope} (a)}}, and vulnerabilities that
   are not identified in \acrshort{cve} but recorded in the commit messages
@@ -681,9 +688,12 @@ be produced using Python 3.
 \subsection{Libraries and Tools}
 The Python 3 standard library contains a wide range of built-in modules and extensive facilities.
 Moreover, many community created created tools can be integrated into Python programs with minimal
-configurations as well. Below is a list of tools and modules that will be used in the mining tool:
+configurations as well. Below is a list of libraries and tools that will be used in the mining tool:
 \begin{itemize}
-  \item GitPython is a Python library built to interact with Git repositories \cite{gitpython}.
+  \item The \texttt{re} \cite{python_re} library for regular expression operations.
+  \item The \texttt{json} \cite{python_json} library for creating and reading the result file.
+  \item GitPython \cite{gitpython} is a Python library built to simplify the interaction with Git
+  repositories.
   \item PyDriller \cite{pydriller_repo, spadini_2018} is a Python library built on top of GitPython
   with additional features for repository mining.
   \item Flawfinder \cite{flawfinder} is a program written in Python that is designed to find
@@ -704,7 +714,7 @@ it has been proved that \acrshort{json} has better performance than \acrshort{xm
 processing time and resource utilisation \cite{nurseitov_2009}, it is considered that
 \acrshort{json} would be the best option for this project.
 
-\section{Proposed Method}
+\section{Proposed Method} \label{sec:proposed_method}
 This project strongly emphasises the need for finding security issues in open source repositories by
 mining software repositories. While it might be impossible to discover the security patches in a
 repository through a single search, the problem could be solved using divide and conquer. The ideal
@@ -720,12 +730,10 @@ separate processes:
 
 \section{Problems and Constraints} \label{sec:problems_and_constraints}
 As mentioned in \hyperref[sec:challenges]{\textbf{Section \ref*{sec:challenges}}}, the main
-challenges of this project are data, misclassification, evaluation and time. The subsequent
-challenge is the implementation difficulties, which the severity is dependent on the complexity of
-the problems and the resources available. It is also expected that some problems might not be solved
-and new problems could emerge in the course of the project. This section will discuss the problems
-in detail and review several ways of mitigating them, as well as analysing the possible constraints
-that might affect the progress of the project.
+challenges of this project are \textbf{data}, \textbf{misclassification}, \textbf{evaluation} and
+\textbf{time}. This section will discuss the problems in detail and review several ways of
+mitigating them, as well as analysing the possible constraints that might limit the achievements of
+the project.
 
 \subsection{Quality of Commit Messages} \label{subsec:commit_quality}
 Although there are a lot of open source repositories available online, the majority of them does not
@@ -740,15 +748,17 @@ commits.
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}{.5\textwidth}
+  \begin{subfigure}{\textwidth}
     \centering
-    \includegraphics[width=.85\linewidth]{images/bad_commit_msg.png}
+    \includegraphics[width=.55\textwidth]{images/bad_commit_msg.png}
     \subcaption{Bad commit message quality \cite{bad_commit_msg}}
     \label{figure:bad_commit_msg}
   \end{subfigure}%
-  \begin{subfigure}{.5\textwidth}
+\end{figure}
+\begin{figure}[H]\ContinuedFloat
+  \begin{subfigure}{\textwidth}
     \centering
-    \includegraphics[width=.95\linewidth]{images/good_commit_msg.png}
+    \includegraphics[width=.55\textwidth]{images/good_commit_msg.png}
     \subcaption{Good commit message quality \cite{good_commit_msg}}
     \label{figure:good_commit_msg}
   \end{subfigure}
@@ -765,19 +775,6 @@ commit message quality vary across different repositories and different authors.
 scenario, repositories that belong to organisations generally have a set of guidelines for
 documenting commit message. Such repositories would normally have higher quality commit message and
 are more likely to include valuable information in the commit messages too.
-
-\subsection{Results Evaluation Process}
-It is estimated that the \textbf{evaluation} process would be the biggest challenge of this project
-since it was regarded as a complicated and difficult area in previous researches. Moreover, this
-project plans to implement an automated version of the evaluation process, which will further
-increase the difficulty level. The implementation of automated evaluation is hard and it does not
-guarantee to provide a good result. It is also extremely challenging for the mining tool to work
-across repositories programmed in different programming languages. The constraint is that the tool
-has to be exhaustively tested to find the optimal threshold value and for it to be automated and
-produce good results. Although the tool might produce good results on some repositories, it does not
-indicate that the tool will produce consistent results on all repositories. To ensure the minimum
-quality of the results, one of the solutions might be using both automated method for basic
-filtering and a manual method for advance refinement.
 
 \subsection{Code Changes Analysis}
 As discussed in \hyperref[subsec:commit_quality]{\textbf{Section \ref*{subsec:commit_quality}}}, the
@@ -802,6 +799,22 @@ to find the relationship between code changes in different files.
   \label{figure:code_diff}
 \end{figure}
 
+\subsection{Quality and Validity of Results}
+The analysis process is automated, which implies that the results returned might not fulfil the
+expectation. Automating the process of finding security vulnerabilities in open source repositories
+does not guarantee to produce a good result. In addition, manual evaluation is still required to
+check the performance of the tool. One constraint is that the automated process has to be
+exhaustively tested to find the optimal regular expression patterns. Although the tool might produce
+good results on some repositories, it does not indicate that the tool will produce consistent
+results on all repositories.
+
+One major threat to the quality and validity of results is the amount of noise in real-world
+repositories. This project does not have a specially designed data set or a test data set, it uses
+real-world data set for calibration. The unconsistency of data in real-world data set will affect
+the quality of results. Therefore, the performance of the developed mining tool varies across
+different real-world repositories. There is no absolute certainty on the results produced, each
+commit found has to be inspected to verify its validity.
+
 \section{Testing}
 This section covers a brief overview of the testing stage. It will be necessary to consider some of
 the self-created test cases and scenarios in advance to find all possible bugs and flaws.
@@ -814,23 +827,22 @@ test cases are based on the functionality of the tool to cover every feature imp
 
 \begin{table}[H]
   \centering
-  \begin{tabular}{|c|c|c|c|c|}
+  \begin{tabular}{|c|c|c|}
     \hline
     \rowcolor[HTML]{D8D8D8}
-    \begin{tabular}[c]{@{}c@{}}Test \\ Case \#\end{tabular} & Test Data & Expected Result & Actual
-    Result & Status \\ \hline
-    & & & & \\ \hline
+    \begin{tabular}[c]{@{}c@{}}Test Case \end{tabular} & Expected Result & Status \\ \hline
+    & & \\ \hline
     \end{tabular}
-  \caption{Documentation format of the unit testing.} \label{table:unittest}
+  \caption{Documentation format of the test case.}
 \end{table}
 
 \subsection{System Testing}
-After completing the unit testing, the mining tool has to be tested for its functional requirements,
-as mentioned in \hyperref[table:func_req]{\textbf{Table \ref*{table:func_req}}}. It is expected that
-the program would not be able to handle complicated errors during the early implementation, and the
-project schedule would become an iterative process between implementation and testing. It is assumed
-that the testing stage would be the most time-consuming process in the whole project, thus it might
-be required to allocate more time and effort into this stage.
+After completing the unit testing, the mining tool has to be tested for the functional requirements
+in \hyperref[table:func_req]{\textbf{Table \ref*{table:func_req}}} on real-world repositories. Since
+the analysis process could run for several days continuously, the purpose of system testing is to
+ensure the stability of the whole analysis process, and to discover the edge cases that are not
+covered by unit testing yet. The test will also ensure that the program will be able to run on
+Python 3.6 and above under different operating systems and hardware specifications.
 
 \section{Evaluation}
 This section briefly discusses the approach to evaluate the mining tool on the real world projects
@@ -860,13 +872,13 @@ in a real-world usage. To ensure the feasibility of this project, the tool has t
 defining and measuring the quality metrics listed below:
 
 \begin{itemize}
-  \item \textbf{Relevance}: The measurement of the number of relevant commits retrieved when given a
+  \item \textbf{Relevance:} The measurement of the number of relevant commits retrieved when given a
   regular expression that represent the commit message pattern of a vulnerability.
-  \item \textbf{True positive rate}: The proportion of actual vulnerable commits or code being
+  \item \textbf{True positive rate:} The proportion of actual vulnerable commits or code being
   reported as a vulnerability.
-  \item \textbf{False negative rate}: The proportion of vulnerable commits or code \textbf{not}
+  \item \textbf{False negative rate:} The proportion of vulnerable commits or code \textbf{not}
   being reported as a vulnerability.
-  \item \textbf{Efficiency}: The total time taken required for the tool to complete the seaching
+  \item \textbf{Efficiency:} The total time taken required for the tool to complete the seaching
   process.
 \end{itemize}
 
@@ -947,7 +959,7 @@ script file uses less system resources and supports batch job processing on the 
 the University of Sheffield. However, the users are not able to evaluate false positive results
 directly with the tool.
 
-\subsection{Chosen implementation model}
+\subsection{Chosen implementation model} \label{subsec:chosen_model}
 After further consideration of both the software requirements and project objectives,
 \hyperref[subsec:model2]{\textbf{Model 2}} was chosen to be the final implementation model. The
 reasons are justified below:
@@ -1061,10 +1073,11 @@ representation of the whole process. Hence, exhaustive details including excepti
 function calls, and user inputs validation are not included.
 
 \section{Commit Messages Matching} \label{sec:design_commit_matching}
-As mentioned in previous chapters and sections, there is already a concept of how commit messages
-matching should be functioning. It can be defined as the process of matching the commit message with
-the regular expression of each vulnerability pattern to find vulnerability-fixing commit. It
-requires some prior knowledge of the vulnerability patterns to define the regular expressions.
+As mentioned in \hyperref[sec:proposed_method]{\textbf{Section \ref*{sec:proposed_method}}}, there
+is already a concept of how commit messages matching should be functioning. It can be defined as the
+process of matching the commit message with the regular expression of each vulnerability pattern to
+find vulnerability-fixing commit. It requires some prior knowledge of the vulnerability patterns to
+define the regular expressions.
 
 \subsection{Vulnerability Patterns and Regular Expressions}
 The general idea of using regular expressions on commit messages is to construct the search queries
@@ -1089,7 +1102,21 @@ correctness (low false positive rate) is desirable, but the additional effort in
 might not yield the corresponding improvements. Hence, the optimal approach would attempt to achieve
 high completeness first, then perform refinement on the regular expressions based on the results.
 
-\section{Vulnerable Code Searching}
+\subsection{Expected Behaviour}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=.85\linewidth]{images/keyword_search.png}
+  \caption{An example of a search query \textbf{`\acrshort{cve}'} on GitHub.}
+  \label{figure:keyword_search}
+\end{figure}
+
+Since regular expression is used instead of plain text search, the tool is aimed to perform at
+least, or better than the GitHub search in \hyperref[figure:keyword_search]{\textbf{Figure
+\ref*{figure:keyword_search}}}. However, the tool does not produce a \acrshort{gui} output
+immediately after the search has completed, it stores the search results into a \acrshort{json} file
+for manual evaluation.
+
+\section{Vulnerable Code Searching} \label{sec:design_vuln_code_search}
 Commit messages matching (\hyperref[sec:design_commit_matching]{\textbf{Section
 \ref*{sec:design_commit_matching}}}) is not sufficient to prove the validity of the results. A
 commit message does not always summarise the actual changes in the commit object. To correctly
@@ -1127,7 +1154,7 @@ the expected results.
   construct abstract syntax tree or control flow graph for its analysis process. Therefore, it is
   unlikely to encounter severe performance or memory issues.
   \item It is able to detect relatively simple vulnerabilities such as buffer overflows and SQL
-  injections with high confidence. Although these vulnerabilities can sometimes be very complex as
+  injections with high confidence. Although these vulnerabilities can sometimes be very  complex as
   well.
 \end{itemize}
 
@@ -1148,7 +1175,7 @@ likelihood for the vulnerability to be correctly identified. With these paramete
 choose to filter the results with severity or confidence higher than a certain level. This would
 lower the effort and time required for manual evaluation.
 
-\section{Level of Details in Result File}
+\section{Level of Detail in Result File} \label{sec:lod_result}
 Every Git commit object contains a lot of metadata \cite{chacon_2014}. Storing all metadata of each
 commit found will consume a substantial amount of storage space, as well as increasing the reading
 time of the result file. Hence, only relevant information that will be used in statistical
@@ -1157,21 +1184,47 @@ evaluation are included, which are listed below:
   \item The commit message (optional)
   \item The date of the commit
   \item The matching groups of regular expression
+  (\hyperref[sec:design_commit_matching]{\textbf{Section \ref*{sec:design_commit_matching}}})
   \item The vulnerability pattern of the matched regular expression
+  (\hyperref[sec:design_vuln_code_search]{\textbf{Section \ref*{sec:design_vuln_code_search}}})
   \item The vulnerable code changes identified, with line number, code severity level, and
-  confidence level.
+  confidence level. (\hyperref[sec:design_vuln_code_search]{\textbf{Section
+  \ref*{sec:design_vuln_code_search}}})
 \end{enumerate}
 
 The commit message is just for the ease of user reference, which might be trivial as it does not
 have positive usage for the analysis but storing it will increase the file size.
 
-\chapter{Implementation and Testing}
+\section{Statistical Evaluation}
+The final part of this project is to create a statistical analysis tool to analyse the result file
+produced. The purpose to calculate these statistics is to study the relationship among
+vulnerability-fixing commit, commit message, and lines changed. The proposed method is to load the
+\acrshort{json} result file into a Python dictionary first, then calculate the statistics. Below is
+a list of statistics to calculate in the statistical analysis tool:
+\begin{enumerate}
+  \item Total commits found
+  \item A list of years that represents the number of commits found in each of the year
+  \item A list of vulnerability types found by regular expressions match and vulnerable code search
+  \item The number of commits found, calculated according to severity and confidence level
+  \item The number of commits found that are \textbf{only} matched by regular expressions
+  \item The number of commits found that \textbf{only} have vulnerable lines changed
+  \item The number of commits found that have \textbf{both} regular expressions match and vulnerable
+  lines changed
+\end{enumerate}
+
+\chapter{Implementation and Testing} \label{chap:implementation}
 This chapter will discuss the implementation of the repository mining tool based on the
 specifications described in previous chapters. It will also provide insights into the challenges
 encountered during the implementation process.
 
 \section{Project Environment and Structure}
-\subsection{Environment}
+\subsection{Hardware Requirements}
+This project relies on strong processing power and high availability of memory (RAM). The speed of
+the analysis process is determined by the processing power of the CPU. For large repositories, it is
+recommended to allocate at least 4GB of RAM to the process, otherwise the process might encounter an
+memory error and terminate.
+
+\subsection{Software Requirements}
 As concluded in \hyperref[subsec:prog_lang]{\textbf{Section \ref*{subsec:prog_lang}}}, the project
 has been implemented in Python 3. There are several Python 3 versions available, and the project
 used the latest stable version at the time of this project, which is Python 3.7.3. Specifically, the
@@ -1179,12 +1232,12 @@ source code is written with the new syntax and features introduced in the latest
 impies that the older versions of Python 3 are not able to run it before updating.
 
 \subsection{Structure}
-\hyperref[fig:directory_structure]{\textbf{Figure \ref*{fig:directory_structure}}} below shows the
+\hyperref[fig:directory_structure]{\textbf{Figure \ref*{fig:directory_structure}}} shows the
 directory stucture of the project. It follows the design in
 \hyperref[figure:class_diagram]{\textbf{Figure \ref*{figure:class_diagram}}}, where the file
-\verb|vulnerability.py| and \verb|language.py| contain the class \verb|Vulnerability| and
-\verb|Language| respectively. It is not necessary to create an individual file for each programming
-language in the \verb|languages| folder, but it is recommended in practice for better
+\texttt{vulnerability.py} and \texttt{language.py} contain the class \texttt{Vulnerability} and
+\texttt{Language} respectively. It is not necessary to create an individual file for each
+programming language in the \texttt{languages} folder, but it is recommended in practice for better
 maintainability and clarity of the project.
 
 \begin{figure}[H]
@@ -1212,37 +1265,154 @@ maintainability and clarity of the project.
   \caption{Directory struture of the project} \label{fig:directory_structure}
 \end{figure}
 
-httpd repo
----------
-89fd8d0353f6dc234bf026594c7b4f00caa8dbd8: only comment changes
-cd2b7a26c776b0754fb98426a67804fd48118708: CVE in message, comment and code changes
-
 \section{Commit Messages Matching}
-\subsection{Expected Behaviour}
+This section is an explanation of how the design defined in
+\hyperref[sec:design_commit_matching]{\textbf{Section \ref*{sec:design_commit_matching}}} was
+implemented. The implementation is split into three stages, and each subsection below represent one
+of the stage.
+
+\subsection{Vulnerabilities}
+The vulnerabilities represent the type of vulnerability-fixing or vulnerability-inducing commit to
+find. Each vulnerability is an instance of the class \texttt{Vulnerability}, and has a regular
+expression pattern that indicates the possible string format of the commit messages. The
+vulnerabilities below are implemented into the tool:
+
+\begin{multicols} {2}
+  \raggedright
+  \begin{itemize}
+    \item Broken Access Control
+    \item Broken Authentication and Session Management
+    \item Buffer Overflow
+    \item Bug Tracker Issue
+    \item Context Leaks
+    \item Cross-Site Request Forgery
+    \item Cross-Site Scripting
+    \item Distributed Denial-of-Service / Denial-of-Service
+    \item Encryption Issues
+    \item Hard Coded
+    \item Injection
+    \item Insufficient Attack Protection
+    \item Memory Leaks
+    \item Miscellaneous
+    \item Null Pointers
+    \item Overflow
+    \item Resource Leaks
+    \item Path / Directory Traversal
+    \item SHA-1 Collision
+    \item Security Misconfiguration
+    \item Sensitive Data Exposure
+    \item Using Components with Known Vulnerabilities
+    \item Underprotected APIs
+  \end{itemize}
+\end{multicols}
+
+A new vulnerability can be created by passing two arguments to the \texttt{Vulnerability} class: the
+name of the new vulnerability, and the regular expression pattern that describes the commit message
+pattern, as demonstrated in \hyperref[code:create_vuln]{\textbf{Listing \ref*{code:create_vuln}}}.
+\begin{lstlisting}[basicstyle=\ttfamily, label=code:create_vuln,
+  caption=Creating a new instance of \texttt{Vulnerability}.]
+Vulnerability(
+  'Distributed Denial-of-Service / Denial-of-Service',
+  '(dos|((distributed)? denial.*of.*service)|ddos|deadlocks?)')
+\end{lstlisting}
+
+\subsection{Writing the Regular Expressions}
+Having defined the list of vulnerabilities to support, the next step is to write the regular
+expression for each vulnerability. This is the most challenging part in commit message matching as
+there are no specific definitions for the commit message format. Achieving \textbf{completeness} and
+\textbf{correctness} is infeasible, it is impracticable to construct a regular expression that will
+cover all the possible cases of a commit message.
+
+The best mitigating approach is to assume that the commit messages of the same vulnerability type
+would be having a similar format, or sharing some parts of a string. This could be accomplish with
+the capturing group and wildcard character of regular expression. The graphical representation of
+the regular expression \texttt{(fix|rem|patch|found|prevent).* mem.* leak|mem.* leak
+(fix|removed?|patch|found|prevent)} is shown in \hyperref[figure:regex_groups]{\textbf{Figure
+\ref*{figure:regex_groups}}}.
+
+In real-world repositories, the regular expressions have a high possibility of matching a false
+positive result. As discussed in \hyperref[subsec:commit_quality]{\textbf{Section
+\ref*{figure:quality_commit_msg}}}, the quality of commit message is not reliable. This factor has
+been considered into the final evaluation of the results.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=.85\linewidth]{images/keyword_search.png}
-  \caption{An example of expected search for the query \textbf{`\acrshort{cve}'}.}
-  \label{figure:keyword_search}
+  \includegraphics[width=.85\linewidth]{images/regex_groups.png}
+  \caption{An example of using capturing groups and alternation in regular expression.}
+  \label{figure:regex_groups}
 \end{figure}
 
-\hyperref[figure:keyword_search]{\textbf{Figure \ref*{figure:keyword_search}}} shows an example of
-expected search results returned for the query \textbf{`\acrshort{cve}'}.
+\subsection{Searching for the Matches}
+The implementation for the search algorithm is not difficult since all regular expression operations
+are already provided in the Python's \texttt{re} \cite{python_re} library. It is only required to
+ensure that the operations will return the expected results for a given regular expression.
 
-\section{Vulnerable Code Searching}
+The algorithm is a single conditional statement. Given a commit message and a regular expression
+pattern, if the commit message matches the regular expression pattern, then include the commit into
+the result. As shown in \hyperref[code:commit_matching]{\textbf{Listing
+\ref*{code:commit_matching}}}, the vulnerability name and matched string are saved into the result
+file, which satisfied the requirements in \hyperref[sec:lod_result]{\textbf{Section
+\ref*{sec:lod_result}}}.
 
-\subsection{Flawfinder Integration} \label{subsec:flawfinder}
-ff
+\begin{lstlisting}[basicstyle=\ttfamily, label=code:commit_matching,
+  caption=A partial snippet of the result file of CPython \cite{cpython_repo} repository.]
+"de072100775cc29e6cd93a75466cecbd1086f258": {
+  ...
+  "vulnerabilities": [
+    {
+      "name": "Buffer Overflow",
+      "match": "Fixed buffer overflow"
+    }
+  ],
+  ...
+},
+"9790a2706573359e02fcfc5f18f9907467f4ec49": {
+  ...
+  "vulnerabilities": [
+    {
+      "name": "Sensitive Data Exposure",
+      "match": "Fix for #1303614 and #1174712:\n- __dict__ des"
+    }
+  ],
+  ...
+}
+\end{lstlisting}
 
-\subsection{Bandit Integration} \label{subsec:bandit}
-ff
+The first commit in \hyperref[code:commit_matching]{\textbf{Listing \ref*{code:commit_matching}}} is
+a successful example of the search, but the second commit is less specific and might require a
+manual evaluation. In the second commit, the string `\texttt{for \#1303614 and
+\#1174712:\textbackslash n- \_\_dict\_\_}' is a wildcard match. Although it is identified that the
+second commit is a fix for some issues, the actual vulnerability fix might not a \texttt{Sensitive
+Data Exposure} type.
+
+\section{Vulnerable Code Searching} \label{sec:imp_vuln_code_search}
+After commit message matching, the next step is to analyse the code changes in the commits. There
+are three change types: added, deleted, and unchanged. The vulnerabilities identified in different
+change types imply different information about the commit.
+
+\subsection{Flawfinder and Bandit Integration} \label{subsec:flawfinder_bandit}
+The Flawfinder program is a standalone tool and consists of only one file, but Bandit has a more
+complex structure and consists of many classes. They were both written in Python and support at
+least Python 2.7 and Python 3. Both of them are imported into the main file as modules, and their
+functions can be directly invoked. No compatibility issues were countered during the integration
+process.
+
+Both Flawfinder and Bandit take a list of source files or directories as input from the
+command-line, thus it is not able to pass the source code in a string form directly into the
+functions. In GitPython \cite{gitpython}, the Diff object of a commit stores the old and new source
+code as binary streams. The integration steps are:
+\begin{enumerate}
+  \item Decode the binary streams into string.
+  \item Write the decoded source code into a temporary file.
+  \item Pass the temporary file into the relative Flawfinder or Bandit function.
+  \item The results will be returned when the Flawfinder or Bandit has finished the analysis.
+\end{enumerate}
 
 \subsection{User-defined Programming Language}
 Python is an \acrfull{oop} language, it can fulfil the design specifications of
 \hyperref[sec:supported_prog_lang]{\textbf{Section \ref*{sec:supported_prog_lang}}}. To support an
-extra programming language, an instance of the \verb|Language| class must be created. The
-`constructor' (the \verb|__init__| method) takes three parameters, a rule set, a list of file
+extra programming language, an instance of the \texttt{Language} class must be created. The
+`constructor' (the \texttt{\_\_init\_\_} method) takes three parameters, a rule set, a list of file
 extensions, and an optional regular expression object for non-context lines.
 
 The importance and impact of the three parameters on the analysis results are explained below:
@@ -1252,67 +1422,160 @@ The importance and impact of the three parameters on the analysis results are ex
   matching one. A well defined rule set could reduce the possibility of false positives. However,
   there is a still limit on the effectiveness of it as the tool is only performing pure regular
   expression search with these rules on the source code. An example of the structure of a rule set
-  is shown below.
-  \begin{verbatim}
-    ruleset = {
-      'createStatement\s*\(.*\)': {
-          'severity': 'HIGH',
-          'confidence': 'LOW'
-      },
-      ...
-    }
-  \end{verbatim}
+  is shown in \hyperref[code:ruleset]{\textbf{Listing \ref*{code:ruleset}}}.
+  \begin{lstlisting}[basicstyle=\ttfamily, label=code:ruleset,
+    caption=An example snippet of the Java ruleset.]
+  ruleset = {
+    'createStatement\s*\(.*\)': {
+        'severity': 'HIGH',
+        'confidence': 'LOW'
+    },
+    ...
+  }
+  \end{lstlisting}
   \item \textbf{File extensions:} Some programming languages use multiple file extensions as their
   source code file. The purpose of this parameter is to prevent the tool from carrying the search on
   irrelevant files.
   \item \textbf{Regular expression object for non-context lines:} The purpose of this parameter is
   to improve the accuracy and performance of the tool. By excluding the non-context lines from the
-  search process, the tool is able to perform faster, and it is less likely to obtain false positive
-  results.
+  analysis process, the tool is able to perform faster, and it is less likely to obtain false
+  positive results. If this parameter is not provided, then the tool will analyse every single line
+  of the source code.
 \end{enumerate}
 
-The tool will be word boundary \verb|\b|
+A rule can either be a plain string or a regular expression pattern, the algorithm will take the
+rule and perform a word boundary search (\verb|\b{rule}\b|). In contrast to Flawfinder and Bandit,
+this algorithm does not need to parse the source code and tokenise them in advance. With these
+justifications, it is predicted that the tool would not have better performance than Flawfinder or
+Bandit (\hyperref[subsec:flawfinder_bandit]{\textbf{Section \ref*{subsec:flawfinder_bandit}}}).
 
-With these justifications, it is predicted that the tool would not have better performance
-than Flawfinder (\hyperref[subsec:flawfinder]{\textbf{Section \ref*{subsec:flawfinder}}}) or Bandit
-(\hyperref[subsec:bandit]{\textbf{Section \ref*{subsec:bandit}}}).
+\section{Configurable Options}
+As specified in \hyperref[subsec:chosen_model]{\textbf{Section \ref*{subsec:chosen_model}}}, the
+repository mining tool is implemented as an executable Python script. This indicates that the
+analysis process is customisable with command-line arguments.
 
-\section{Storing the Results}
-In Python, dictionary and \acrshort{json} are interchangeable
+\begin{itemize}
+  \item The branch to analyse.
+  \item The commit range to analyse. This can be specified by providing two dates, two tags, or two
+  commit hash.
+  \item The minimum severity level.
+  \item The minimum confidence level.
+\end{itemize}
 
 \section{Exceptions and Errors}
+An unhandled exception will cause the program to terminate. Exception occurs whenever syntactically
+correct Python code results in an unhandled error. Below is a list of errors encountered during the
+implementation and testing. The list does not include the errors that are already handled by
+Flawfinder and Bandit.
+\begin{itemize}
+  \item \textbf{Decode error:} Not all binary streams are encoded in the same encoding. This error
+  will occur when it is unable to decode the binary streams due to the encodings used is not
+  supported by standard Python codecs.
+  \item \textbf{Memory and storage error:} This error will occur when the tool is trying to output a
+  very large result file but the memory and storage space allocated is not enough.
+\end{itemize}
+
+\subsection{Special Case}
+There are cases where the analysis progress is completely frozen. For example, the commit
+\href{https://github.com/apache/camel/commit/b9a311}{\texttt{b9a311}} has 17925 files changed, which
+will cause the progress to be stucked for a long time. Therefore, the tool is programmed to skip a
+commit if it has more than 100 files changed.
 
 \section{Testing}
-- self-created repo
-- not supported programming languages
-- supported programming languages
+The system was tested both automatically and manually to ensure that each feature has functioned
+correctly. Automatic testing covered the test cases written using the Python's unit testing library
+\cite{unittest}. Manual testing mostly covered some edge cases and tried to reproduce some rare
+errors to ensure that they will be handled by the system.
 
-weakness of flawfinder:
-memcpy() changes to memcpy () will be detected as well
+\subsection{System Environment}
+\begin{longtable}{|p{5.6cm}|p{5.6cm}|>{\columncolor[HTML]{B7E1CD}}c|}
+  \hline \endfirsthead
+  \rowcolor[HTML]{D8D8D8}
+  \multicolumn{1}{|c|}{Test Case} & \multicolumn{1}{|c|}{Expected Result} & Status \\ \hline
+  Windows 10, Python 3.6 and above & The program runs & Pass \\ \hline
+  Windows 10, Python 3.5 and below & Syntax error, program does not run & Pass \\ \hline
+  Linux, Python 3.6 and above & The program runs & Pass \\ \hline
+  Linux, Python 3.5 and below & Syntax error, program does not run & Pass \\ \hline
+  macOS, Python 3.6 and above & Syntax error, program does not run & Pass \\ \hline
+  macOS, Python 3.5 and below & Syntax error, program does not run & Pass \\ \hline
+  \caption{Test cases of system environment.}
+\end{longtable}
 
-https://github.com/apache/camel/commit/b9a311
-Too many files changed will cause the program to hang, so skip the commit
+\subsection{Program Initialisation}
+\begin{longtable}{|p{5.6cm}|p{5.6cm}|>{\columncolor[HTML]{B7E1CD}}c|}
+  \hline \endfirsthead
+  \rowcolor[HTML]{D8D8D8}
+  \multicolumn{1}{|c|}{Test Case} & \multicolumn{1}{|c|}{Expected Result} & Status \\ \hline
+  Providing an invalid path & Exception is handled and error message is printed & Pass \\ \hline
+  Providing an invalid Git repository & Exception is handled and error message is printed & Pass \\
+  \hline
+  Specifying an invalid branch & Exception is handled and error message is printed & Pass \\ \hline
+  Specifying an invalid commit hash & Exception is handled and error message is printed & Pass \\
+  \hline
+  Specifying an invalid commit range & Exception is handled and error message is printed & Pass \\
+  \hline
+  Providing valid options & Program starts to analyse & Pass \\ \hline
+  \caption{Test cases of program initialisation.}
+\end{longtable}
 
-\subsection{Edge Cases}
-CVE-2019-0211
-Vulneable code searching is unable to detect very specific code
-% https://github.com/apache/httpd/commit/a41bac
-% https://httpd.apache.org/security/vulnerabilities_24.html
-% https://cfreal.github.io/carpe-diem-cve-2019-0211-apache-local-root.html
+\subsection{Repository and Commit Properties}
+\begin{longtable}{|p{5.6cm}|p{5.6cm}|>{\columncolor[HTML]{B7E1CD}}c|}
+  \hline \endfirsthead
+  \rowcolor[HTML]{D8D8D8}
+  \multicolumn{1}{|c|}{Test Case} & \multicolumn{1}{|c|}{Expected Result} & Status \\ \hline
+  Providing an empty Git repository & Analysis started but no result file output & Pass \\ \hline
+  Analysing an empty commit & The commit is skipped & Pass \\ \hline
+  Analysing a commit with binary files changed only & Binary files are excluded from analysis & Pass
+  \\ \hline
+  Analysing a commit with more than 100 files changed & The commit is skipped & Pass \\ \hline
+  Decoding a file changed that has invalid characters & The characters are ignored, and analysis
+  continues to run & Pass \\ \hline
+  Decoding a file changed of non-supported encoding & The file is skipped & Pass \\ \hline
+  \caption{Test cases of repository and commit properties.}
+\end{longtable}
 
-\begin{table}[H]
-  \centering
-  \begin{tabular}{|c|c|c|c|c|}
-    \hline
-    \rowcolor[HTML]{D8D8D8}
-    \begin{tabular}[c]{@{}c@{}}Test \\ Case \#\end{tabular} & Test Data & Expected Result & Actual
-    Result & Status \\ \hline
-    & & & & \\ \hline
-    \end{tabular}
-  \caption{some test.}
-\end{table}
+\subsection{Commit Message Matching}
+\begin{longtable}{|p{5.6cm}|p{5.6cm}|>{\columncolor[HTML]{B7E1CD}}c|}
+  \hline \endfirsthead
+  \rowcolor[HTML]{D8D8D8}
+  \multicolumn{1}{|c|}{Test Case} & \multicolumn{1}{|c|}{Expected Result} & Status \\ \hline
+  Given a non-matching string and a regular expression & The search operation returned \texttt{None}
+  & Pass \\ \hline
+  Given a matching string and a regular expression & The search operation returned the matched
+  groups, and the matched groups are correct & Pass \\ \hline
+  \caption{Test cases of commit message matching.}
+\end{longtable}
+
+\subsection{Vulnerable Code Searching}
+
+\subsubsection*{Flawfinder (C/C++) and Bandit (Python)}
+\begin{longtable}{|p{5.6cm}|p{5.6cm}|>{\columncolor[HTML]{B7E1CD}}c|}
+  \hline \endfirsthead
+  \rowcolor[HTML]{D8D8D8}
+  \multicolumn{1}{|c|}{Test Case} & \multicolumn{1}{|c|}{Expected Result} & Status \\ \hline
+  File extension is not supported & The file is skipped & Pass \\ \hline
+  File is empty & No issues returned & Pass \\ \hline
+  & & Pass \\ \hline
+  \hline
+  \caption{Test cases of commit message matching.}
+\end{longtable}
+
+\subsubsection*{Java Language}
+
+\subsection{Performance}
+An experiment is carried out to test the performance of the tool.
+\begin{itemize}
+  \item \textbf{Control variables:} The hardware specifications
+  \item \textbf{Independent variables:} The number of commits to analyse, the size of a commit
+  (number of files changed, number of code changes)
+  \item \textbf{Dependent variables:} The time taken to complete the analysis process
+\end{itemize}
+
+It has been observed that the time taken to complete the analysis process is negative correlation to
+the number of commits to analyse and the size of each commit.
 
 \subsection{Verification and Validation}
+After the implementation and testing has finished,
 
 \chapter{Results and Discussion}
 This chapter
@@ -1397,14 +1660,41 @@ vendor.
 \section{Case Study}
 
 \section{Problems}
+weakness of flawfinder:
+memcpy() changes to memcpy () will be detected as well
+
+In real-world repositories, there are many cases that will cause the
+
+httpd repo
+---------
+\begin{itemize}
+  \item \href{https://github.com/apache/httpd/commit/89fd8d}{\texttt{89fd8d}}: only comment changes
+  \item \href{https://github.com/apache/httpd/commit/cd2b7a}{\texttt{cd2b7a}}: CVE in message,
+  comment and code changes
+\end{itemize}
+
+CVE-2019-0211
+Vulneable code searching is unable to detect very specific code
+% https://github.com/apache/httpd/commit/a41bac
+% https://httpd.apache.org/security/vulnerabilities_24.html
+% https://cfreal.github.io/carpe-diem-cve-2019-0211-apache-local-root.html
+
 Linux repo
-224426f168aa4af3dcb628e6edaa824d32d60e6f, date is year 1970, parent is year 2007
-09f2724a786f76475ef2985cf84f5359c553aade, date is year 2030, parent is year 2008
-12ca45fea91cfbb09df828bea958b47348caee6d, date is year 2037, parent is year 2009
+\begin{itemize}
+  \item \href{https://github.com/torvalds/linux/commit/224426f}{\texttt{224426f}}: date is year
+  1970, parent is year 2007
+  \item \href{https://github.com/torvalds/linux/commit/09f2724}{\texttt{09f2724}}: date is year
+  2030, parent is year 2008
+  \item \href{https://github.com/torvalds/linux/commit/12ca45f}{\texttt{12ca45f}}: date is year
+  2030, parent is year 2008
+\end{itemize}
+
 
 \section{Evaluation}
 
 \section{Goals Achieved}
+Overall, the repository mining tool has achieved the implementation objects and satisfied the
+software requirements in \hyperref[sec:software_req]{\textbf{Section \ref*{sec:software_req}}}.
 
 \section{Further Work}
 pyhton multiprocessing

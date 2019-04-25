@@ -476,10 +476,12 @@ def output_result(output: dict, path: str):
 
     print(f'{"Total commits found":<20}: {len(output)}')
 
-    with open(path, 'w') as outfile:
-        json.dump(output, outfile, indent=2)
+    # Only output result file is it is not empty
+    if output:
+        with open(path, 'w') as outfile:
+            json.dump(output, outfile, indent=2)
 
-    print(f'{"Output location":<20}: {os.path.realpath(path)}')
+        print(f'{"Output location":<20}: {os.path.realpath(path)}')
 
 
 if __name__ == '__main__':
@@ -555,6 +557,12 @@ if __name__ == '__main__':
         output_result(search_repository(repo_mining, args.severity, args.confidence), output_path)
     except git.NoSuchPathError:
         print(f"shefmine.py: '{args.repo}' is not a Git repository")
+    except git.BadName as e:
+        print(f"shefmine.py: {e}")
+    except IndexError as e:
+        print(f"shefmine.py: IndexError, {e}")
+    except ValueError as e:
+        print(f"shefmine.py: ValueError, {e}")
     except git.GitCommandError:
         print(f"shefmine.py: GitCommandError, bad revision '{args.branch}'")
     except git.InvalidGitRepositoryError:
