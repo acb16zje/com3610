@@ -18,9 +18,8 @@
 \usepackage{multicol}
 \usepackage{parskip}
 \usepackage[dvipsnames]{xcolor}
-\usepackage{pgfplots}
+\usepackage{pgfplots, tikz}
 \usepackage{subcaption}
-\usepackage{tikz}
 \usepackage[edges]{forest}
 
 \linespread{1.2}
@@ -29,6 +28,7 @@
 \lstset{captionpos=b, columns=flexible}
 
 \pgfplotsset{small, compat=1.16}
+\usepgfplotslibrary{dateplot}
 \usetikzlibrary{fpu, positioning, shapes}
 
 \definecolor{folderbg}{RGB}{124,166,198}
@@ -655,13 +655,13 @@ requirements can be included to define the scope of the mining tool.
   \centering
   \begin{subfigure}{.5\textwidth}
     \centering
-    \includegraphics[width=.85\linewidth]{images/cve_vuln.png}
+    \includegraphics[width=.85\textwidth]{images/cve_vuln.png}
     \subcaption{\acrshort{cve}-identified vulnerability fix \cite{cve_vuln}}
     \label{figure:cve_vuln}
   \end{subfigure}%
   \begin{subfigure}{.5\textwidth}
     \centering
-    \includegraphics[width=.85\linewidth]{images/common_vuln.png}
+    \includegraphics[width=.85\textwidth]{images/common_vuln.png}
     \subcaption{Common vulnerability fix \cite{common_vuln}}
     \label{figure:common_vuln}
   \end{subfigure}
@@ -794,7 +794,7 @@ to find the relationship between code changes in different files.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=.75\linewidth]{images/code_diff.png}
+  \includegraphics[width=.75\textwidth]{images/code_diff.png}
   \caption{An example of code changes to prevent SQL injection \cite{code_diff}.}
   \label{figure:code_diff}
 \end{figure}
@@ -1008,7 +1008,7 @@ to be reviewed and evaluated manually.
 \subsection{Structure}
 \begin{figure}[H]
   \centering
-  \includegraphics[width=.65\linewidth]{images/class_diagram.png}
+  \includegraphics[width=.65\textwidth]{images/class_diagram.png}
   \caption{UML class diagram of Shefmine, the repository mining tool.}
   \label{figure:class_diagram}
 \end{figure}
@@ -1105,7 +1105,7 @@ high completeness first, then perform refinement on the regular expressions base
 \subsection{Expected Behaviour}
 \begin{figure}[H]
   \centering
-  \includegraphics[width=.85\linewidth]{images/keyword_search.png}
+  \includegraphics[width=.85\textwidth]{images/keyword_search.png}
   \caption{An example of a search query \textbf{`\acrshort{cve}'} on GitHub.}
   \label{figure:keyword_search}
 \end{figure}
@@ -1337,7 +1337,7 @@ been considered into the final evaluation of the results.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=.85\linewidth]{images/regex_groups.png}
+  \includegraphics[width=.85\textwidth]{images/regex_groups.png}
   \caption{An example of using capturing groups and alternation in regular expression.}
   \label{figure:regex_groups}
 \end{figure}
@@ -1386,9 +1386,26 @@ second commit is a fix for some issues, the actual vulnerability fix might not a
 Data Exposure} type.
 
 \section{Vulnerable Code Searching} \label{sec:imp_vuln_code_search}
-After commit message matching, the next step is to analyse the code changes in the commits. There
-are three change types: added, deleted, and unchanged. The vulnerabilities identified in different
-change types imply different information about the commit.
+After commit message matching, the next step is to analyse the code changes in the commits. This
+section will discuss the technique used to extract the information from the Git commit object, and
+the use of the extracted information to find potential vulnerabilities in Git commit.
+
+\subsection{Types of the Code Changes}
+All code changes are recorded in the commit, and these changes can be categorised into added,
+deleted, and unchanged.
+\begin{itemize}
+  \item \textbf{Added:} If an added line is reported as vulnerable, then the commit is identified as
+  a vulnerability-inducing commit.
+  \item \textbf{Deleted:} If an deleted line is reported as vulnerable, then the commit is
+  identified as vulnerability-fixing commit.
+  \item \textbf{Unchanged:} If an unchanged line in a changed file is detected as vulnerable, then
+  it is possible for the repository to contain vulnerabilities that are not yet known.
+\end{itemize}
+
+It is important to note that the objective of the repository mining tool is to find potential
+vulnerabilities through the commit history. Therefore, if a vulnerability is introduced at the very
+first commit, and the file that contains the vulnerability has never been modified after that, then
+it would not be possible for the tool to find it.
 
 \subsection{Flawfinder and Bandit Integration} \label{subsec:flawfinder_bandit}
 The Flawfinder program is a standalone tool and consists of only one file, but Bandit has a more
@@ -1541,46 +1558,77 @@ errors to ensure that they will be handled by the system.
   \multicolumn{1}{|c|}{Test Case} & \multicolumn{1}{|c|}{Expected Result} & Status \\ \hline
   Given a non-matching string and a regular expression & The search operation returned \texttt{None}
   & Pass \\ \hline
-  Given a matching string and a regular expression & The search operation returned the matched
-  groups, and the matched groups are correct & Pass \\ \hline
+  Given a matching string and a regular expression & The search operation returned the correct
+  matched groups & Pass \\ \hline
   \caption{Test cases of commit message matching.}
 \end{longtable}
 
 \subsection{Vulnerable Code Searching}
-
-\subsubsection*{Flawfinder (C/C++) and Bandit (Python)}
 \begin{longtable}{|p{5.6cm}|p{5.6cm}|>{\columncolor[HTML]{B7E1CD}}c|}
   \hline \endfirsthead
   \rowcolor[HTML]{D8D8D8}
   \multicolumn{1}{|c|}{Test Case} & \multicolumn{1}{|c|}{Expected Result} & Status \\ \hline
   File extension is not supported & The file is skipped & Pass \\ \hline
   File is empty & No issues returned & Pass \\ \hline
-  & & Pass \\ \hline
+  Analysing a commit that has vulnerable code added  & Vulnerabilities is saved into the
+  `added' list & Pass \\ \hline
+  Analysing a commit that has vulnerable code deleted & Vulnerabilities is saved into the `deleted'
+  list & Pass \\ \hline
+  Analysing a commit that has vulnerable code unchanged & Vulnerabilities is saved into the
+  `unchanged' list & Pass \\ \hline
   \hline
-  \caption{Test cases of commit message matching.}
+  \caption{Test cases of vulnerable code searching.}
 \end{longtable}
 
-\subsubsection*{Java Language}
-
-\subsection{Performance}
-An experiment is carried out to test the performance of the tool.
+\subsection{Performance Testing}
 \begin{itemize}
   \item \textbf{Control variables:} The hardware specifications
   \item \textbf{Independent variables:} The number of commits to analyse, the size of a commit
   (number of files changed, number of code changes)
-  \item \textbf{Dependent variables:} The time taken to complete the analysis process
+  \item \textbf{Dependent variables:} The time taken to complete the analysis
 \end{itemize}
 
-It has been observed that the time taken to complete the analysis process is negative correlation to
-the number of commits to analyse and the size of each commit.
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \pgfplotstableread[col sep=comma]{repos_time.dat}\datatable
+    \begin{axis}[
+      width=\textwidth, height=6cm,
+      title={\textbf{Time against Total Number of Commits}},
+      title style={align=center},
+      enlarge x limits=0.02,
+      xlabel near ticks, xlabel=Total Number of Commits,
+      table/col sep=comma,
+      date coordinates in=y,
+      yticklabel=\Hour,
+      ylabel near ticks, ylabel=Time (hours),
+      legend pos=north west
+    ]
+    \addplot [scatter, only marks, point meta=explicit symbolic, scatter/classes={
+        a={mark=x,blue},
+        b={mark=triangle*,red},
+        c={mark=o,draw=black}% <-- don’t add comma
+      },] table[meta=label] {\datatable};
+    \legend{C/ C++,Java,Python}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Number of potentially vulnerable commits found since 1990 in all repositories analysed.}
+  \label{figure:perf_result}
+\end{figure}
 
-\subsection{Verification and Validation}
-After the implementation and testing has finished,
+According to \hyperref[figure:perf_result]{\textbf{Figure \ref*{figure:perf_result}}}, it has been
+shown that there is a positive correlation between the time taken and the total number of commits.
+The details of the results are recordeed in \hyperref[table:perf_result]{\textbf{Table
+\ref*{table:perf_result}}}.
+
+Overall, the performance of the repository mining tool is considered fast after taking into account
+that all files changed of the whole commit history are analysed in the testing. In a practical
+scenario, the users might only be interested in the commits that newer than a specific date or tag.
+If these options are specified, then the time taken would decrease as there are less commits to
+analyse.
 
 \chapter{Results and Discussion}
 This chapter
-
-\section{Introduction}
 
 \section{Results Overview}
 Repositories are not randomly selected. Selected based on actual software usage of large software
@@ -1689,8 +1737,10 @@ Linux repo
   2030, parent is year 2008
 \end{itemize}
 
-
 \section{Evaluation}
+
+\subsection{Verification and Validation}
+After the implementation and testing has finished,
 
 \section{Goals Achieved}
 Overall, the repository mining tool has achieved the implementation objects and satisfied the
@@ -1704,4 +1754,78 @@ pyhton multiprocessing
 \printglossary[type=\acronymtype]
 \printbibliography[heading=bibintoc]
 
+\clearpage
+
+\appendix
+\chapter*{Appendices}
+\markboth{APPENDICES}{}
+\addcontentsline{toc}{section}{Appendices}
+\setcounter{table}{0}
+\renewcommand{\thetable}{A\arabic{table}}
+\renewcommand{\thesubsection}{\Alph{subsection}}
+
+\subsection{Performance Testing Results}
+  \begin{longtable}{|l|l|l|}
+    \hline \endfirsthead
+    \multicolumn{1}{|c|}{Repository} & \multicolumn{1}{|c|}{Total commits} & \multicolumn{1}{|c|}
+    {Time (hh:mm:ss)} \\ \hline
+    \multicolumn{3}{|c|}{\cellcolor[HTML]{D8D8D8}C/C++} \\ \hline
+    curl & 24,173 & 0:38:37 \\
+    httpd & 31,399 & 1:16:21 \\
+    icu & 30,642 & 9:03:57 \\
+    ImageMagick & 15,503 & 1:12:41 \\
+    libarchive & 5,461 & 0:13:15 \\
+    libpng & 4,054 & 0:36:14 \\
+    libtomcrypt & 1,906 & 0:04:01 \\
+    libxml2 & 4,737 & 0:32:35 \\
+    libxslt & 1,776 & 0:03:40 \\
+    linux & 825,898 & 73:54:55 \\
+    openssl & 23,714 & 0:54:28 \\
+    v8 & 55,289 & 9:38:54 \\
+    xalan-c & 4,323 & 0:07:38 \\
+    xerces-c & 6,358 & 0:16:11 \\
+    zlib & 419 & 0:01:29 \\ \hline
+    \multicolumn{3}{|c|}{\cellcolor[HTML]{D8D8D8}Java} \\ \hline
+    activemq & 10,158 & 0:32:46 \\
+    axis2-java & 13,329 & 1:05:14 \\
+    batik & 3,490 & 0:14:28 \\
+    bc-java & 5,530 & 0:25:21 \\
+    camel & 36,562 & 4:49:29 \\
+    cocoon & 13,156 & 0:25:47 \\
+    commons-fileupload & 950 & 0:00:38 \\
+    cordova-android & 3,760 & 0:05:04 \\
+    cxf & 14,879 & 1:24:13 \\
+    flex-sdk & 33,707 & 1:22:20 \\
+    geronimo & 13,137 & 0:27:42 \\
+    httpcomponents-client & 2,993 & 0:09:33 \\
+    jetty.project & 16,621 & 1:00:20 \\
+    poi & 9,786 & 0:38:15 \\
+    spring-framework & 18,415 & 0:56:35 \\
+    spring-security & 7,616 & 0:12:14 \\
+    struts & 5,649 & 0:09:16 \\
+    tomcat & 20,723 & 0:54:59 \\
+    wss4j & 2,543 & 0:12:30 \\
+    xalan-j & 4,560 & 0:10:17 \\ \hline
+    \multicolumn{3}{|c|}{\cellcolor[HTML]{D8D8D8}Python} \\ \hline
+    ansible & 44,388 & 4:39:53 \\
+    asn1crypto & 586 & 0:09:38 \\
+    bcrypt & 165 & 0:00:25 \\
+    botocore & 5,666 & 0:55:11 \\
+    cpython & 103,752 & 17:01:44 \\
+    cryptography & 7,619 & 1:09:44 \\
+    django & 26,822 & 5:35:03 \\
+    flask & 3,505 & 0:14:14 \\
+    home-assistant & 18,675 & 1:56:53 \\
+    paramiko & 3,231 & 0:13:29 \\
+    photon & 3,433 & 0:04:22 \\
+    pyopenssl & 1,999 & 0:33:27 \\
+    python-certifi & 140 & 0:00:03 \\
+    requests & 5,614 & 0:35:14 \\
+    sqlmap & 8,671 & 0:42:55 \\
+    tornado & 4,054 & 0:26:48 \\
+    urllib3 & 3,190 & 0:20:28 \\ \hline \hline
+    \textbf{Total (52 repos.)} & \textbf{1,514,726} & \textbf{148:31:28} \\ \hline
+    \caption{The time taken to complete the analysis process of each repository.}
+    \label{table:perf_result}
+  \end{longtable}
 \end{document}
