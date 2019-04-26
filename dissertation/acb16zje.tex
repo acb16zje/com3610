@@ -11,7 +11,6 @@
 \usepackage{graphicx}
 \usepackage[hidelinks]{hyperref}
 \usepackage[toc, acronym, automake, nomain]{glossaries} % after hyperref for link
-\usepackage{import}
 \usepackage{listings}
 \usepackage{longtable}
 \usepackage{microtype}
@@ -20,6 +19,7 @@
 \usepackage[dvipsnames]{xcolor}
 \usepackage{pgfplots, tikz}
 \usepackage{subcaption}
+\usepackage{subfiles}
 \usepackage[edges]{forest}
 
 \linespread{1.2}
@@ -591,8 +591,7 @@ that improve the feasibility of this project.
 \section{Software Requirements and Scope} \label{sec:software_req}
 \subsection{Functional Requirements}
 \begin{longtable}{|p{10.3cm}|c|}
-  \hline \endfirsthead
-  \rowcolor[HTML]{D8D8D8}
+  \hline \endfirsthead \rowcolor[HTML]{D8D8D8}
   \multicolumn{1}{|c|}{Criteria} & Importance \\ \hline
   \textbf{Compatibility:} The mining tool should be able to run on all machines that meet the
   system requirements. & Essential \\ \hline
@@ -616,8 +615,7 @@ that improve the feasibility of this project.
 \begin{table}[H]
   \centering
   \begin{tabular}{|p{10.3cm}|c|}
-    \hline
-    \rowcolor[HTML]{D8D8D8}
+    \hline \rowcolor[HTML]{D8D8D8}
     \multicolumn{1}{|c|}{Criteria} & Importance \\ \hline
     \textbf{Code Style:} The source code should be well-commented and follow a consistent coding
     style. & Essential  \\ \hline
@@ -737,8 +735,8 @@ the project.
 
 \subsection{Quality of Commit Messages} \label{subsec:commit_quality}
 Although there are a lot of open source repositories available online, the majority of them does not
-have a formal guideline for the documenting the changes in the commit messages. As part of the
-\textbf{data} problem, the commit messages in the real-world repositories
+have a formal guideline for the documenting the changes in the commit messages \cite{bird_2009}. As
+part of the \textbf{data} problem, the commit messages in the real-world repositories
 (\hyperref[sec:realworld]{\textbf{Section \ref*{sec:realworld}}}) might have lower quality compared
 to a self-created repository. It has been reported that the terms `fix', `add', and `test' have the
 top average term frequency in the commit messages \cite{alali_2008}. With these indistinct terms
@@ -799,7 +797,7 @@ to find the relationship between code changes in different files.
   \label{figure:code_diff}
 \end{figure}
 
-\subsection{Quality and Validity of Results}
+\subsection{Quality and Validity of Results} \label{subsec:quality_and_validity}
 The analysis process is automated, which implies that the results returned might not fulfil the
 expectation. Automating the process of finding security vulnerabilities in open source repositories
 does not guarantee to produce a good result. In addition, manual evaluation is still required to
@@ -828,8 +826,7 @@ test cases are based on the functionality of the tool to cover every feature imp
 \begin{table}[H]
   \centering
   \begin{tabular}{|c|c|c|}
-    \hline
-    \rowcolor[HTML]{D8D8D8}
+    \hline \rowcolor[HTML]{D8D8D8}
     \begin{tabular}[c]{@{}c@{}}Test Case \end{tabular} & Expected Result & Status \\ \hline
     & & \\ \hline
     \end{tabular}
@@ -994,7 +991,7 @@ must provide:
   \item A rule set. This is a dictionary of common vulnerabilities. Each vulnerability are
   given a severity and confidence level.
   \item A list of file extensions used by the programming language.
-  \item An optional regular expression pattern for non-context lines. A non-context line
+  \item An optional regular expression pattern for non-essential lines. A non-essential line
   can be defined as a line of code that does not have positive contribution to the vulnerability
   analysis. Examples are code comments, blank line, and print statements for debugging purposes.
 \end{enumerate}
@@ -1162,7 +1159,7 @@ the expected results.
 \begin{itemize}
   \item It is unable to detect many security vulnerabilities automatically and accurately. These
   security vulnerabilities usually require sophisticated analysis method to detect.
-  \item It is expected to generate numberous false postiive results.
+  \item It is expected to generate numerous false postiive results.
   \item It is difficult to prove the validity of the results. Since the analysis does not involve
   any data flow analysis, the reported results do not contain any detailed information such as
   variables value, and the steps to exploit the vulnerabilities.
@@ -1390,14 +1387,14 @@ After commit message matching, the next step is to analyse the code changes in t
 section will discuss the technique used to extract the information from the Git commit object, and
 the use of the extracted information to find potential vulnerabilities in Git commit.
 
-\subsection{Types of the Code Changes}
+\subsection{Types of the Code Changes} \label{sec:code_change_type}
 All code changes are recorded in the commit, and these changes can be categorised into added,
 deleted, and unchanged.
 \begin{itemize}
   \item \textbf{Added:} If an added line is reported as vulnerable, then the commit is identified as
-  a vulnerability-inducing commit.
+  a \textbf{vulnerability-inducing} commit.
   \item \textbf{Deleted:} If an deleted line is reported as vulnerable, then the commit is
-  identified as vulnerability-fixing commit.
+  identified as \textbf{vulnerability-fixing} commit.
   \item \textbf{Unchanged:} If an unchanged line in a changed file is detected as vulnerable, then
   it is possible for the repository to contain vulnerabilities that are not yet known.
 \end{itemize}
@@ -1430,7 +1427,7 @@ Python is an \acrfull{oop} language, it can fulfil the design specifications of
 \hyperref[sec:supported_prog_lang]{\textbf{Section \ref*{sec:supported_prog_lang}}}. To support an
 extra programming language, an instance of the \texttt{Language} class must be created. The
 `constructor' (the \texttt{\_\_init\_\_} method) takes three parameters, a rule set, a list of file
-extensions, and an optional regular expression object for non-context lines.
+extensions, and an optional regular expression object for non-essential lines.
 
 The importance and impact of the three parameters on the analysis results are explained below:
 \begin{enumerate}
@@ -1453,14 +1450,14 @@ The importance and impact of the three parameters on the analysis results are ex
   \item \textbf{File extensions:} Some programming languages use multiple file extensions as their
   source code file. The purpose of this parameter is to prevent the tool from carrying the search on
   irrelevant files.
-  \item \textbf{Regular expression object for non-context lines:} The purpose of this parameter is
-  to improve the accuracy and performance of the tool. By excluding the non-context lines from the
+  \item \textbf{Regular expression object for non-essential lines:} The purpose of this parameter is
+  to improve the accuracy and performance of the tool. By excluding the non-essential lines from the
   analysis process, the tool is able to perform faster, and it is less likely to obtain false
   positive results. If this parameter is not provided, then the tool will analyse every single line
   of the source code.
 \end{enumerate}
 
-A rule can either be a plain string or a regular expression pattern, the algorithm will take the
+A rule can be either a plain string or a regular expression pattern, the algorithm will take the
 rule and perform a word boundary search (\verb|\b{rule}\b|). In contrast to Flawfinder and Bandit,
 this algorithm does not need to parse the source code and tokenise them in advance. With these
 justifications, it is predicted that the tool would not have better performance than Flawfinder or
@@ -1506,8 +1503,7 @@ errors to ensure that they will be handled by the system.
 
 \subsection{System Environment}
 \begin{longtable}{|p{5.6cm}|p{5.6cm}|>{\columncolor[HTML]{B7E1CD}}c|}
-  \hline \endfirsthead
-  \rowcolor[HTML]{D8D8D8}
+  \hline \endfirsthead \rowcolor[HTML]{D8D8D8}
   \multicolumn{1}{|c|}{Test Case} & \multicolumn{1}{|c|}{Expected Result} & Status \\ \hline
   Windows 10, Python 3.6 and above & The program runs & Pass \\ \hline
   Windows 10, Python 3.5 and below & Syntax error, program does not run & Pass \\ \hline
@@ -1520,8 +1516,7 @@ errors to ensure that they will be handled by the system.
 
 \subsection{Program Initialisation}
 \begin{longtable}{|p{5.6cm}|p{5.6cm}|>{\columncolor[HTML]{B7E1CD}}c|}
-  \hline \endfirsthead
-  \rowcolor[HTML]{D8D8D8}
+  \hline \endfirsthead \rowcolor[HTML]{D8D8D8}
   \multicolumn{1}{|c|}{Test Case} & \multicolumn{1}{|c|}{Expected Result} & Status \\ \hline
   Providing an invalid path & Exception is handled and error message is printed & Pass \\ \hline
   Providing an invalid Git repository & Exception is handled and error message is printed & Pass \\
@@ -1537,8 +1532,7 @@ errors to ensure that they will be handled by the system.
 
 \subsection{Repository and Commit Properties}
 \begin{longtable}{|p{5.6cm}|p{5.6cm}|>{\columncolor[HTML]{B7E1CD}}c|}
-  \hline \endfirsthead
-  \rowcolor[HTML]{D8D8D8}
+  \hline \endfirsthead \rowcolor[HTML]{D8D8D8}
   \multicolumn{1}{|c|}{Test Case} & \multicolumn{1}{|c|}{Expected Result} & Status \\ \hline
   Providing an empty Git repository & Analysis started but no result file output & Pass \\ \hline
   Analysing an empty commit & The commit is skipped & Pass \\ \hline
@@ -1553,8 +1547,7 @@ errors to ensure that they will be handled by the system.
 
 \subsection{Commit Message Matching}
 \begin{longtable}{|p{5.6cm}|p{5.6cm}|>{\columncolor[HTML]{B7E1CD}}c|}
-  \hline \endfirsthead
-  \rowcolor[HTML]{D8D8D8}
+  \hline \endfirsthead \rowcolor[HTML]{D8D8D8}
   \multicolumn{1}{|c|}{Test Case} & \multicolumn{1}{|c|}{Expected Result} & Status \\ \hline
   Given a non-matching string and a regular expression & The search operation returned \texttt{None}
   & Pass \\ \hline
@@ -1565,8 +1558,7 @@ errors to ensure that they will be handled by the system.
 
 \subsection{Vulnerable Code Searching}
 \begin{longtable}{|p{5.6cm}|p{5.6cm}|>{\columncolor[HTML]{B7E1CD}}c|}
-  \hline \endfirsthead
-  \rowcolor[HTML]{D8D8D8}
+  \hline \endfirsthead \rowcolor[HTML]{D8D8D8}
   \multicolumn{1}{|c|}{Test Case} & \multicolumn{1}{|c|}{Expected Result} & Status \\ \hline
   File extension is not supported & The file is skipped & Pass \\ \hline
   File is empty & No issues returned & Pass \\ \hline
@@ -1594,7 +1586,7 @@ errors to ensure that they will be handled by the system.
     \pgfplotstableread[col sep=comma]{repos_time.dat}\datatable
     \begin{axis}[
       width=\textwidth, height=6cm,
-      title={\textbf{Time against Total Number of Commits}},
+      title={\textbf{Time (hours) against Total Number of Commits}},
       title style={align=center},
       enlarge x limits=0.02,
       xlabel near ticks, xlabel=Total Number of Commits,
@@ -1628,11 +1620,196 @@ If these options are specified, then the time taken would decrease as there are 
 analyse.
 
 \chapter{Results and Discussion}
-This chapter
+This chapter will present the main results of the tool, together with the evaluation. The critical
+discussion will present a detailed analysis of the results, as well as the possible improvements to
+be made.
 
-\section{Results Overview}
-Repositories are not randomly selected. Selected based on actual software usage of large software
-vendor.
+\section{Data Set}
+The analysis data set consists of 52 open source repositories
+(\hyperref[table:perf_result]{\textbf{Table \ref*{table:perf_result}}}) selected from GitHub
+\cite{github}. Specifically, 15 of these repositories are C/C++ based, 20 of them are Java based,
+and 17 of them are Python based. These repositories are selected based on the actual usage of large
+software vendors and their user base.
+
+\section{C/C++ Repositories}
+\hyperref[table:top5_c]{\textbf{Table \ref*{table:top5_c}}} has shown the 5 most common
+vulnerability types found by \textbf{commit message matching}. These most common vulnerability
+types, however, do not represent the actual security condition of the overall C/C++ repositories. In
+particular, \textbf{Null Pointers} (7397 found, 6.34\%), \textbf{Memory Leaks} (5242 found, 4.49\%),
+\textbf{Overflow} (4486 found, 3.85\%), and \textbf{Buffer Overflow} (1286 found, 1.10\%) are more
+relevant issues in the C/C++ programming language.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|l|l|l|}
+    \hline \rowcolor[HTML]{D8D8D8}
+    \multicolumn{1}{|c|}{Vulnerabilities} & \multicolumn{1}{|c|}{Total} &
+    \multicolumn{1}{|c|}{Percentage} \\ \hline
+    Bug Tracker Issue & 29,884 & 25.62\% \\
+    Sensitive Data Exposure & 17,448 & 14.96\% \\
+    Encryption Issue & 17,022 & 14.59\% \\
+    Miscellaneous & 12,741 & 10.92\% \\
+    Null Pointers & 7,397 & 6.34\% \\ \hline
+  \end{tabular}
+  \caption{Top 5 vulnerabilities matched by the regular expressions in the C/C++ repositories
+  analysed.}
+  \label{table:top5_c}
+\end{table}
+
+\subsection{Case Study}
+\subsubsection*{Linux}
+The Linux repository \cite{linux_repo} has the most commit counts in the data set. The commit
+messages are well-documented, and most of the bug-fixing commits contain a reference link to a
+specific bug tracker issue. The partial statistics shown in
+\hyperref[table:case_linux]{\textbf{Table \ref*{table:case_linux}}} are more specifically targeted
+to the repository, and are considered to be a good research objective for future references.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|l|l|l|}
+    \hline \rowcolor[HTML]{D8D8D8}
+    \multicolumn{1}{|c|}{Vulnerabilities} & \multicolumn{1}{|c|}{Total} &
+    \multicolumn{1}{|c|}{Percentage} \\ \hline
+    Bug Tracker Issue & 18,886 & 21.89\% \\
+    Null Pointers & 7,073 & 8.20\% \\
+    Security Misconfiguration & 5,867 & 6.80\% \\
+    Distributed Denial-of-Service / Denial-of-Service & 5,725 & 6.64\% \\
+    Encryption Issues & 5,242 & 6.08\% \\
+    Memory Leaks & 4,223 & 4.89\% \\
+    Overflow & 4,052 & 4.70\% \\
+    Underprotected APIs & 3,967 & 4.60\% \\
+    Injection & 1,391 & 1.61\% \\
+    Hard Coded & 1,308 & 1.52\% \\
+    Buffer Overflow & 1,114 & 1.29\% \\ \hline
+    & \textbf{$\frac{58848}{86283}$} & \textbf{68.20\%} \\ \hline
+  \end{tabular}
+  \caption{Partial statistics of the Linux repository analysis.}
+  \label{table:case_linux}
+\end{table}
+
+\section{Java Repositories}
+\begin{longtable}{|l|l|l|}
+  \hline \endfirsthead \rowcolor[HTML]{D8D8D8}
+  \multicolumn{1}{|c|}{Vulnerabilities} & \multicolumn{1}{|c|}{Total} &
+  \multicolumn{1}{|c|}{Percentage} \\ \hline
+  Bug Tracker Issue & 4,304 & 24.25\% \\
+  Security Misconfiguration & 3,468 & 19.54\% \\
+  Encryption Issue & 3,339 & 18.82\% \\
+  Sensitive Data Exposure & 2,674 & 15.07\% \\
+  Distributed Denial-of-Service / Denial-of-Service & 849 & 4.78\% \\ \hline
+  \caption{Top 5 vulnerabilities matched by the regular expressions in the Java repositories
+  analysed.}
+  \label{table:top5_java}
+\end{longtable}
+
+The statistics in \hyperref[table:top5_java]{\textbf{Table \ref*{table:top5_java}}} do not reflect
+the actual condition as well. Majority of the Java repositories analysed are server or networking
+based projects. Hence, vulnerabilities such as \textbf{DDoS / DoS} (849, 4.78\%),
+\textbf{Underprotected APIs} (695, 3.92\%), \textbf{Injection} (203 found, 1.14\%), and
+\textbf{Cross-Site Scripting} (198 found, 1.12\%) are more specific and relevant to the data set.
+
+\subsection{Case Study}
+\subsubsection*{Apache Tomcat}
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|l|l|l|}
+    \hline \rowcolor[HTML]{D8D8D8}
+    \multicolumn{1}{|c|}{Vulnerabilities} & \multicolumn{1}{|c|}{Total} &
+    \multicolumn{1}{|c|}{Percentage} \\ \hline
+    Bug Tracker Issue & 2,410 & 62.00\% \\
+    Encryption Issues & 699 & 17.98\% \\
+    Sensitive Data Exposure & 327 & 8.41\% \\
+    Dsitributed Denial-of-Service / Denial-of-Service & 101 & 2.60\% \\
+    Miscellaneous & 82 & 2.11\% \\
+    Memory Leaks & 58 & 1.49\% \\
+    Security Misconfiguration & 37 & 0.95\% \\
+    Underprotected APIs & 35 & 0.90\% \\
+    Cross-Site Request Forgery & 19 & 0.49\% \\ \hline
+    & \textbf{$\frac{3768}{3887}$} & \textbf{96.94\%} \\ \hline
+  \end{tabular}
+  \caption{Partial statistics of the Tomcat repository analysis.}
+  \label{table:case_tomcat}
+\end{table}
+
+In contrast to the Linux repository, the commit messages of Tomcat repository
+\cite{apache_tomcat_repo} are less informative but still provide enough context as a whole. It is a
+server implementation project, thus it is expected to find more network related vulnerabilities in
+this repository. However, this assumption implies that the statistics in
+\hyperref[table:case_tomcat]{\textbf{Table \ref*{table:case_tomcat}}} might not be accurate. The
+problem is further inspected in \hyperref[sec:evaluation]{\textbf{Section \ref*{sec:evaluation}}}.
+
+\section{Python Repositories}
+\begin{longtable}{|l|l|l|}
+  \hline \endfirsthead \rowcolor[HTML]{D8D8D8}
+  \multicolumn{1}{|c|}{Vulnerabilities} & \multicolumn{1}{|c|}{Total} &
+  \multicolumn{1}{|c|}{Percentage} \\ \hline
+  Encryption Issues & 3,930 & 35.02\% \\
+  Sensitive Data Exposure & 2,535 & 22.29\% \\
+  Miscellaneous & 1,028 & 9.16\% \\
+  Underprotected APIs & 704 & 6.27\% \\
+  Security Misconfiguration & 675 & 6.02\% \\ \hline
+  \caption{Top 5 vulnerabilities matched by the regular expressions in the Python repositories
+  analysed.}
+  \label{table:top5_python}
+\end{longtable}
+
+Similarly, the statistics in \hyperref[table:top5_python]{\textbf{Table \ref*{table:top5_python}}}
+do not represent the overall condition of all Python repositories. The validity of the statistics
+has to be evaluated before concluding it.
+
+\subsection{Case Study}
+\subsubsection*{CPython}
+CPython \cite{cpython_repo} is the repository of the Python programming language. The commit
+messages strictly follow a specific documenting guideline, and are considered to have the same
+quality as the Linux repository. According to the repository page on GitHub, 61.4\% and 32.5\% of
+source code in written in Python and C respectively. This explains why
+\hyperref[table:case_cpython]{\textbf{Table \ref*{table:case_cpython}}} shows a mixed range of
+vulnerability types. Moreover, the repository also contains numerous files that are implemented as
+the built-in modules for end users.
+
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|l|l|l|}
+    \hline \rowcolor[HTML]{D8D8D8}
+    \multicolumn{1}{|c|}{Vulnerabilities} & \multicolumn{1}{|c|}{Total} &
+    \multicolumn{1}{|c|}{Percentage} \\ \hline
+    Encryption Issues & 1,251 & 30.04\% \\
+    Sensitive Data Exposure & 911 & 21.88\% \\
+    Miscellaneous & 332 & 7.97\% \\
+    Overflow & 330 & 7.93\% \\
+    Memory Leaks & 288 & 6.92\% \\
+    Underprotected APIs & 245 & 5.88\% \\
+    Distributed Denial-of-Service / Denial-of-Service & 234 & 5.62\% \\
+    Security Misconfiguration & 208 & 5.00\% \\
+    Bug Tracker Issue & 133 & 3.19\% \\
+    Null Pointers & 77 & 1.85\% \\ \hline
+    & \textbf{$\frac{4009}{4164}$} & \textbf{96.28\%} \\ \hline
+  \end{tabular}
+  \caption{Partial statistics of the Tomcat repository analysis.}
+  \label{table:case_cpython}
+\end{table}
+
+\section{Results Summary}
+This section presents a summary of the results. The results presented is the combined total
+of statistics from the analysis results of C/C++, Java, and Python repositories. The main purpose is
+to show an overall trend of the results, and provide a brief perspective on the overall results.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|l|l|l|}
+    \hline \rowcolor[HTML]{D8D8D8}
+    \multicolumn{1}{|c|}{Vulnerabilities} & \multicolumn{1}{|c|}{Total} &
+    \multicolumn{1}{|c|}{Percentage} \\ \hline
+    Bug Tracker Issue & 34,799 & 23.90\% \\
+    Encryption Issue & 24,291 & 16.68\% \\
+    Sensitive Data Exposure & 22,657 & 15.56\% \\
+    Miscellaneous & 14,409 & 9.89\% \\
+    Security Misconfiguration & 10,457 & 7.18\% \\ \hline
+  \end{tabular}
+  \caption{Top 5 vulnerabilities matched by the regular expressions in all repositories analysed.}
+  \label{table:top5_all}
+\end{table}
 
 \begin{figure}[H]
   \centering
@@ -1668,164 +1845,207 @@ vendor.
     \end{axis}
   \end{tikzpicture}
   \caption{Number of potentially vulnerable commits found since 1990 in all repositories analysed.}
+  \label{figure:commits_year}
 \end{figure}
 
-\begin{table}[H]
-  \centering
-  \begin{tabular}{|l|l|l|}
-    \hline
-    \rowcolor[HTML]{D8D8D8}
-    \multicolumn{1}{|c|}{Vulnerabilities} & \multicolumn{1}{|c|}{Total} &
-    \multicolumn{1}{|c|}{Percentage} \\ \hline
-    Broken Access Control & 190 & 0.13\% \\
-    Broken Authentication and Session Management & 978 & 0.67\% \\
-    Buffer Overflow & 1,365 & 0.94\% \\
-    Bug Tracker Issue & 34,799 & 23.90\% \\
-    Context Leaks & 17 & 0.01\% \\
-    Cross-Site Request Forgery & 204 & 0.14\% \\
-    Cross-Site Scripting & 310 & 0.21\% \\
-    Distributed Denial-of-Service / Denial-of-Service & 7,340 & 5.04\% \\
-    Encryption Issues & 24,291 & 16.68\% \\
-    Hard Coded & 1,766 & 1.21\% \\
-    Injection & 1,772 & 1.22\% \\
-    Insufficient Attack Protection & 191 & 0.13\% \\
-    Memory Leaks & 5,819 & 4.00\% \\
-    Miscellaneous & 14,409 & 9.89\% \\
-    Null Pointers & 7,803 & 5.36\% \\
-    Overflow & 4,929 & 3.38\% \\
-    Resource Leaks & 98 & 0.07\% \\
-    Path / Directory Traversal & 177 & 0.12\% \\
-    SHA-1 Collision & 1 & 0.00\% \\
-    Security Misconfiguration & 10,457 & 7.18\% \\
-    Sensitive Data Exposure & 22,657 & 15.56\% \\
-    Using Components with Known Vulnerabilities & 186 & 0.13\% \\
-    Underprotected APIs & 5,862 & 4.03\% \\ \hline \hline
-    \textbf{Total} & \textbf{145,621} & \textbf{100.00\%} \\ \hline
-  \end{tabular}
-  \caption{Vulnerabilities matched by the regular expressions in all repositories analysed.}
-\end{table}
+Some repositories have longer commit history, while some of them have more commit counts than
+others. This applies to the number of vulnerable commits found in each repository as well. According
+to \hyperref[figure:commits_year]{\textbf{Figure \ref*{figure:commits_year}}}, the number of
+potentially vulnerable commits found has increased over the years. A potentially vulnerable commit
+can be either a vulnerability-inducing or vulnerability-fixing commit, as explained in
+\hyperref[sec:code_change_type]{\textbf{Section \ref*{sec:code_change_type}}}. This can be explained
+by the increase of security awareness among developers, and the increased number of Internet users
+over the past 20 years. Therefore, it could be assumed that both the number of security issues and
+the number of vulnerability-fixing commits will be increasing in the future.
 
-\section{Case Study}
+It can be observed in \hyperref[figure:commits_year]{\textbf{Figure \ref*{figure:commits_year}}}
+that the number of potentially vulnerable commits has started to grow rapidly since 2004, which is
+the same year as the initial release of \acrshort{owasp} Top Ten project \cite{owasp_top10_2004}.
+Hence, the sudden grow from 2004 to 2005 could be assumed as the increase of security fixes being
+published by the developers. If this assumption was true, then the correctness of the repository
+mining tool could be proved to a certain extent.
 
-\section{Problems}
-weakness of flawfinder:
-memcpy() changes to memcpy () will be detected as well
+\section{Evaluation} \label{sec:evaluation}
+This section will assess the validity of the results, and show the problems discovered during the
+evaluation process. Lastly, the achievements of this project will be evaluated, and future
+improvements will be discussed.
 
-In real-world repositories, there are many cases that will cause the
+\subsection{Threats to Validity of Results} \label{subsec:threats_to_validity}
+There are several threats identified during the results collection and evaluation process. These
+threats may potentially affect the final accuracy of the results, and lower the overall quality of
+the repository mining tool.
 
-httpd repo
----------
 \begin{itemize}
-  \item \href{https://github.com/apache/httpd/commit/89fd8d}{\texttt{89fd8d}}: only comment changes
-  \item \href{https://github.com/apache/httpd/commit/cd2b7a}{\texttt{cd2b7a}}: CVE in message,
-  comment and code changes
+  \item \textbf{Ambiguous commit messages:} The statements in
+  \hyperref[subsec:commit_quality]{\textbf{Section \ref*{subsec:commit_quality}}} have been proved
+  to be correct. Many commits do not provide a clear and precise summary of the changes introduced.
+  This might cause the actual vulnerability-fixing commits to be classified as false negatives.
+  \item \textbf{Problematic commit properties:} Git allows empty commit to be made, as well as
+  setting the commit date to any date. Commits with empty message or no code changes will require
+  extra effort for verification. For example,
+  \href{https://github.com/torvalds/linux/commit/224426f}{\color{blue}\texttt{224426f}},
+  \href{https://github.com/torvalds/linux/commit/09f2724}{\color{blue}\texttt{09f2724}}, and
+  \href{https://github.com/torvalds/linux/commit/12ca45f}{\color{blue}\texttt{12ca45f}} have
+  incorrect date with respect to their parent commit, such issue will affect the results in
+  \hyperref[figure:commits_year]{\textbf{Figure \ref*{figure:commits_year}}}.
+  \item \textbf{Hidden information:}
+  \begin{itemize}
+    \item The commit
+    \href{https://github.com/apache/httpd/commit/df7edb}{\color{blue}\texttt{df7edb}} is a fix for
+    CVE-2019-0211 \cite{cve_2019_0211}, but the commit message did not mention the CVE identifier.
+    \item The commit {\texttt{9233d9}}
+    (\href{https://github.com/apache/tomcat/commit/9233d9}{\color{blue}{GitHub link}},
+    \href{https://svn.apache.org/viewvc?view=revision&revision=1788544}{\color{blue}{Subversion
+    link}}) of Tomcat repository is an actual fix for CVE-2017-5651. However, the commit message of
+    this commit does not contain the CVE identifier in the GitHub version, whereas the Subversion
+    version does. It is unknown whether the removal of CVE identifier from the commit message in the
+    GitHub version was intentionally, or a conversion error from Subversion to Git.
+  \end{itemize}
+  \item \textbf{Existence of noise in code changes:} This factor have already been considered in
+  \hyperref[subsec:quality_and_validity]{\textbf{Section \ref*{subsec:quality_and_validity}}}, but
+  the amount of noise was beyond the expectation. It was later noticed that the precautions method
+  implemented were not able to exclude various non-essential code changes.
+  \item \textbf{Human error:} Wrong judgements might be made during the manual validation due to
+  insufficient knowledge in security vulnerabilities and limited proficiency in programming
+  languages.
 \end{itemize}
 
-CVE-2019-0211
-Vulneable code searching is unable to detect very specific code
-% https://github.com/apache/httpd/commit/a41bac
-% https://httpd.apache.org/security/vulnerabilities_24.html
-% https://cfreal.github.io/carpe-diem-cve-2019-0211-apache-local-root.html
+\subsection{Problems and Limitations} \label{subsec:result_prob_and_limit}
+\subsubsection*{Commit Message Matching}
+According to \hyperref[table:top5_c]{\textbf{Table \ref*{table:top5_c}}},
+\hyperref[table:top5_java]{\textbf{Table \ref*{table:top5_java}}},
+\hyperref[table:top5_python]{\textbf{Table \ref*{table:top5_python}}}, and
+\hyperref[table:top5_all]{\textbf{Table \ref*{table:top5_all}}}, the following vulnerability types
+are commonly being matched: \textbf{Bug Tracker Issue}, \textbf{Encryption Issue}, \textbf{Sensitive
+Data Exposure}, and \textbf{Miscellaneous}. This scenario is theoretically possible, but not very
+likely when considering the actual data set used. The high proportion of these vulnerability types
+in the overall results does not appear to be logical, especially when some of them still remain with
+high percentage in the case study.
 
-Linux repo
+Upon manual inspection, it is discovered that the majority of commits matched by the regular
+expressions are positive results, but many of them are misclassified. Therefore, it can be concluded
+that some of the regular expressions were broadly defined, while others were strictly defined. For
+example, the commit message of
+\href{https://github.com/apache/httpd/commit/89fd8d}{\color{blue}\texttt{89fd8d}} is matched as
+Sensitive Data Exposure, but the code changes are all comment improvements. The impact could be
+either significant or minor, which depends on the proportion of positive results in the
+misclassified commits.
+
+\subsubsection*{Vulnerable Code Searching}
+As mentioned in \hyperref[subsec:threats_to_validity]{\textbf{Section
+\ref*{subsec:threats_to_validity}}}, the repository mining tool could not detect and exclude all
+non-essential code changes from the analysis. This limitation is less significant in Flawfinder and
+Bandit implementation, but more severe in the implementation for user-defined programming language.
+Moreover, the tool did not ignore whitespace changes (e.g. \texttt{memcpy()} to \texttt{memcpy ()}),
+which then introduced considerable amount of false positives into the results.
+
+One major limitation of the repository mining tool is the inability to detect very specific
+vulnerability fixes. This is also a known limitation in many static analysis tools. For instance,
+the commit \href{https://github.com/apache/httpd/commit/cd2b7a}{\color{blue}\texttt{cd2b7a}} of
+Apache HTTPD repository contains CVE identifier in the commit message, but the tool was unable to
+detect the actual code changes that addressed the vulnerability fix. In other cases,
+vulnerability-fixing code changes might also be distributed to several files, which would increase
+the difficulty for such tools to detect it.
+
+\subsection{True Positive Rate}
+To calculate the true positive rate, the commits found must be evaluated manually. The sampling
+process must be completely stochastic to minimise human bias. For each programming language, 3
+random repositories were randomly chosen. Then for each repository chosen, a maximum of 4 commits
+from each category below was randomly chosen for manual evaluation. The minimum severity and
+confidence level for vulnerable code changes are set to high for the best result.
 \begin{itemize}
-  \item \href{https://github.com/torvalds/linux/commit/224426f}{\texttt{224426f}}: date is year
-  1970, parent is year 2007
-  \item \href{https://github.com/torvalds/linux/commit/09f2724}{\texttt{09f2724}}: date is year
-  2030, parent is year 2008
-  \item \href{https://github.com/torvalds/linux/commit/12ca45f}{\texttt{12ca45f}}: date is year
-  2030, parent is year 2008
+  \item Only regular expression match
+  \item Only vulnerable code changes
+  \item Only added vulnerable code changes
+  \item Only deleted vulnerable code changes
+  \item Only added and deleted vulnerable code changes
+  \item Both regular expression match and vulnerable code changes
 \end{itemize}
+120 out of 271 commits were found to be vulnerability-fixing commits. The sample size might be
+relatively small compared to the total commits found, but the commits evaluated were randomly
+selected. Such commits give a general indication of the overall results. Hence, the true positive
+rate of the repository mining tool is approximately \textbf{44.28\%}. Additionaly, the following
+situations were observed during the evaluation process:
 
-\section{Evaluation}
-
-\subsection{Verification and Validation}
-After the implementation and testing has finished,
+\begin{itemize}
+  \item If a commit contains both regular expression match and vulnerable code changes, then it is
+  likely to be a vulnerability-fixing commit.
+  \item The test files of some repositories includes running the vulnerable code, which is very
+  likely to be detected and introduced false positives.
+  \item Some regular expressions are able to perform unexpectedly well on matching ambiguous commit
+  messages.
+\end{itemize}
 
 \section{Goals Achieved}
-Overall, the repository mining tool has achieved the implementation objects and satisfied the
-software requirements in \hyperref[sec:software_req]{\textbf{Section \ref*{sec:software_req}}}.
+\subsection{Objectives}
+The primary objective of this project is to find security issues in open source software
+repositories through a series of analysis processes. With a true positive rate of 44.28\%, the
+project has proved its practicality, and demonstrated a feasible way to achieve the objective.
+Although the current implementation faces many problems and limitations, the repository mining tool
+was able to reach the goal, and complete the analysis process successfully.
+
+\subsection{Functional Requirements}
+\begin{longtable}{|l|c|>{\columncolor[HTML]{B7E1CD}}c|}
+  \hline \endfirsthead \rowcolor[HTML]{D8D8D8}
+  \multicolumn{1}{|c|}{Criteria} & Importance & Status \\ \hline
+  \textbf{Compatibility} & Essential & Achieved \\ \hline
+  \textbf{Completeness} & Essential & \cellcolor[HTML]{FCE8B2}Partly Achieved \\ \hline
+  \textbf{Informative} & Essential & Achieved \\ \hline
+  \textbf{Repeatable} & Essential & Achieved \\ \hline
+  \textbf{Scalability} & Essential & Achieved \\ \hline
+  \textbf{Automated Evaluation} & Desirable & Achieved \\ \hline
+  \textbf{Extensibility} & Desirable & Achieved \\ \hline
+  \textbf{Robustness} & Desirable & Achieved \\ \hline
+  \caption{Achievement status of functional requirements in \hyperref[table:func_req]{\textbf{Table
+  \ref*{table:func_req}}}.}
+\end{longtable}
+
+The completeness criteria is partly achieved due to the high false positive rate and the
+inconsistency in finding hidden vulnerability-fixing commits.
+
+\subsection{Non-functional Requirements}
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|l|c|>{\columncolor[HTML]{B7E1CD}}c|}
+    \hline \rowcolor[HTML]{D8D8D8}
+    \multicolumn{1}{|c|}{Criteria} & Importance & Status \\ \hline
+    \textbf{Code Style} & Essential & Achieved \\ \hline
+    \textbf{Documentation} & Essential & Achieved \\ \hline
+    \textbf{Lightweight} & Essential & Achieved \\ \hline
+    \textbf{Open source} & Essential & Achieved \\ \hline
+    \textbf{Performance} & Desirable & Achieved \\ \hline
+  \end{tabular}
+  \caption{Achievement status of non-functional requirements in \hyperref[table:nonfunc_req]{\textbf
+  {Table \ref*{table:nonfunc_req}}}.}
+\end{table}
 
 \section{Further Work}
-pyhton multiprocessing
+\begin{enumerate}
+  \item \textbf{Regular expressions improvement:} This is an iterative process. The refinement has
+  to be carried out in stages to ensure that the patterns are specific and do not overlap with eath
+  other's domain.
+  \item \textbf{Noise elimination improvement:} Implements a more precise technique by following the
+  approach of Kawrykow and Robillard \cite{kawrykow_2011}.
+  \item \textbf{Performance optimisation:} The current implementation is limited to using a single
+  processor core. The program could be extended to make use of the Python built-in multiprocessing
+  \cite{python_multiprocessing} module to run the program on multiple processors for simultaneous
+  execution. This improvement is expected to lower the analysis time significantly.
+  \item \textbf{Ability to locate the origin of the vulnerabilities:} The tool should be improved to
+  link the vulnerability-fixing commit with a correct vulnerability-inducing commit.
+  \item \textbf{Automatic validation of bug tracker issues:} For every bug tracker issue referenced
+  in the commit message, the tool could verify it by sending a HTTP request to the link and analyse
+  the HTML file retrieved.
+\end{enumerate}
 
 \chapter{Conclusion}
+Overall, the repository mining tool has achieved the implementation objects and satisfied the
+software requirements in \hyperref[sec:software_req]{\textbf{Section \ref*{sec:software_req}}}.
 
 \printglossary[type=\acronymtype]
 \printbibliography[heading=bibintoc]
 
-\clearpage
+%TC:ignore
+\subfile{appendix.tex}
+%TC:endignore
 
-\appendix
-\chapter*{Appendices}
-\markboth{APPENDICES}{}
-\addcontentsline{toc}{section}{Appendices}
-\setcounter{table}{0}
-\renewcommand{\thetable}{A\arabic{table}}
-\renewcommand{\thesubsection}{\Alph{subsection}}
-
-\subsection{Performance Testing Results}
-  \begin{longtable}{|l|l|l|}
-    \hline \endfirsthead
-    \multicolumn{1}{|c|}{Repository} & \multicolumn{1}{|c|}{Total commits} & \multicolumn{1}{|c|}
-    {Time (hh:mm:ss)} \\ \hline
-    \multicolumn{3}{|c|}{\cellcolor[HTML]{D8D8D8}C/C++} \\ \hline
-    curl & 24,173 & 0:38:37 \\
-    httpd & 31,399 & 1:16:21 \\
-    icu & 30,642 & 9:03:57 \\
-    ImageMagick & 15,503 & 1:12:41 \\
-    libarchive & 5,461 & 0:13:15 \\
-    libpng & 4,054 & 0:36:14 \\
-    libtomcrypt & 1,906 & 0:04:01 \\
-    libxml2 & 4,737 & 0:32:35 \\
-    libxslt & 1,776 & 0:03:40 \\
-    linux & 825,898 & 73:54:55 \\
-    openssl & 23,714 & 0:54:28 \\
-    v8 & 55,289 & 9:38:54 \\
-    xalan-c & 4,323 & 0:07:38 \\
-    xerces-c & 6,358 & 0:16:11 \\
-    zlib & 419 & 0:01:29 \\ \hline
-    \multicolumn{3}{|c|}{\cellcolor[HTML]{D8D8D8}Java} \\ \hline
-    activemq & 10,158 & 0:32:46 \\
-    axis2-java & 13,329 & 1:05:14 \\
-    batik & 3,490 & 0:14:28 \\
-    bc-java & 5,530 & 0:25:21 \\
-    camel & 36,562 & 4:49:29 \\
-    cocoon & 13,156 & 0:25:47 \\
-    commons-fileupload & 950 & 0:00:38 \\
-    cordova-android & 3,760 & 0:05:04 \\
-    cxf & 14,879 & 1:24:13 \\
-    flex-sdk & 33,707 & 1:22:20 \\
-    geronimo & 13,137 & 0:27:42 \\
-    httpcomponents-client & 2,993 & 0:09:33 \\
-    jetty.project & 16,621 & 1:00:20 \\
-    poi & 9,786 & 0:38:15 \\
-    spring-framework & 18,415 & 0:56:35 \\
-    spring-security & 7,616 & 0:12:14 \\
-    struts & 5,649 & 0:09:16 \\
-    tomcat & 20,723 & 0:54:59 \\
-    wss4j & 2,543 & 0:12:30 \\
-    xalan-j & 4,560 & 0:10:17 \\ \hline
-    \multicolumn{3}{|c|}{\cellcolor[HTML]{D8D8D8}Python} \\ \hline
-    ansible & 44,388 & 4:39:53 \\
-    asn1crypto & 586 & 0:09:38 \\
-    bcrypt & 165 & 0:00:25 \\
-    botocore & 5,666 & 0:55:11 \\
-    cpython & 103,752 & 17:01:44 \\
-    cryptography & 7,619 & 1:09:44 \\
-    django & 26,822 & 5:35:03 \\
-    flask & 3,505 & 0:14:14 \\
-    home-assistant & 18,675 & 1:56:53 \\
-    paramiko & 3,231 & 0:13:29 \\
-    photon & 3,433 & 0:04:22 \\
-    pyopenssl & 1,999 & 0:33:27 \\
-    python-certifi & 140 & 0:00:03 \\
-    requests & 5,614 & 0:35:14 \\
-    sqlmap & 8,671 & 0:42:55 \\
-    tornado & 4,054 & 0:26:48 \\
-    urllib3 & 3,190 & 0:20:28 \\ \hline \hline
-    \textbf{Total (52 repos.)} & \textbf{1,514,726} & \textbf{148:31:28} \\ \hline
-    \caption{The time taken to complete the analysis process of each repository.}
-    \label{table:perf_result}
-  \end{longtable}
 \end{document}

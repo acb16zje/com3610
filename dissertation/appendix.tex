@@ -1,0 +1,205 @@
+\documentclass[acb16zje.tex]{subfiles}
+
+\begin{document}
+\appendix
+\chapter*{Appendices}
+\markboth{APPENDICES}{}
+\addcontentsline{toc}{chapter}{Appendices}
+\setcounter{table}{0}
+\renewcommand{\thetable}{A\arabic{table}}
+\renewcommand{\thesubsection}{\Alph{subsection}}
+
+\subsection{Performance Testing Results}
+\begin{longtable}{|l|l|l|}
+  \hline \endfirsthead
+  \multicolumn{1}{|c|}{Repository} & \multicolumn{1}{|c|}{Total commits} & \multicolumn{1}{|c|}
+  {Time (hh:mm:ss)} \\ \hline
+  \multicolumn{3}{|c|}{\cellcolor[HTML]{D8D8D8}C/C++} \\ \hline
+  curl & 24,173 & 0:38:37 \\
+  httpd & 31,399 & 1:16:21 \\
+  icu & 30,642 & 9:03:57 \\
+  ImageMagick & 15,503 & 1:12:41 \\
+  libarchive & 5,461 & 0:13:15 \\
+  libpng & 4,054 & 0:36:14 \\
+  libtomcrypt & 1,906 & 0:04:01 \\
+  libxml2 & 4,737 & 0:32:35 \\
+  libxslt & 1,776 & 0:03:40 \\
+  linux & 825,898 & 73:54:55 \\
+  openssl & 23,714 & 0:54:28 \\
+  v8 & 55,289 & 9:38:54 \\
+  xalan-c & 4,323 & 0:07:38 \\
+  xerces-c & 6,358 & 0:16:11 \\
+  zlib & 419 & 0:01:29 \\ \hline
+  \multicolumn{3}{|c|}{\cellcolor[HTML]{D8D8D8}Java} \\ \hline
+  activemq & 10,158 & 0:32:46 \\
+  axis2-java & 13,329 & 1:05:14 \\
+  batik & 3,490 & 0:14:28 \\
+  bc-java & 5,530 & 0:25:21 \\
+  camel & 36,562 & 4:49:29 \\
+  cocoon & 13,156 & 0:25:47 \\
+  commons-fileupload & 950 & 0:00:38 \\
+  cordova-android & 3,760 & 0:05:04 \\
+  cxf & 14,879 & 1:24:13 \\
+  flex-sdk & 33,707 & 1:22:20 \\
+  geronimo & 13,137 & 0:27:42 \\
+  httpcomponents-client & 2,993 & 0:09:33 \\
+  jetty.project & 16,621 & 1:00:20 \\
+  poi & 9,786 & 0:38:15 \\
+  spring-framework & 18,415 & 0:56:35 \\
+  spring-security & 7,616 & 0:12:14 \\
+  struts & 5,649 & 0:09:16 \\
+  tomcat & 20,723 & 0:54:59 \\
+  wss4j & 2,543 & 0:12:30 \\
+  xalan-j & 4,560 & 0:10:17 \\ \hline
+  \multicolumn{3}{|c|}{\cellcolor[HTML]{D8D8D8}Python} \\ \hline
+  ansible & 44,388 & 4:39:53 \\
+  asn1crypto & 586 & 0:09:38 \\
+  bcrypt & 165 & 0:00:25 \\
+  botocore & 5,666 & 0:55:11 \\
+  cpython & 103,752 & 17:01:44 \\
+  cryptography & 7,619 & 1:09:44 \\
+  django & 26,822 & 5:35:03 \\
+  flask & 3,505 & 0:14:14 \\
+  home-assistant & 18,675 & 1:56:53 \\
+  paramiko & 3,231 & 0:13:29 \\
+  photon & 3,433 & 0:04:22 \\
+  pyopenssl & 1,999 & 0:33:27 \\
+  python-certifi & 140 & 0:00:03 \\
+  requests & 5,614 & 0:35:14 \\
+  sqlmap & 8,671 & 0:42:55 \\
+  tornado & 4,054 & 0:26:48 \\
+  urllib3 & 3,190 & 0:20:28 \\ \hline
+  \textbf{Total (52 repositories)} & \textbf{1,514,726} & \textbf{148:31:28} \\ \hline
+  \caption{The time taken to complete the analysis process of each repository.}
+  \label{table:perf_result}
+\end{longtable}
+
+\subsection{RegExp match, all repositories}
+\begin{longtable}{|l|l|l|}
+  \hline \endfirsthead \rowcolor[HTML]{D8D8D8}
+  \multicolumn{1}{|c|}{Vulnerabilities} & \multicolumn{1}{|c|}{Total} &
+  \multicolumn{1}{|c|}{Percentage} \\ \hline
+  Broken Access Control & 190 & 0.13\% \\
+  Broken Authentication and Session Management & 978 & 0.67\% \\
+  Buffer Overflow & 1,365 & 0.94\% \\
+  Bug Tracker Issue & 34,799 & 23.90\% \\
+  Context Leaks & 17 & 0.01\% \\
+  Cross-Site Request Forgery & 204 & 0.14\% \\
+  Cross-Site Scripting & 310 & 0.21\% \\
+  Distributed Denial-of-Service / Denial-of-Service & 7,340 & 5.04\% \\
+  Encryption Issues & 24,291 & 16.68\% \\
+  Hard Coded & 1,766 & 1.21\% \\
+  Injection & 1,772 & 1.22\% \\
+  Insufficient Attack Protection & 191 & 0.13\% \\
+  Memory Leaks & 5,819 & 4.00\% \\
+  Miscellaneous & 14,409 & 9.89\% \\
+  Null Pointers & 7,803 & 5.36\% \\
+  Overflow & 4,929 & 3.38\% \\
+  Resource Leaks & 98 & 0.07\% \\
+  Path / Directory Traversal & 177 & 0.12\% \\
+  SHA-1 Collision & 1 & 0.00\% \\
+  Security Misconfiguration & 10,457 & 7.18\% \\
+  Sensitive Data Exposure & 22,657 & 15.56\% \\
+  Using Components with Known Vulnerabilities & 186 & 0.13\% \\
+  Underprotected APIs & 5,862 & 4.03\% \\ \hline
+  \textbf{Total} & \textbf{145,621} & \textbf{100.00\%} \\ \hline
+  \caption{All vulnerabilities matched by the regular expressions in all repositories analysed.}
+\end{longtable}
+
+\subsection{RegExp match, C/C++ repositories}
+\begin{longtable}{|l|l|l|}
+  \hline \endfirsthead \rowcolor[HTML]{D8D8D8}
+  \multicolumn{1}{|c|}{Vulnerabilities} & \multicolumn{1}{|c|}{Total} &
+  \multicolumn{1}{|c|}{Percentage} \\ \hline
+  Broken Access Control & 142 & 0.12\% \\
+  Broken Authentication and Session Management & 545 & 0.47\% \\
+  Buffer Overflow & 1,286 & 1.10\% \\
+  Bug Tracker Issue & 29,884 & 25.62\% \\
+  Context Leaks & 14 & 0.01\% \\
+  Cross-Site Request Forgery & 15 & 0.01\% \\
+  Cross-Site Scripting & 97 & 0.08\% \\
+  Distributed Denial-of-Service / Denial-of-Service & 6,129 & 5.25\% \\
+  Encryption Issues & 17,022 & 14.59\% \\
+  Hard Coded & 1,449 & 1.24\% \\
+  Injection & 1,413 & 1.21\% \\
+  Insufficient Attack Protection & 172 & 0.15\% \\
+  Memory Leaks & 5,242 & 4.49\% \\
+  Miscellaneous & 12,741 & 10.92\% \\
+  Null Pointers & 7,397 & 6.34\% \\
+  Overflow & 4,486 & 3.85\% \\
+  Resource Leaks & 69 & 0.06\% \\
+  Path / Directory Traversal & 159 & 0.14\% \\
+  SHA-1 Collision & 1 & 0.00\% \\
+  Security Misconfiguration & 6,314 & 5.41\% \\
+  Sensitive Data Exposure & 17,448 & 14.96\% \\
+  Using Components with Known Vulnerabilities & 167 & 0.14\% \\
+  Underprotected APIs & 4,463 & 3.83\% \\ \hline
+  \textbf{Total} & \textbf{116,655} & \textbf{100.00\%} \\ \hline
+  \caption{All vulnerabilities matched by the regular expressions in the C/C++ repositories
+  analysed.}
+\end{longtable}
+
+\subsection{RegExp match, Java repositories}
+\begin{longtable}{|l|l|l|}
+  \hline \endfirsthead \rowcolor[HTML]{D8D8D8}
+  \multicolumn{1}{|c|}{Vulnerabilities} & \multicolumn{1}{|c|}{Total} &
+  \multicolumn{1}{|c|}{Percentage} \\ \hline
+  Broken Access Control & 21 & 0.12\% \\
+  Broken Authentication and Session Management & 360 & 2.03\% \\
+  Buffer Overflow & 27 & 0.15\% \\
+  Bug Tracker Issue & 4,304 & 24.25\% \\
+  Context Leaks & 1 & 0.01\% \\
+  Cross-Site Request Forgery & 72 & 0.41\% \\
+  Cross-Site Scripting & 198 & 1.12\% \\
+  Distributed Denial-of-Service / Denial-of-Service & 849 & 4.78\% \\
+  Encryption Issues & 3,339 & 18.82\% \\
+  Hard Coded & 210 & 1.18\% \\
+  Injection & 203 & 1.14\% \\
+  Insufficient Attack Protection & 8 & 0.05\% \\
+  Memory Leaks & 242 & 1.36\% \\
+  Miscellaneous & 640 & 3.61\% \\
+  Null Pointers & 326 & 1.84\% \\
+  Overflow & 85 & 0.48\% \\
+  Resource Leaks & 13 & 0.07\% \\
+  Path / Directory Traversal & 7 & 0.04\% \\
+  Security Misconfiguration & 3,468 & 19.54\% \\
+  Sensitive Data Exposure & 2,674 & 15.07\% \\
+  Using Components with Known Vulnerabilities & 3 & 0.02\% \\
+  Underprotected APIs & 695 & 3.92\% \\ \hline
+  \textbf{Total} & \textbf{17,745} & \textbf{100.00\%} \\ \hline
+  \caption{All vulnerabilities matched by the regular expressions in the Java repositories
+  analysed.}
+\end{longtable}
+
+\subsection{RegExp match, Python repositories}
+\begin{longtable}{|l|l|l|}
+  \hline \endfirsthead \rowcolor[HTML]{D8D8D8}
+  \multicolumn{1}{|c|}{Vulnerabilities} & \multicolumn{1}{|c|}{Total} &
+  \multicolumn{1}{|c|}{Percentage} \\ \hline
+  Broken Access Control & 27 & 0.24\% \\
+  Broken Authentication and Session Management & 73 & 0.65\% \\
+  Buffer Overflow & 52 & 0.46\% \\
+  Bug Tracker Issue & 611 & 5.45\% \\
+  Context Leaks & 2 & 0.02\% \\
+  Cross-Site Request Forgery & 117 & 1.04\% \\
+  Cross-Site Scripting & 15 & 0.13\% \\
+  Distributed Denial-of-Service / Denial-of-Service & 362 & 3.23\% \\
+  Encryption Issues & 3,930 & 35.02\% \\
+  Hard Coded & 107 & 0.95\% \\
+  Injection & 156 & 1.39\% \\
+  Insufficient Attack Protection & 11 & 0.10\% \\
+  Memory Leaks & 335 & 2.99\% \\
+  Miscellaneous & 1,028 & 9.16\% \\
+  Null Pointers & 80 & 0.71\% \\
+  Overflow & 358 & 3.19\% \\
+  Resource Leaks & 16 & 0.14\% \\
+  Path / Directory Traversal & 11 & 0.10\% \\
+  Security Misconfiguration & 675 & 6.02\% \\
+  Sensitive Data Exposure & 2,535 & 22.59\% \\
+  Using Components with Known Vulnerabilities & 16 & 0.14\% \\
+  Underprotected APIs & 704 & 6.27\% \\ \hline
+  \textbf{Total} & \textbf{11,221} & \textbf{100.00\%} \\ \hline
+  \caption{All vulnerabilities matched by the regular expressions in the Python repositories
+  analysed.}
+\end{longtable}
+\end{document}
