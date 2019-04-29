@@ -132,14 +132,17 @@ will be considered grounds for failure in this project and the degree examinatio
 \newpage
 
 \chapter*{Abstract}
-% In both proprietary and Free/Libre and Open Source Softwares (FLOSS) components, not all security
-% vulnerabilities are documented in CVE format nor published in the vulnerability databases such as
-% NVD. These vulnerabilities could have been fixed by the developers. Finding these
-% vulnerability-fixing commits could provide valuable insights for the developers using those
-% components. Therefore, the objective of this project is to develop a repository mining tool that
-% is able to detect vulnerability-fixing commits using MSR approach. Comparing to previous
-% approaches, the tool will be focusing on searches the commit message first, and then investigates
-% the code difference in each commit.
+In Free/Libre and Open Source Software (FLOSS) repositories, some developers chose to not publicly
+disclose the details of various security vulnerability patches. Finding these vulnerability-fixing
+commits in a software repository could provide valuable insights for research purposes. This project
+aims to develop a repository mining tool that runs an analysis process to find vulnerability-fixing
+commits in Git repositories. The tool utilises regular expressions, static analysis techniques, and
+various approaches from software repository mining in the analysis process. The results collected
+provided considerable empirical evidence that shows the number of security issues fixed in 52 sample
+repositories from GitHub. After manual evaluation, it has shown that the tool has a true positive
+rate of 44.28\%. Several problems and limitations of the developed tool are identified during the
+evaluation. Overall, the project has reached its goal, and it ends in the discussion of possible
+improvements to be made in the future.
 
 \chapter*{Acknowledgements}
 I would like to thank my parents for their unconditional love and the full financial support
@@ -253,9 +256,8 @@ the feasibility of the project.
 and disadvantages of different approaches are stated. The chosen design is justified with suitable
 diagrams provided including wireframes and UML component diagrams.
 
-\noindent\textbf{Chapter 5} describes the implementation process by highlighting novel aspects to
-the algorithms used. Testing is performed by following a suitable model to evaluate the
-implementation.
+\noindent\textbf{Chapter 5} describes the implementation by highlighting novel aspects to the
+algorithms used. Testing is performed by following a suitable model to evaluate the implementation.
 
 \noindent\textbf{Chapter 6} presents all the results along with critical discussions about the main
 findings,	and outlines the possible improvements that could be made in the future work.
@@ -269,16 +271,16 @@ insights into computer security. By studying the patterns of security vulnerabil
 source repositories, the practical knowledge for building and ensuring a secure system could be
 gained. Moreover, the difficulty of improving software security could be experienced during the
 evaluation process in this project. This relates to the Software Engineering degree as it requires a
-good understanding in version control system and it aims to improve softwares quality by reducing
+good understanding in version control system and it aims to improve software quality by reducing
 the time and effort needed to find security vulnerabilities in the source code.
 
 \chapter{Literature Review}
 This chapter will start with the background contents of the project, and then focus on discussing
-the security aspect of open source softwares. Additionally, previous and existing relevant works are
+the security aspect of open source software. Additionally, previous and existing relevant works are
 reviewed and a critical analysis is provided for the comparison of these resources and this project.
 
 \section{Open Source Security}
-The security of open source softwares mostly rely on the collaboration of the community. It is
+The security of open source software mostly rely on the collaboration of the community. It is
 deduced that the power of open data and crowdsourcing will make open source security more reliable
 \cite{hoepman_2007, witten_2001}, and provides more flexibility and freedom over the security option
 to their users \cite{payne_2002}. However, when it comes to publishing the vulnerability
@@ -322,7 +324,7 @@ developers and vendors are not required to publish security vulnerabilities of t
 \acrshort{cve} format. They are allowed to use their own naming scheme for the vulnerabilities, even
 if the same vulnerability has already been recorded in the \acrshort{cve} list.
 
-\section{Security Issues in Open Source Softwares}
+\section{Security Issues in Open Source Software}
 The \acrfull{owasp} is a worldwide non-profit organization committed to improve and raise the
 awareness of software security \cite{owasp_home}. The project members of \acrshort{owasp} have
 worked together to produce a list of the most critical web application security risks based on the
@@ -335,10 +337,10 @@ Vulnerabilities'}, which will be extensively discussed.
 \subsection{Using Components with Known Vulnerabilities} \label{subsec:components}
 It has been indicated that a small software component could create a large error in a software
 system \cite{basili_1984, munson_1992, selby_1988}. Components such as plugins, libraries, and
-modules are ubiquitous in both open source and proprietary softwares. Third-party components are
-increasingly being integrated into softwares to reduce the amount of time and effort required for
+modules are ubiquitous in both open source and proprietary software. Third-party components are
+increasingly being integrated into software to reduce the amount of time and effort required for
 development \cite{balzarotti_2006}, but they also increase the risk of vulnerabilities being
-introduced into the softwares. These components are mostly maintained by different developers or
+introduced into the software. These components are mostly maintained by different developers or
 organisations, and the time required to fix a vulnerability varies between developers. While the
 majority of third-party components are still being actively maintained after a long time, some of
 them might have depreciated and security patches are no longer being released. The users might
@@ -356,7 +358,7 @@ libraries, etc.) with known vulnerabilities in a software. Several open source t
 \acrshort{owasp} Dependency Check \cite{owasp_dependency}, Retire.js \cite{retirejs}, and Safety
 \cite{safety} are applications that identifies vulnerable dependencies in a software project.
 Cadariu et al. \cite{cadariu_2015} have used the \acrshort{owasp} Dependency Check tool to find all
-known vulnerabilities that have a unique \acrshort{cve} identifier in proprietary softwares written
+known vulnerabilities that have a unique \acrshort{cve} identifier in proprietary software written
 in Java. According to their study, the \acrshort{owasp} Dependency Check tool has low precision due
 to the high false positives rate in the large data sets. However, Cadariu et al. \cite{cadariu_2015}
 justified that the tool is still usable by taking into account that the checking process is
@@ -375,7 +377,7 @@ components, and the results achieved are satisfactory.
 
 As a conclusion, static dependency checking tools provide a fast and easy way to scan for vulnerable
 components, but the users are required to verify the validity and compatibility of the results with
-their softwares. In contrast, models that use machine learning technique has been proved to be
+their software. In contrast, models that use machine learning technique has been proved to be
 effective and are more likely to produce consistent and accurate results. However, such models
 require a large amount of training data and are only designed for a specific area. While dependency
 checking approach is more related to the scope of this project, the capability of predicting
@@ -530,7 +532,7 @@ vulnerabilities in previous version of the source code unless it is specifically
 tool. Therefore, static analysis of source code could be integrated with \acrshort{msr} to find
 potential security vulnerabilities in older versions of the source code.
 
-Researches have suggested that users often turn off auto-updates for softwares \cite{fagan_2015,
+Researches have suggested that users often turn off auto-updates for software \cite{fagan_2015,
 mathur_2017} to avoid possible consequences such as major interface changes or compatibility issues.
 This statement is justifiable if and only if an update does not introduce security improvements bug
 fixes. As a result, it is helpful to run static analysis in an older version of software and inform
@@ -882,7 +884,7 @@ defining and measuring the quality metrics listed below:
 \section{Ethical Issues}
 In this project, it is declared that any known or unknown vulnerabilities found by the mining tool
 in any repositories will not be publicly disclosed without the permission of the original authors.
-The reason is that publishing the vulnerabilities publicly would make the softwares highly
+The reason is that publishing the vulnerabilities publicly would make the software highly
 vulnerable to attackers \cite{arora_2010}, and it is recommended to wait for the official
 announcement from the software vendors.
 
@@ -1212,7 +1214,7 @@ a list of statistics to calculate in the statistical analysis tool:
 \chapter{Implementation and Testing} \label{chap:implementation}
 This chapter will discuss the implementation of the repository mining tool based on the
 specifications described in previous chapters. It will also provide insights into the challenges
-encountered during the implementation process.
+encountered during the implementation.
 
 \section{Project Environment and Structure}
 \subsection{Hardware Requirements}
@@ -1491,9 +1493,9 @@ Flawfinder and Bandit.
 
 \subsection{Special Case}
 There are cases where the analysis progress is completely frozen. For example, the commit
-\href{https://github.com/apache/camel/commit/b9a311}{\texttt{b9a311}} has 17925 files changed, which
-will cause the progress to be stucked for a long time. Therefore, the tool is programmed to skip a
-commit if it has more than 100 files changed.
+\href{https://github.com/apache/camel/commit/b9a311}{\color{blue}\texttt{b9a311}} has 17925 files
+changed, which will cause the progress to be stucked for a long time. Therefore, the tool is
+programmed to skip a commit if it has more than 100 files changed.
 
 \section{Testing}
 The system was tested both automatically and manually to ensure that each feature has functioned
@@ -1980,7 +1982,7 @@ situations were observed during the evaluation process:
 \subsection{Objectives}
 The primary objective of this project is to find security issues in open source software
 repositories through a series of analysis processes. With a true positive rate of 44.28\%, the
-project has proved its practicality, and demonstrated a feasible way to achieve the objective.
+project has proved its practicability, and demonstrated a feasible way to achieve the objective.
 Although the current implementation faces many problems and limitations, the repository mining tool
 was able to reach the goal, and complete the analysis process successfully.
 
@@ -2038,8 +2040,30 @@ inconsistency in finding hidden vulnerability-fixing commits.
 \end{enumerate}
 
 \chapter{Conclusion}
-Overall, the repository mining tool has achieved the implementation objects and satisfied the
-software requirements in \hyperref[sec:software_req]{\textbf{Section \ref*{sec:software_req}}}.
+This project began with research into the security of open source repositories, which led into a
+deeper analysis of the techniques used in \acrfull{msr}. During the research period, a wide range of
+options were explored, and the most suitable choices were selected and adapted into the
+implementation. The research has helped to recognise several limitations and difficulties, which
+also helped to reduce the number of vain attempts being made during the implementation.
+
+After the research has been completed, the project objectives were set and the requirements were
+outlined. Following the requirements, the selection of software was reviewed, and the reasoning of
+the final decisions was justified. The project was then assessed for its feasibility by considering
+the limitations of the chosen approach and the factors that might affect the quality of analytical
+results. The testing and evaluation were planned in details to cover all aspects of functionality.
+
+The repository mining tool was designed and implemented with consideration. The chosen approaches
+were further explained with their strenghts and weaknesses presented and compared to alternative
+methods. The implementation followed the design specifications and introduced several improvements
+during the process. The final version of the tool developed was tested with unit testing and system
+testing and passed all the test cases.
+
+Overall, the repository mining tool was found to have a true positive rate of 44.28\%. Several
+problems and limitations were identified in the manual evaluation, and they can be corrected and
+improved. In conclusion, the result was satisfying but there is still room for improvement. The tool
+produced has achieved the implementation objectives and satisfied the software requirements in
+\hyperref[sec:software_req]{\textbf{Section \ref*{sec:software_req}}}. This project has demonstrated
+its practicability and the possibility of achieving such research objectives in related fields.
 
 \printglossary[type=\acronymtype]
 \printbibliography[heading=bibintoc]
